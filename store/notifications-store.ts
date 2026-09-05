@@ -1,97 +1,86 @@
 import { InboxItem, inboxItems as mockNotifications, NotificationType } from '@/mock-data/inbox';
 import { create } from 'zustand';
 
+import {
+   fetchNotifications,
+   markAllNotificationsRead,
+   markNotificationRead,
+} from '@/lib/api/notifications';
+
 interface NotificationsState {
-   // Data
    notifications: InboxItem[];
    selectedNotification: InboxItem | undefined;
+   hydrated: boolean;
+   hydrate: () => Promise<void>;
 
-   // Actions
    setSelectedNotification: (notification: InboxItem | undefined) => void;
    markAsRead: (id: string) => void;
    markAllAsRead: () => void;
    markAsUnread: (id: string) => void;
 
-   // Filters
    getUnreadNotifications: () => InboxItem[];
    getReadNotifications: () => InboxItem[];
    getNotificationsByType: (type: NotificationType) => InboxItem[];
    getNotificationsByUser: (userId: string) => InboxItem[];
-
-   // Utility functions
    getNotificationById: (id: string) => InboxItem | undefined;
    getUnreadCount: () => number;
 }
 
+const setRead = (list: InboxItem[], id: string, read: boolean) =>
+   list.map((n) => (n.id === id ? { ...n, read } : n));
+
 export const useNotificationsStore = create<NotificationsState>((set, get) => ({
-   // Initial state
    notifications: mockNotifications,
    selectedNotification: undefined,
+   hydrated: false,
 
-   // Actions
-   setSelectedNotification: (notification: InboxItem | undefined) => {
-      set({ selectedNotification: notification });
+   hydrate: async () => {
+      if (get().hydrated) return;
+      try {
+         set({ notifications: await fetchNotifications(), hydrated: true });
+      } catch (err) {
+         console.error(err);
+      }
    },
 
-   markAsRead: (id: string) => {
+   setSelectedNotification: (notification) => set({ selectedNotification: notification }),
+
+   markAsRead: (id) => {
       set((state) => ({
-         notifications: state.notifications.map((notification) =>
-            notification.id === id ? { ...notification, read: true } : notification
-         ),
+         notifications: setRead(state.notifications, id, true),
          selectedNotification:
             state.selectedNotification?.id === id
                ? { ...state.selectedNotification, read: true }
                : state.selectedNotification,
       }));
+      markNotificationRead(id, true).catch((e) => console.error(e));
    },
 
    markAllAsRead: () => {
       set((state) => ({
-         notifications: state.notifications.map((notification) => ({
-            ...notification,
-            read: true,
-         })),
+         notifications: state.notifications.map((n) => ({ ...n, read: true })),
          selectedNotification: state.selectedNotification
             ? { ...state.selectedNotification, read: true }
             : undefined,
       }));
+      markAllNotificationsRead().catch((e) => console.error(e));
    },
 
-   markAsUnread: (id: string) => {
+   markAsUnread: (id) => {
       set((state) => ({
-         notifications: state.notifications.map((notification) =>
-            notification.id === id ? { ...notification, read: false } : notification
-         ),
+         notifications: setRead(state.notifications, id, false),
          selectedNotification:
             state.selectedNotification?.id === id
                ? { ...state.selectedNotification, read: false }
                : state.selectedNotification,
       }));
+      markNotificationRead(id, false).catch((e) => console.error(e));
    },
 
-   // Filters
-   getUnreadNotifications: () => {
-      return get().notifications.filter((notification) => !notification.read);
-   },
-
-   getReadNotifications: () => {
-      return get().notifications.filter((notification) => notification.read);
-   },
-
-   getNotificationsByType: (type: NotificationType) => {
-      return get().notifications.filter((notification) => notification.type === type);
-   },
-
-   getNotificationsByUser: (userId: string) => {
-      return get().notifications.filter((notification) => notification.user.id === userId);
-   },
-
-   // Utility functions
-   getNotificationById: (id: string) => {
-      return get().notifications.find((notification) => notification.id === id);
-   },
-
-   getUnreadCount: () => {
-      return get().notifications.filter((notification) => !notification.read).length;
-   },
+   getUnreadNotifications: () => get().notifications.filter((n) => !n.read),
+   getReadNotifications: () => get().notifications.filter((n) => n.read),
+   getNotificationsByType: (type) => get().notifications.filter((n) => n.type === type),
+   getNotificationsByUser: (userId) => get().notifications.filter((n) => n.user.id === userId),
+   getNotificationById: (id) => get().notifications.find((n) => n.id === id),
+   getUnreadCount: () => get().notifications.filter((n) => !n.read).length,
 }));

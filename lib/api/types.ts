@@ -285,6 +285,20 @@ export const PR_STATUS_ENUM_TO_KEY: Record<string, string> = {
    DRAFT: 'draft',
 };
 
+/* -------------------------------------------------------------------------- */
+/*                             Notifications                                  */
+/* -------------------------------------------------------------------------- */
+
+export interface NotificationDTO {
+   id: string;
+   type: string; // comment | mention | assignment | status | reopened | closed | edited | created | upload
+   content: string;
+   actorId: string | null;
+   issueIdentifier: string | null;
+   read: boolean;
+   timestamp: string; // ISO
+}
+
 /* ------------------------------ health mapping ---------------------------- */
 // DB enum (ON_TRACK) <-> mock Health.id (on-track)
 
