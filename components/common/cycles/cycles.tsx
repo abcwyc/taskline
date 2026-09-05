@@ -1,6 +1,6 @@
 'use client';
 
-import { cycles } from '@/mock-data/cycles';
+import { useCyclesStore } from '@/store/cycles-store';
 import { format, parseISO } from 'date-fns';
 import { Fragment } from 'react';
 import CycleLine from './cycle-line';
@@ -11,6 +11,7 @@ import { CycleBurnupChart, CycleProgressLegend } from './cycle-burnup-chart';
  * newest first. The current cycle is expanded with its burn-up chart.
  */
 export default function Cycles() {
+   const cycles = useCyclesStore((s) => s.cycles);
    return (
       <div className="w-full py-4">
          {cycles.map((cycle) => (

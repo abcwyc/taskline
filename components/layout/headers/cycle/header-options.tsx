@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { IssueFilterTrigger } from '@/components/common/issues/issue-filter-trigger';
-import { getCurrentCycle, getUpcomingCycle } from '@/mock-data/cycles';
+import { useCyclesStore } from '@/store/cycles-store';
 import { useIssuesStore } from '@/store/issues-store';
 import { useRightPanelStore } from '@/store/right-panel-store';
 import { BarChart3, PanelRight } from 'lucide-react';
@@ -13,7 +13,9 @@ export default function HeaderOptions({ cycleView }: { cycleView: CycleView }) {
    const { openPanel, togglePanel } = useRightPanelStore();
    const { issues } = useIssuesStore();
 
-   const cycle = cycleView === 'active' ? getCurrentCycle() : getUpcomingCycle();
+   const cycle = useCyclesStore((s) =>
+      cycleView === 'active' ? s.getCurrentCycle() : s.getUpcomingCycle()
+   );
    const count = issues.filter((issue) => issue.cycleId === cycle.id).length;
 
    return (

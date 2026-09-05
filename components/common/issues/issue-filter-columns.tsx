@@ -4,7 +4,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { createColumnConfigHelper } from '@/components/data-table-filter/core/filters';
 import type { ColumnOption, FiltersState } from '@/components/data-table-filter/core/types';
 import { multiOptionFilterFn, optionFilterFn } from '@/components/data-table-filter/lib/filter-fns';
-import { cycles, cycleStatusLabel } from '@/mock-data/cycles';
+import { Cycle, cycles as mockCycles, cycleStatusLabel } from '@/mock-data/cycles';
+import { useCyclesStore } from '@/store/cycles-store';
 import { Issue } from '@/mock-data/issues';
 import { LabelInterface, labels as mockLabels } from '@/mock-data/labels';
 import { useLabelsStore } from '@/store/labels-store';
@@ -90,13 +91,13 @@ const buildProjectOptions = (projectList: Project[]): ColumnOption[] =>
       icon: <project.icon className="size-4 text-muted-foreground" />,
    }));
 
-const cycleOptions: ColumnOption[] = [
+const buildCycleOptions = (list: Cycle[]): ColumnOption[] => [
    {
       value: 'no-cycle',
       label: 'No cycle',
       icon: <RefreshCcw className="size-4 text-muted-foreground" />,
    },
-   ...cycles.map((cycle) => ({
+   ...list.map((cycle) => ({
       value: cycle.id,
       label: `${cycle.name} (${cycleStatusLabel[cycle.status]})`,
       icon: <RefreshCcw className="size-4 text-muted-foreground" />,
@@ -118,7 +119,8 @@ const dtf = createColumnConfigHelper<Issue>();
 function buildIssueFilterColumns(
    projectOptions: ColumnOption[],
    assigneeOptions: ColumnOption[],
-   labelOptions: ColumnOption[]
+   labelOptions: ColumnOption[],
+   cycleOptions: ColumnOption[]
 ) {
    return [
       dtf
@@ -188,22 +190,25 @@ function buildIssueFilterColumns(
 export const issueFilterColumns = buildIssueFilterColumns(
    buildProjectOptions(mockProjects),
    buildAssigneeOptions(mockUsers),
-   buildLabelOptions(mockLabels)
+   buildLabelOptions(mockLabels),
+   buildCycleOptions(mockCycles)
 );
 
-/** Filter-UI columns with the live (DB-backed) project + member + label lists. */
+/** Filter-UI columns with the live (DB-backed) project / member / label / cycle lists. */
 export function useIssueFilterColumns() {
    const projectList = useProjectsStore((s) => s.projects);
    const memberList = useMembersStore((s) => s.members);
    const labelList = useLabelsStore((s) => s.labels);
+   const cycleList = useCyclesStore((s) => s.cycles);
    return useMemo(
       () =>
          buildIssueFilterColumns(
             buildProjectOptions(projectList.length ? projectList : mockProjects),
             buildAssigneeOptions(memberList.length ? memberList : mockUsers),
-            buildLabelOptions(labelList.length ? labelList : mockLabels)
+            buildLabelOptions(labelList.length ? labelList : mockLabels),
+            buildCycleOptions(cycleList.length ? cycleList : mockCycles)
          ),
-      [projectList, memberList, labelList]
+      [projectList, memberList, labelList, cycleList]
    );
 }
 

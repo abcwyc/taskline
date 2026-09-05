@@ -2,7 +2,7 @@
 
 import { CyclePlayIcon } from '@/components/common/cycles/cycle-line';
 import { Button } from '@/components/ui/button';
-import { getCycleById } from '@/mock-data/cycles';
+import { useCyclesStore } from '@/store/cycles-store';
 import { IssueDetail } from '@/mock-data/issue-details';
 import { Issue } from '@/mock-data/issues';
 import { Ban, GitPullRequestArrow, Plus } from 'lucide-react';
@@ -31,7 +31,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
  * assignee), cycle, labels, project + milestone, relations and linked PRs.
  */
 export function IssuePropertiesPanel({ issue, detail }: IssuePropertiesPanelProps) {
-   const cycle = issue.cycleId ? getCycleById(issue.cycleId) : undefined;
+   const cycle = useCyclesStore((s) => (issue.cycleId ? s.getCycleById(issue.cycleId) : undefined));
 
    return (
       <div className="flex flex-col gap-7">

@@ -1,7 +1,7 @@
 'use client';
 
 import { CycleDetailsPanel } from '@/components/common/cycles/cycle-details-panel';
-import { getCurrentCycle, getUpcomingCycle } from '@/mock-data/cycles';
+import { useCyclesStore } from '@/store/cycles-store';
 import { displayOrderedStatus } from '@/mock-data/status';
 import { useFilterStore } from '@/store/filter-store';
 import { useIssuesStore } from '@/store/issues-store';
@@ -33,7 +33,9 @@ export default function CycleIssues({ cycleView }: CycleIssuesProps) {
    const { issues } = useIssuesStore();
    const { openPanel } = useRightPanelStore();
 
-   const cycle = cycleView === 'active' ? getCurrentCycle() : getUpcomingCycle();
+   const cycle = useCyclesStore((s) =>
+      cycleView === 'active' ? s.getCurrentCycle() : s.getUpcomingCycle()
+   );
 
    const isSearching = isSearchOpen && searchQuery.trim() !== '';
    const isViewTypeGrid = viewType === 'grid';

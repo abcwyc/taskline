@@ -4,7 +4,7 @@ import { CapacityRing } from '@/components/common/cycles/capacity-ring';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Issue } from '@/mock-data/issues';
-import { getCycleById } from '@/mock-data/cycles';
+import { useCyclesStore } from '@/store/cycles-store';
 import { ProjectDetail } from '@/mock-data/project-details';
 import { Project } from '@/mock-data/projects';
 import { useTeamsStore } from '@/store/teams-store';
@@ -112,6 +112,7 @@ function PropertyRow({ label, children }: { label: string; children: React.React
  */
 export function ProjectPropertiesPanel({ project, detail, issues }: ProjectPropertiesPanelProps) {
    const teams = useTeamsStore((s) => s.teams);
+   const cycles = useCyclesStore((s) => s.cycles);
    const panelFilter = usePanelFilter();
    const completed = issues.filter(isCompleted).length;
 
@@ -188,12 +189,12 @@ export function ProjectPropertiesPanel({ project, detail, issues }: ProjectPrope
             (issue) => (issue.cycleId === '' ? undefined : issue.cycleId),
             (key) => ({
                key: String(key),
-               label: getCycleById(String(key))?.name ?? `Cycle ${key}`,
+               label: cycles.find((c) => c.id === String(key))?.name ?? `Cycle ${key}`,
                leading: null,
                target: { columnId: 'cycle', value: String(key) },
             })
          ),
-      [issues]
+      [issues, cycles]
    );
 
    return (

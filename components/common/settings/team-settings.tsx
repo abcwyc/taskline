@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { getCyclesByTeam } from '@/mock-data/cycles';
+import { useCyclesStore } from '@/store/cycles-store';
 import { status } from '@/mock-data/status';
 import { useTeamsStore } from '@/store/teams-store';
 import {
@@ -31,6 +31,7 @@ interface TeamSettingsProps {
 /** Per-team settings page (general, workflow, AI and danger zone). */
 export default function TeamSettings({ teamId }: TeamSettingsProps) {
    const teams = useTeamsStore((s) => s.teams);
+   const cycles = useCyclesStore((s) => s.getCyclesByTeam(teamId));
    const { orgId } = useParams<{ orgId: string }>();
    const team = teams.find((candidate) => candidate.id === teamId);
 
@@ -41,8 +42,6 @@ export default function TeamSettings({ teamId }: TeamSettingsProps) {
          </div>
       );
    }
-
-   const cycles = getCyclesByTeam(team.id);
 
    return (
       <div className="w-full overflow-y-auto h-full">

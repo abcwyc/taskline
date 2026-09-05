@@ -2,7 +2,7 @@
 
 import { CyclePlayIcon } from '@/components/common/cycles/cycle-line';
 import { SidebarTrigger } from '@/components/ui/sidebar';
-import { getCurrentCycle, getUpcomingCycle } from '@/mock-data/cycles';
+import { useCyclesStore } from '@/store/cycles-store';
 import { useTeamsStore } from '@/store/teams-store';
 import { ChevronRight, MoreHorizontal, Star } from 'lucide-react';
 import Link from 'next/link';
@@ -13,7 +13,9 @@ export default function HeaderNav({ cycleView }: { cycleView: CycleView }) {
    const teams = useTeamsStore((s) => s.teams);
    const { orgId, teamId } = useParams<{ orgId: string; teamId: string }>();
    const team = teams.find((t) => t.id === teamId) ?? teams[0];
-   const cycle = cycleView === 'active' ? getCurrentCycle() : getUpcomingCycle();
+   const cycle = useCyclesStore((s) =>
+      cycleView === 'active' ? s.getCurrentCycle(teamId) : s.getUpcomingCycle(teamId)
+   );
 
    return (
       <div className="w-full flex justify-between items-center border-b py-1.5 px-6 h-10">

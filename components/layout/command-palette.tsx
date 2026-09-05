@@ -9,7 +9,8 @@ import {
    CommandItem,
    CommandList,
 } from '@/components/ui/command';
-import { cycles, formatCycleDateRange } from '@/mock-data/cycles';
+import { formatCycleDateRange } from '@/mock-data/cycles';
+import { useCyclesStore } from '@/store/cycles-store';
 import { Issue } from '@/mock-data/issues';
 import { useLabelsStore } from '@/store/labels-store';
 import { priorities } from '@/mock-data/priorities';
@@ -100,6 +101,7 @@ export function CommandPalette() {
    } = useIssuesStore();
    const { openModal } = useCreateIssueStore();
    const allProjects = useProjectsStore((s) => s.projects);
+   const cycles = useCyclesStore((s) => s.cycles);
 
    const orgId = pathname.split('/')[1] || 'lndev-ui';
 
