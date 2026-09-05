@@ -16,6 +16,7 @@
  * ----------------------------------------------------------------------------
  */
 
+import bcrypt from 'bcryptjs';
 import {
    PrismaClient,
    Prisma,
@@ -205,12 +206,16 @@ async function main() {
    });
 
    /* ------------------------------- users -------------------------------- */
+   // All demo users share the same password so you can log in as anyone.
+   const DEMO_PASSWORD = process.env.SEED_PASSWORD ?? 'password';
+   const demoHash = bcrypt.hashSync(DEMO_PASSWORD, 10);
    await db.user.createMany({
       data: mockUsers.map((u) => ({
          id: u.id,
          email: u.email,
          name: u.name,
          avatarUrl: u.avatarUrl,
+         passwordHash: demoHash,
          timezone: u.timezone,
          presence: PRESENCE[u.status] ?? PS.OFFLINE,
          createdAt: date(u.joinedDate) ?? new Date(),
@@ -621,7 +626,8 @@ async function main() {
       })
    );
 
-   console.log('\n✅ seed complete');
+   const admin = mockUsers.find((u) => u.role === 'Admin') ?? mockUsers[0];
+   console.log(`\n✅ seed complete — log in as ${admin.email} / ${DEMO_PASSWORD}`);
 }
 
 main()

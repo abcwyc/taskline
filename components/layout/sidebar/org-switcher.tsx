@@ -18,6 +18,7 @@ import {
    DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
+import { signOutAction } from '@/lib/auth-actions';
 import { CreateNewIssue } from './create-new-issue';
 import { ThemeToggle } from '../theme-toggle';
 import Link from 'next/link';
@@ -85,10 +86,14 @@ export function OrgSwitcher() {
                         </DropdownMenuSubContent>
                      </DropdownMenuPortal>
                   </DropdownMenuSub>
-                  <DropdownMenuItem>
-                     Log out
-                     <DropdownMenuShortcut>⌥⇧Q</DropdownMenuShortcut>
-                  </DropdownMenuItem>
+                  <form action={signOutAction}>
+                     <DropdownMenuItem asChild>
+                        <button type="submit" className="w-full cursor-pointer">
+                           Log out
+                           <DropdownMenuShortcut>⌥⇧Q</DropdownMenuShortcut>
+                        </button>
+                     </DropdownMenuItem>
+                  </form>
                </DropdownMenuContent>
             </DropdownMenu>
          </SidebarMenuItem>

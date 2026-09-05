@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { getRequestContext } from '@/lib/api/context';
+import { isContext, requireContext } from '@/lib/api/context';
 import { setMilestoneCompleted } from '@/lib/api/project-details.server';
 
 export const dynamic = 'force-dynamic';
@@ -10,7 +10,9 @@ export async function PATCH(
    req: NextRequest,
    { params }: { params: Promise<{ id: string; milestoneId: string }> }
 ) {
-   const { orgId } = await getRequestContext();
+   const ctx = await requireContext();
+   if (!isContext(ctx)) return ctx;
+   const { orgId } = ctx;
    const { id, milestoneId } = await params;
 
    let body: { completed?: unknown };

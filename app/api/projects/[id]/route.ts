@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { getRequestContext } from '@/lib/api/context';
+import { isContext, requireContext } from '@/lib/api/context';
 import { deleteProject, getProject, updateProject } from '@/lib/api/projects.server';
 import { ProjectUpdateBody } from '@/lib/api/types';
 
@@ -10,7 +10,9 @@ type Params = { params: Promise<{ id: string }> };
 
 // GET /api/projects/:id
 export async function GET(_req: NextRequest, { params }: Params) {
-   const { orgId } = await getRequestContext();
+   const ctx = await requireContext();
+   if (!isContext(ctx)) return ctx;
+   const { orgId } = ctx;
    const { id } = await params;
 
    const project = await getProject(orgId, id);
@@ -20,7 +22,9 @@ export async function GET(_req: NextRequest, { params }: Params) {
 
 // PATCH /api/projects/:id
 export async function PATCH(req: NextRequest, { params }: Params) {
-   const { orgId } = await getRequestContext();
+   const ctx = await requireContext();
+   if (!isContext(ctx)) return ctx;
+   const { orgId } = ctx;
    const { id } = await params;
 
    let body: unknown;
@@ -44,7 +48,9 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
 // DELETE /api/projects/:id
 export async function DELETE(_req: NextRequest, { params }: Params) {
-   const { orgId } = await getRequestContext();
+   const ctx = await requireContext();
+   if (!isContext(ctx)) return ctx;
+   const { orgId } = ctx;
    const { id } = await params;
 
    const ok = await deleteProject(orgId, id);

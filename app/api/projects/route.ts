@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { getRequestContext } from '@/lib/api/context';
+import { isContext, requireContext } from '@/lib/api/context';
 import { createProject, listProjects } from '@/lib/api/projects.server';
 import { ListProjectsQuery, ProjectCreateBody } from '@/lib/api/types';
 
@@ -8,7 +8,9 @@ export const dynamic = 'force-dynamic';
 
 // GET /api/projects?teamId=&initiativeId=&healthId=&statusId=&leadId=&q=
 export async function GET(req: NextRequest) {
-   const { orgId } = await getRequestContext();
+   const ctx = await requireContext();
+   if (!isContext(ctx)) return ctx;
+   const { orgId } = ctx;
    const sp = req.nextUrl.searchParams;
 
    const query: ListProjectsQuery = {};
@@ -22,7 +24,9 @@ export async function GET(req: NextRequest) {
 
 // POST /api/projects
 export async function POST(req: NextRequest) {
-   const { orgId } = await getRequestContext();
+   const ctx = await requireContext();
+   if (!isContext(ctx)) return ctx;
+   const { orgId } = ctx;
 
    let body: unknown;
    try {

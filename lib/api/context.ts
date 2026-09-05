@@ -1,26 +1,52 @@
 import 'server-only';
+import { NextResponse } from 'next/server';
+
+import { auth } from '@/lib/auth';
+import { db } from '@/lib/db';
 
 /**
- * Request context (org / current user).
+ * Per-request context (which workspace + who). Route handlers call
+ * `requireContext()` and bail early on the returned 401.
  *
- * TEMPLATE STUB: every API route needs to know which workspace it operates on.
- * Today it returns the seeded demo org. When you wire Auth.js:
- *
- *   import { auth } from '@/lib/auth';
- *   const session = await auth();
- *   if (!session) throw new UnauthorizedError();
- *   // resolve the membership for the `[orgId]` route segment and check it
- *
- * Keep the shape of this module stable — routes only call `getRequestContext()`.
+ * Today a user belongs to one workspace (the seeded org); when the UI grows a
+ * real org switcher, resolve `orgId` from the `[orgId]` route segment and check
+ * the membership here.
  */
 
 export interface RequestContext {
    orgId: string;
-   userId: string | null;
+   userId: string;
 }
 
-const DEMO_ORG = process.env.CIRCLE_DEFAULT_ORG ?? 'org_lndev';
+export class UnauthorizedError extends Error {}
 
 export async function getRequestContext(): Promise<RequestContext> {
-   return { orgId: DEMO_ORG, userId: null };
+   const session = await auth();
+   const userId = session?.user?.id;
+   if (!userId) throw new UnauthorizedError('not authenticated');
+
+   const membership = await db.membership.findFirst({
+      where: { userId },
+      orderBy: { joinedAt: 'asc' },
+      select: { orgId: true },
+   });
+   if (!membership) throw new UnauthorizedError('no workspace membership');
+
+   return { orgId: membership.orgId, userId };
+}
+
+/** Route-handler helper: returns the context, or a 401 `NextResponse` to return. */
+export async function requireContext(): Promise<RequestContext | NextResponse> {
+   try {
+      return await getRequestContext();
+   } catch (err) {
+      if (err instanceof UnauthorizedError) {
+         return NextResponse.json({ error: err.message }, { status: 401 });
+      }
+      throw err;
+   }
+}
+
+export function isContext(v: RequestContext | NextResponse): v is RequestContext {
+   return !(v instanceof NextResponse);
 }

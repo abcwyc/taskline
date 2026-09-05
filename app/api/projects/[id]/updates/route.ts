@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { getRequestContext } from '@/lib/api/context';
+import { isContext, requireContext } from '@/lib/api/context';
 import { addProjectUpdate } from '@/lib/api/project-details.server';
 import { PostProjectUpdateBody } from '@/lib/api/types';
 
@@ -8,7 +8,9 @@ export const dynamic = 'force-dynamic';
 
 // POST /api/projects/:id/updates
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-   const { orgId, userId } = await getRequestContext();
+   const ctx = await requireContext();
+   if (!isContext(ctx)) return ctx;
+   const { orgId, userId } = ctx;
    const { id } = await params;
 
    let body: unknown;
