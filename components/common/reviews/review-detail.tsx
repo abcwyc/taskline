@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { getReviewById } from '@/mock-data/reviews';
+import { useReviewsStore } from '@/store/reviews-store';
 import { Eye, Link2, MoreHorizontal, Play, Star } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -20,15 +20,9 @@ const SECTION_TABS: { key: ReviewSection; label: string; path: string }[] = [
 ];
 
 /** Right pane of the Reviews split view: breadcrumb, tabs and section body. */
-export function ReviewDetail({
-   reviewId,
-   section,
-}: {
-   reviewId: string;
-   section: ReviewSection;
-}) {
+export function ReviewDetail({ reviewId, section }: { reviewId: string; section: ReviewSection }) {
    const { orgId } = useParams<{ orgId: string }>();
-   const review = getReviewById(reviewId);
+   const review = useReviewsStore((s) => s.getReviewById(reviewId));
 
    if (!review) {
       return (

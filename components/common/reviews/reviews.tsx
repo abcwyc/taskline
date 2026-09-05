@@ -2,13 +2,8 @@
 
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
-import {
-   createdReviews,
-   forYouReviews,
-   Review,
-   ReviewList,
-   ReviewStatus,
-} from '@/mock-data/reviews';
+import type { Review, ReviewList, ReviewStatus } from '@/mock-data/reviews';
+import { useReviewsStore } from '@/store/reviews-store';
 import { ListFilter, SlidersHorizontal } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -123,6 +118,8 @@ export default function Reviews({
    section = 'overview',
 }: ReviewsProps) {
    const { orgId } = useParams<{ orgId: string }>();
+   const forYouReviews = useReviewsStore((s) => s.forYouReviews());
+   const createdReviews = useReviewsStore((s) => s.createdReviews());
    const source = listTab === 'for-you' ? forYouReviews : createdReviews;
 
    const groups = (['open', 'merged', 'closed'] as ReviewStatus[])

@@ -693,6 +693,7 @@ async function main() {
    await safe(`${mockReviews.length} reviews`, () =>
       db.review.createMany({
          data: mockReviews.map((r) => ({
+            id: r.id,
             orgId: ORG_ID,
             title: r.title,
             status: { open: RS.OPEN, merged: RS.MERGED, closed: RS.CLOSED }[r.status] ?? RS.OPEN,
