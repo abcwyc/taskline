@@ -3,7 +3,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { documentFolders } from '@/mock-data/documents';
+import { useDocumentsStore } from '@/store/documents-store';
 import { formatDistanceToNowStrict, parseISO } from 'date-fns';
 import { ChevronRight, Pin, Plus, SlidersHorizontal } from 'lucide-react';
 
@@ -21,6 +21,7 @@ const timeAgo = (date: string) =>
  * with created / last edited metadata.
  */
 export default function TeamDocuments() {
+   const documentFolders = useDocumentsStore((s) => s.folders);
    return (
       <div className="w-full">
          <div className="flex items-center justify-between px-6 py-3 gap-2">

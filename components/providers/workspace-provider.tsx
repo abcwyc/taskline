@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 
 import { useCyclesStore } from '@/store/cycles-store';
+import { useDocumentsStore } from '@/store/documents-store';
 import { useLabelsStore } from '@/store/labels-store';
 import { useMembersStore } from '@/store/members-store';
 import { useTeamsStore } from '@/store/teams-store';
@@ -20,6 +21,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
    const hydrateCycles = useCyclesStore((s) => s.hydrate);
    const hydrateViews = useViewsStore((s) => s.hydrate);
    const hydrateTriage = useTriageStore((s) => s.hydrate);
+   const hydrateDocuments = useDocumentsStore((s) => s.hydrate);
 
    useEffect(() => {
       void hydrateMembers();
@@ -28,7 +30,16 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       void hydrateCycles();
       void hydrateViews();
       void hydrateTriage();
-   }, [hydrateMembers, hydrateTeams, hydrateLabels, hydrateCycles, hydrateViews, hydrateTriage]);
+      void hydrateDocuments();
+   }, [
+      hydrateMembers,
+      hydrateTeams,
+      hydrateLabels,
+      hydrateCycles,
+      hydrateViews,
+      hydrateTriage,
+      hydrateDocuments,
+   ]);
 
    return <>{children}</>;
 }
