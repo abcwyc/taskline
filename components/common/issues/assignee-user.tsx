@@ -8,7 +8,8 @@ import {
    DropdownMenuSeparator,
    DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { statusUserColors, User, users } from '@/mock-data/users';
+import { statusUserColors, type User } from '@/mock-data/users';
+import { useMembersStore } from '@/store/members-store';
 import { CheckIcon, CircleUserRound, Send, UserIcon } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
@@ -17,6 +18,7 @@ interface AssigneeUserProps {
 }
 
 export function AssigneeUser({ user }: AssigneeUserProps) {
+   const users = useMembersStore((s) => s.members);
    const [open, setOpen] = useState(false);
    const [currentAssignee, setCurrentAssignee] = useState<User | null>(user);
 

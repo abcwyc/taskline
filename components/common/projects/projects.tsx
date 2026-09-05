@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Project } from '@/mock-data/projects';
-import { teams } from '@/mock-data/teams';
+import { useTeamsStore } from '@/store/teams-store';
 import { useProjectsStore } from '@/store/projects-store';
 import { useProjectsFilterStore } from '@/store/projects-filter-store';
 import { useProjectsDisplayStore } from '@/store/projects-display-store';
@@ -42,6 +42,7 @@ const CLOSED_CATEGORIES = new Set(['completed', 'canceled']);
  * options, views, insights) is scoped to that team's projects.
  */
 export default function Projects({ teamId }: { teamId?: string }) {
+   const teams = useTeamsStore((s) => s.teams);
    const allProjects = useProjectsStore((s) => s.projects);
    const { filters } = useProjectsFilterStore();
    const { viewTypes, grouping, ordering, closedProjects, showEmptyGroups } =
@@ -97,7 +98,7 @@ export default function Projects({ teamId }: { teamId?: string }) {
             projects: displayed.filter((project) => project.teamId === team.id),
          }))
          .filter((group) => showEmptyGroups || group.projects.length > 0);
-   }, [displayed, grouping, showEmptyGroups]);
+   }, [teams, displayed, grouping, showEmptyGroups]);
 
    return (
       <div className="w-full h-full flex flex-col overflow-hidden">

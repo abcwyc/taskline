@@ -3,7 +3,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ActivityItem } from '@/mock-data/issue-details';
-import { users } from '@/mock-data/users';
+import { useMembersStore } from '@/store/members-store';
 import {
    Ban,
    CircleDot,
@@ -81,6 +81,7 @@ function CommentCard({ item }: { item: Extract<ActivityItem, { kind: 'comment' }
  * comment composer (comments are kept in memory only).
  */
 export function ActivityFeed({ activity }: { activity: ActivityItem[] }) {
+   const users = useMembersStore((s) => s.members);
    const [items, setItems] = useState<ActivityItem[]>(activity);
    const [draft, setDraft] = useState('');
    const currentUser = users[0];

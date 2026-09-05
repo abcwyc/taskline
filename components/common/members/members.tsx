@@ -1,6 +1,6 @@
 'use client';
 
-import { users as allUsers } from '@/mock-data/users';
+import { useMembersStore } from '@/store/members-store';
 import MemberLine from './member-line';
 import { useMembersFilterStore } from '@/store/members-filter-store';
 import { ArrowDown } from 'lucide-react';
@@ -8,6 +8,7 @@ import { useMemo } from 'react';
 
 export default function Members() {
    const { filters, sort } = useMembersFilterStore();
+   const allUsers = useMembersStore((s) => s.members);
 
    const displayed = useMemo(() => {
       let list = allUsers.slice();

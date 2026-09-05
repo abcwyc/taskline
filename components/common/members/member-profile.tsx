@@ -11,8 +11,9 @@ import { Issue, issueCreatorIndex } from '@/mock-data/issues';
 import { labels } from '@/mock-data/labels';
 import { priorities } from '@/mock-data/priorities';
 import { useProjectsStore } from '@/store/projects-store';
-import { teams } from '@/mock-data/teams';
-import { statusUserColors, User, users } from '@/mock-data/users';
+import { useTeamsStore } from '@/store/teams-store';
+import { statusUserColors, type User } from '@/mock-data/users';
+import { useMembersStore } from '@/store/members-store';
 import { displayOrderedStatus } from '@/mock-data/status';
 import { useFilterStore } from '@/store/filter-store';
 import { useIssuesStore } from '@/store/issues-store';
@@ -100,6 +101,8 @@ function useClientTimes(member: User) {
  * per-label / priority / project / team breakdowns.
  */
 export default function MemberProfile({ member }: { member: User }) {
+   const teams = useTeamsStore((s) => s.teams);
+   const users = useMembersStore((s) => s.members);
    const { issues } = useIssuesStore();
    const projects = useProjectsStore((s) => s.projects);
    const [activeTab] = useQueryState('tab', parseAsString.withDefault('assigned'));
@@ -131,7 +134,7 @@ export default function MemberProfile({ member }: { member: User }) {
 
    const memberTeams = useMemo(
       () => teams.filter((team) => member.teamIds.includes(team.id)),
-      [member.teamIds]
+      [teams, member.teamIds]
    );
 
    const memberProjects = useMemo(() => {

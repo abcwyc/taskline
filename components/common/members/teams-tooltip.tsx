@@ -1,12 +1,13 @@
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { ContactRound } from 'lucide-react';
-import { teams } from '@/mock-data/teams';
+import { useTeamsStore } from '@/store/teams-store';
 
 interface TeamsTooltipProps {
    teamIds: string[];
 }
 
 export function TeamsTooltip({ teamIds }: TeamsTooltipProps) {
+   const teams = useTeamsStore((s) => s.teams);
    return (
       <Tooltip delayDuration={0}>
          <TooltipTrigger className="flex items-center gap-0.5 truncate">

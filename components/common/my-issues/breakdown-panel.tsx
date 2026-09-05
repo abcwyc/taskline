@@ -2,7 +2,7 @@
 
 import { cn } from '@/lib/utils';
 import { Issue } from '@/mock-data/issues';
-import { teams } from '@/mock-data/teams';
+import { useTeamsStore } from '@/store/teams-store';
 import { useRightPanelStore } from '@/store/right-panel-store';
 import { X } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -43,6 +43,7 @@ const PRIORITY_COLORS: Record<string, string> = {
  * over the currently displayed issues (Linear side panel).
  */
 export function BreakdownPanel({ issues }: { issues: Issue[] }) {
+   const teams = useTeamsStore((s) => s.teams);
    const { closePanel } = useRightPanelStore();
    const [tab, setTab] = useState<BreakdownTab>('labels');
 

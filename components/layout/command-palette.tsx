@@ -15,8 +15,8 @@ import { labels as allLabels } from '@/mock-data/labels';
 import { priorities } from '@/mock-data/priorities';
 import { useProjectsStore } from '@/store/projects-store';
 import { status as allStatus } from '@/mock-data/status';
-import { teams } from '@/mock-data/teams';
-import { users } from '@/mock-data/users';
+import { useTeamsStore } from '@/store/teams-store';
+import { useMembersStore } from '@/store/members-store';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useCreateIssueStore } from '@/store/create-issue-store';
 import { useIssuesStore } from '@/store/issues-store';
@@ -77,6 +77,8 @@ function Keys({ keys }: { keys: string[] }) {
 
 /** ⌘K command palette — Linear-style, aware of the issue in context. */
 export function CommandPalette() {
+   const teams = useTeamsStore((s) => s.teams);
+   const users = useMembersStore((s) => s.members);
    const [open, setOpen] = useState(false);
    const [route, setRoute] = useState<PaletteRoute>('root');
    const [query, setQuery] = useState('');

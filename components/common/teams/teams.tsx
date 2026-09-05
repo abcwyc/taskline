@@ -1,6 +1,6 @@
 'use client';
 
-import { teams as allTeams } from '@/mock-data/teams';
+import { useTeamsStore } from '@/store/teams-store';
 import { useTeamsFilterStore } from '@/store/team-filter-store';
 import { useTeamsDisplayStore } from '@/store/teams-display-store';
 import { useMemo } from 'react';
@@ -9,6 +9,7 @@ import TeamLine from './team-line';
 import { TeamsDisplayOptions } from './teams-display-options';
 
 export default function Teams() {
+   const allTeams = useTeamsStore((s) => s.teams);
    const { filters } = useTeamsFilterStore();
    const { ordering, displayProperties } = useTeamsDisplayStore();
 

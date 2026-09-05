@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { health as healthList, Project } from '@/mock-data/projects';
-import { teams } from '@/mock-data/teams';
-import { users } from '@/mock-data/users';
+import { useTeamsStore } from '@/store/teams-store';
+import { useMembersStore } from '@/store/members-store';
 import { useProjectsFilterStore } from '@/store/projects-filter-store';
 import { useRightPanelStore } from '@/store/right-panel-store';
 import { X } from 'lucide-react';
@@ -64,6 +64,8 @@ function CountList({ rows }: { rows: CountRow[] }) {
 
 /** Right panel of the Projects page: counters by health / team / lead. */
 export default function ProjectsInsightsPanel({ projects }: ProjectsInsightsPanelProps) {
+   const teams = useTeamsStore((s) => s.teams);
+   const users = useMembersStore((s) => s.members);
    const { closePanel } = useRightPanelStore();
    const { filters, toggleFilter } = useProjectsFilterStore();
 
@@ -73,7 +75,10 @@ export default function ProjectsInsightsPanel({ projects }: ProjectsInsightsPane
             key: entry.id,
             label: entry.id === 'no-update' ? 'No update expected' : entry.name,
             leading: (
-               <span className="size-2.5 rounded-full shrink-0" style={{ backgroundColor: entry.color }} />
+               <span
+                  className="size-2.5 rounded-full shrink-0"
+                  style={{ backgroundColor: entry.color }}
+               />
             ),
             count: projects.filter((project) => project.health.id === entry.id).length,
             onClick: () => toggleFilter('health', entry.id),

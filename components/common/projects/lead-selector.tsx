@@ -10,7 +10,8 @@ import {
    CommandList,
 } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { users, User } from '@/mock-data/users';
+import type { User } from '@/mock-data/users';
+import { useMembersStore } from '@/store/members-store';
 import { CheckIcon } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useId, useState } from 'react';
@@ -21,6 +22,7 @@ interface LeadSelectorProps {
 }
 
 export function LeadSelector({ lead, onLeadChange }: LeadSelectorProps) {
+   const users = useMembersStore((s) => s.members);
    const id = useId();
    const [open, setOpen] = useState<boolean>(false);
    const [value, setValue] = useState<string>(lead.id);

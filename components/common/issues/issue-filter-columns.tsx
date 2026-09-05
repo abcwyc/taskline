@@ -10,7 +10,8 @@ import { labels } from '@/mock-data/labels';
 import { priorities } from '@/mock-data/priorities';
 import { status, StatusCategory } from '@/mock-data/status';
 import { Project, projects as mockProjects } from '@/mock-data/projects';
-import { users } from '@/mock-data/users';
+import { User, users as mockUsers } from '@/mock-data/users';
+import { useMembersStore } from '@/store/members-store';
 import { useProjectsStore } from '@/store/projects-store';
 import { useMemo } from 'react';
 import {
@@ -48,13 +49,14 @@ const statusTypeOptions: ColumnOption[] = STATUS_TYPES.map((item) => ({
    icon: <CircleDashed className="size-4 text-muted-foreground" />,
 }));
 
-const assigneeOptions: ColumnOption[] = [
+/** Assignee options are dynamic (members are DB-backed). */
+const buildAssigneeOptions = (members: User[]): ColumnOption[] => [
    {
       value: 'unassigned',
       label: 'Unassigned',
       icon: <CircleUserRound className="size-4 text-muted-foreground" />,
    },
-   ...users.map((user) => ({
+   ...members.map((user) => ({
       value: user.id,
       label: user.name,
       icon: (
@@ -107,11 +109,11 @@ const dtf = createColumnConfigHelper<Issue>();
 
 /**
  * Builds the filterable issue columns for the bazza/ui data-table-filter.
- * Only `projectOptions` varies (projects are DB-backed) — everything else is a
- * static list. Accessors return the raw values the filter functions compare
- * against and never depend on the option lists.
+ * `projectOptions` / `assigneeOptions` vary (projects + members are DB-backed);
+ * everything else is a static list. Accessors return the raw values the filter
+ * functions compare against and never depend on the option lists.
  */
-function buildIssueFilterColumns(projectOptions: ColumnOption[]) {
+function buildIssueFilterColumns(projectOptions: ColumnOption[], assigneeOptions: ColumnOption[]) {
    return [
       dtf
          .option()
@@ -177,17 +179,22 @@ function buildIssueFilterColumns(projectOptions: ColumnOption[]) {
  * no options needed) and as the SSR/pre-hydrate fallback. The filter UI uses
  * `useIssueFilterColumns()` instead so the Project list stays live.
  */
-export const issueFilterColumns = buildIssueFilterColumns(buildProjectOptions(mockProjects));
+export const issueFilterColumns = buildIssueFilterColumns(
+   buildProjectOptions(mockProjects),
+   buildAssigneeOptions(mockUsers)
+);
 
-/** Filter-UI columns with the live (DB-backed) project list. */
+/** Filter-UI columns with the live (DB-backed) project + member lists. */
 export function useIssueFilterColumns() {
    const projectList = useProjectsStore((s) => s.projects);
+   const memberList = useMembersStore((s) => s.members);
    return useMemo(
       () =>
          buildIssueFilterColumns(
-            buildProjectOptions(projectList.length ? projectList : mockProjects)
+            buildProjectOptions(projectList.length ? projectList : mockProjects),
+            buildAssigneeOptions(memberList.length ? memberList : mockUsers)
          ),
-      [projectList]
+      [projectList, memberList]
    );
 }
 

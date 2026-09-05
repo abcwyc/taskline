@@ -4,7 +4,7 @@ import { CyclePlayIcon } from '@/components/common/cycles/cycle-line';
 import { Button } from '@/components/ui/button';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { getCycleById } from '@/mock-data/cycles';
-import { teams } from '@/mock-data/teams';
+import { useTeamsStore } from '@/store/teams-store';
 import { useIssuesStore } from '@/store/issues-store';
 import { ChevronDown, ChevronRight, ChevronUp, MoreHorizontal, Star } from 'lucide-react';
 import Link from 'next/link';
@@ -15,6 +15,7 @@ import { useParams } from 'next/navigation';
  * previous / next navigation across the issue list.
  */
 export default function HeaderNav() {
+   const teams = useTeamsStore((s) => s.teams);
    const { orgId, issueId } = useParams<{ orgId: string; issueId: string }>();
    const { issues } = useIssuesStore();
 

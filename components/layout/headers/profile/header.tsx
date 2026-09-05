@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { issueCreatorIndex } from '@/mock-data/issues';
-import { User, users } from '@/mock-data/users';
+import type { User } from '@/mock-data/users';
+import { useMembersStore } from '@/store/members-store';
 import { cn } from '@/lib/utils';
 import { useIssuesStore } from '@/store/issues-store';
 import { useRightPanelStore } from '@/store/right-panel-store';
@@ -120,6 +121,7 @@ export default function Header({ member }: { member: User }) {
    const { orgId } = useParams<{ orgId: string }>();
    const [activeTab] = useQueryState('tab', parseAsString.withDefault('assigned'));
    const { issues } = useIssuesStore();
+   const users = useMembersStore((s) => s.members);
    const { openPanel, togglePanel } = useRightPanelStore();
 
    const memberIndex = Math.max(
@@ -177,7 +179,9 @@ export default function Header({ member }: { member: User }) {
                </Button>
                <Button
                   size="xs"
-                  variant={openPanel !== 'hidden' && openPanel !== 'insights' ? 'secondary' : 'ghost'}
+                  variant={
+                     openPanel !== 'hidden' && openPanel !== 'insights' ? 'secondary' : 'ghost'
+                  }
                   onClick={() => togglePanel('hidden')}
                   aria-label="Toggle profile panel"
                >

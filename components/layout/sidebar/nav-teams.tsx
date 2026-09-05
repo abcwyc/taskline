@@ -35,11 +35,12 @@ import {
    SidebarMenuSubItem,
 } from '@/components/ui/sidebar';
 import { StatusTriageIcon } from '@/mock-data/status';
-import { teams } from '@/mock-data/teams';
+import { useTeamsStore } from '@/store/teams-store';
 import { useTriageStore } from '@/store/triage-store';
 import { RiDonutChartFill } from '@remixicon/react';
 
 export function NavTeams() {
+   const teams = useTeamsStore((s) => s.teams);
    const joinedTeams = teams.filter((t) => t.joined);
    const { items: triageQueue } = useTriageStore();
    return (

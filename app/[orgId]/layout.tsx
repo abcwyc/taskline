@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 
 import { IssuesProvider } from '@/components/providers/issues-provider';
 import { ProjectsProvider } from '@/components/providers/projects-provider';
+import { TeamsProvider } from '@/components/providers/teams-provider';
 import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
 
@@ -29,8 +30,10 @@ export default async function OrgLayout({
    if (!member) redirect('/');
 
    return (
-      <IssuesProvider>
-         <ProjectsProvider>{children}</ProjectsProvider>
-      </IssuesProvider>
+      <TeamsProvider>
+         <ProjectsProvider>
+            <IssuesProvider>{children}</IssuesProvider>
+         </ProjectsProvider>
+      </TeamsProvider>
    );
 }

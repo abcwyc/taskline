@@ -3,7 +3,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { documentFolders } from '@/mock-data/documents';
-import { teams } from '@/mock-data/teams';
+import { useTeamsStore } from '@/store/teams-store';
 import { RiDonutChartFill } from '@remixicon/react';
 import { Box, CopyMinus, Layers, Plus, Settings, SquareStack } from 'lucide-react';
 import Link from 'next/link';
@@ -14,6 +14,7 @@ import { useParams } from 'next/navigation';
  * quick links, Linear-style.
  */
 export default function TeamOverview() {
+   const teams = useTeamsStore((s) => s.teams);
    const { orgId, teamId } = useParams<{ orgId: string; teamId: string }>();
    const team = teams.find((t) => t.id === teamId) ?? teams[0];
 

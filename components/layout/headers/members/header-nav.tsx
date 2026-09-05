@@ -2,10 +2,11 @@
 
 import { Button } from '@/components/ui/button';
 import { SidebarTrigger } from '@/components/ui/sidebar';
-import { users } from '@/mock-data/users';
+import { useMembersStore } from '@/store/members-store';
 import { Plus } from 'lucide-react';
 
 export default function HeaderNav() {
+   const users = useMembersStore((s) => s.members);
    return (
       <div className="w-full flex justify-between items-center border-b py-1.5 px-6 h-10">
          <div className="flex items-center gap-2">

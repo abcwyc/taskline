@@ -10,11 +10,12 @@ import {
    SidebarMenuButton,
    SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { teams } from '@/mock-data/teams';
+import { useTeamsStore } from '@/store/teams-store';
 import { Button } from '@/components/ui/button';
 import { useParams } from 'next/navigation';
 
 export function NavTeamsSettings() {
+   const teams = useTeamsStore((s) => s.teams);
    const { orgId } = useParams<{ orgId: string }>();
    const joinedTeams = teams.filter((t) => t.joined);
    return (

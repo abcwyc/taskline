@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { getInitiativeProjects, Initiative } from '@/mock-data/initiatives';
 import { health as allHealth } from '@/mock-data/projects';
-import { teams } from '@/mock-data/teams';
+import { useTeamsStore } from '@/store/teams-store';
 import { UserRound } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
@@ -21,6 +21,7 @@ interface BreakdownRow {
 
 /** Right side panel of the Initiatives page: counts by owner / team / health. */
 export function InitiativesSidePanel({ initiatives }: { initiatives: Initiative[] }) {
+   const teams = useTeamsStore((s) => s.teams);
    const [tab, setTab] = useState<PanelTab>('owner');
 
    const rows = useMemo<BreakdownRow[]>(() => {
@@ -51,7 +52,8 @@ export function InitiativesSidePanel({ initiatives }: { initiatives: Initiative[
                if (!team) continue;
                const existing = byTeam.get(teamId);
                if (existing) existing.count += 1;
-               else byTeam.set(teamId, { key: teamId, label: team.name, icon: team.icon, count: 1 });
+               else
+                  byTeam.set(teamId, { key: teamId, label: team.name, icon: team.icon, count: 1 });
             }
          }
          return [...byTeam.values()].sort((a, b) => b.count - a.count);

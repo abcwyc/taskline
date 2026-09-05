@@ -2,7 +2,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { teams } from '@/mock-data/teams';
+import { useTeamsStore } from '@/store/teams-store';
 import { Plus, SlidersHorizontal } from 'lucide-react';
 import { useParams } from 'next/navigation';
 
@@ -11,6 +11,7 @@ import { useParams } from 'next/navigation';
  * their email and role.
  */
 export default function TeamMembers() {
+   const teams = useTeamsStore((s) => s.teams);
    const { teamId } = useParams<{ orgId: string; teamId: string }>();
    const team = teams.find((t) => t.id === teamId) ?? teams[0];
 

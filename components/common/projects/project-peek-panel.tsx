@@ -2,7 +2,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { getProjectById as mockGetProjectById } from '@/mock-data/projects';
-import { teams } from '@/mock-data/teams';
+import { useTeamsStore } from '@/store/teams-store';
 import { useIssuesStore } from '@/store/issues-store';
 import { useProjectsStore } from '@/store/projects-store';
 import { useProjectDetail } from '@/store/project-details-store';
@@ -55,6 +55,7 @@ function Card({ children, className }: { children: React.ReactNode; className?: 
  * progress cards stacked over the right side of the timeline.
  */
 export function ProjectPeekPanel({ projectId, onClose }: ProjectPeekPanelProps) {
+   const teams = useTeamsStore((s) => s.teams);
    const { orgId } = useParams<{ orgId: string }>();
    const { issues: allIssues } = useIssuesStore();
 

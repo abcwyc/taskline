@@ -30,8 +30,8 @@ import {
 } from '@/mock-data/initiatives';
 import { priorities } from '@/mock-data/priorities';
 import { health as allHealth } from '@/mock-data/projects';
-import { teams } from '@/mock-data/teams';
-import { users } from '@/mock-data/users';
+import { useTeamsStore } from '@/store/teams-store';
+import { useMembersStore } from '@/store/members-store';
 import { InitiativesFilterType, useInitiativesFilterStore } from '@/store/initiatives-filter-store';
 import {
    InitiativesDisplayProperties,
@@ -65,6 +65,7 @@ const TAB_ITEMS: { label: string; value: (typeof TABS)[number] }[] = [
 /* --------------------------------- filter --------------------------------- */
 
 function InitiativesFilter() {
+   const users = useMembersStore((s) => s.members);
    const [open, setOpen] = useState(false);
    const [active, setActive] = useState<InitiativesFilterType | null>(null);
    const { filters, toggleFilter, clearFilters, getActiveFiltersCount } =
@@ -325,6 +326,7 @@ function InitiativeRow({
    orgId: string;
    showStatus: boolean;
 }) {
+   const teams = useTeamsStore((s) => s.teams);
    const { displayProperties } = useInitiativesDisplayStore();
    const projects = getInitiativeProjects(initiative);
    const completed = countCompletedProjects(initiative);

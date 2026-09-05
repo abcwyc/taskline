@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { getInitiativeProjects, Initiative } from '@/mock-data/initiatives';
 import { health as allHealth } from '@/mock-data/projects';
-import { teams } from '@/mock-data/teams';
+import { useTeamsStore } from '@/store/teams-store';
 import { useMemo, useState } from 'react';
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
 
@@ -23,6 +23,7 @@ interface ProgressPoint {
 
 /** Progress area chart + Health/Status/Teams/Leads breakdown of an initiative. */
 export function InitiativeProgressPanel({ initiative }: { initiative: Initiative }) {
+   const teams = useTeamsStore((s) => s.teams);
    const [tab, setTab] = useState<BreakdownTab>('teams');
    const projects = useMemo(() => getInitiativeProjects(initiative), [initiative]);
 

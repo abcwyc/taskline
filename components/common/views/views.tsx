@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { issueViews, projectViews, View } from '@/mock-data/views';
-import { teams } from '@/mock-data/teams';
+import { useTeamsStore } from '@/store/teams-store';
 import { useViewsDisplayStore, ViewsOrdering } from '@/store/views-display-store';
 import { ArrowDown, Plus, SlidersHorizontal } from 'lucide-react';
 import Link from 'next/link';
@@ -143,6 +143,7 @@ function ViewRow({ view, orgId }: { view: View; orgId: string }) {
  * workspace is shown.
  */
 export default function Views({ teamId }: { teamId?: string }) {
+   const teams = useTeamsStore((s) => s.teams);
    const { orgId } = useParams<{ orgId: string }>();
    const [tab, setTab] = useQueryState('tab', parseAsStringLiteral(TABS).withDefault('issues'));
    const { ordering } = useViewsDisplayStore();

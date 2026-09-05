@@ -117,6 +117,64 @@ export interface ListProjectsQuery {
    q?: string;
 }
 
+/* -------------------------------------------------------------------------- */
+/*                              Teams / members                               */
+/* -------------------------------------------------------------------------- */
+
+export interface TeamDTO {
+   id: string; // team key, e.g. "CORE" — also the [teamId] route segment
+   name: string;
+   icon: string;
+   color: string;
+   joined: boolean; // is the current user a member (per-request)
+   memberIds: string[];
+   projectIds: string[];
+   createdAt: string;
+}
+
+export type TeamCreateBody = Partial<Pick<TeamDTO, 'id' | 'name' | 'icon' | 'color'>>;
+export type TeamUpdateBody = Partial<Pick<TeamDTO, 'name' | 'icon' | 'color'>> & {
+   joined?: boolean; // join / leave for the current user
+};
+
+export interface MemberDTO {
+   id: string;
+   name: string;
+   email: string;
+   avatarUrl: string | null;
+   status: string; // "online" | "offline" | "away"
+   role: string; // "Member" | "Admin" | "Guest" | "Application"
+   joinedDate: string; // ISO date
+   timezone: string;
+   teamIds: string[];
+}
+
+export type MemberUpdateBody = Partial<Pick<MemberDTO, 'role' | 'timezone' | 'name'>>;
+
+export const PRESENCE_ENUM_TO_KEY: Record<string, string> = {
+   ONLINE: 'online',
+   OFFLINE: 'offline',
+   AWAY: 'away',
+};
+export const PRESENCE_KEY_TO_ENUM: Record<string, string> = {
+   online: 'ONLINE',
+   offline: 'OFFLINE',
+   away: 'AWAY',
+};
+
+export const ROLE_ENUM_TO_KEY: Record<string, string> = {
+   ADMIN: 'Admin',
+   MEMBER: 'Member',
+   GUEST: 'Guest',
+   APPLICATION: 'Application',
+};
+export const ROLE_KEY_TO_ENUM: Record<string, string> = {
+   Admin: 'ADMIN',
+   Member: 'MEMBER',
+   Guest: 'GUEST',
+   Application: 'APPLICATION',
+};
+
 /* ------------------------------ health mapping ---------------------------- */
 // DB enum (ON_TRACK) <-> mock Health.id (on-track)
 

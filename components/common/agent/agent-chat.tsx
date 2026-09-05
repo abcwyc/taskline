@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { agentExamples, agentSkills } from '@/mock-data/agent';
-import { users } from '@/mock-data/users';
+import { useMembersStore } from '@/store/members-store';
 import { useAgentChatStore } from '@/store/agent-chat-store';
 import { ArrowUp, Blocks, Bot, ChevronDown, Paperclip, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
@@ -154,6 +154,7 @@ function ChatComposer({
  * client store and can be revisited from the header dropdown.
  */
 export default function AgentChat() {
+   const users = useMembersStore((s) => s.members);
    const { chats, activeChatId, sendMessage } = useAgentChatStore();
    const stream = useStreamReply();
    const [bannerDismissed, setBannerDismissed] = useState(false);

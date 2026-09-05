@@ -37,7 +37,7 @@ import React, { useState } from 'react';
 import { useIssuesStore } from '@/store/issues-store';
 import { status } from '@/mock-data/status';
 import { priorities } from '@/mock-data/priorities';
-import { users } from '@/mock-data/users';
+import { useMembersStore } from '@/store/members-store';
 import { labels } from '@/mock-data/labels';
 import { useProjectsStore } from '@/store/projects-store';
 import { toast } from 'sonner';
@@ -61,6 +61,7 @@ export function IssueContextMenu({ issueId }: IssueContextMenuProps) {
       getIssueById,
    } = useIssuesStore();
    const projects = useProjectsStore((s) => s.projects);
+   const users = useMembersStore((s) => s.members);
 
    const handleStatusChange = (statusId: string) => {
       if (!issueId) return;
