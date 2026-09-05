@@ -5,12 +5,8 @@ import { InsightsPanel } from '@/components/common/issues/insights-panel';
 import ProjectsList from '@/components/common/projects/projects-list';
 import { ProjectGroup } from '@/components/common/projects/projects';
 import { status as allStatus } from '@/mock-data/status';
-import {
-   filterIssuesForView,
-   filterProjectsForView,
-   getViewById,
-   View,
-} from '@/mock-data/views';
+import type { View } from '@/mock-data/views';
+import { filterIssuesForView, filterProjectsForView, useViewsStore } from '@/store/views-store';
 import { useRightPanelStore } from '@/store/right-panel-store';
 import { useMemo } from 'react';
 
@@ -58,7 +54,7 @@ function ProjectViewBody({ view }: { view: View }) {
 
 /** Saved-view detail page: filtered issues (with insights) or projects. */
 export default function ViewDetails({ viewId }: { viewId: string }) {
-   const view = getViewById(viewId);
+   const view = useViewsStore((s) => s.getViewById(viewId));
 
    if (!view) {
       return (

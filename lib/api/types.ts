@@ -348,6 +348,73 @@ export const INITIATIVE_STATUS_KEY_TO_ENUM: Record<string, string> = {
    canceled: 'CANCELED',
 };
 
+/* -------------------------------------------------------------------------- */
+/*                              Saved views                                   */
+/* -------------------------------------------------------------------------- */
+
+export interface ViewDTO {
+   id: string;
+   name: string;
+   description: string;
+   icon: string;
+   type: string; // "issue" | "project"
+   teamId: string | null; // team key
+   ownerId: string;
+   filter: Record<string, unknown>;
+   createdAt: string;
+   updatedAt: string;
+}
+
+export type ViewCreateBody = Partial<
+   Pick<ViewDTO, 'name' | 'description' | 'icon' | 'type' | 'teamId' | 'filter'>
+>;
+export type ViewUpdateBody = ViewCreateBody;
+
+/* -------------------------------------------------------------------------- */
+/*                                Documents                                   */
+/* -------------------------------------------------------------------------- */
+
+export interface DocumentDTO {
+   id: string;
+   name: string;
+   icon: string;
+   pinned: boolean;
+   creatorId: string;
+   createdAt: string;
+   updatedAt: string;
+}
+
+export interface DocumentFolderDTO {
+   id: string;
+   name: string;
+   icon: string;
+   documents: DocumentDTO[];
+}
+
+export type DocumentCreateBody = Partial<Pick<DocumentDTO, 'name' | 'icon' | 'pinned'>> & {
+   folderId?: string;
+};
+export type DocumentUpdateBody = Partial<Pick<DocumentDTO, 'name' | 'icon' | 'pinned'>>;
+
+/* -------------------------------------------------------------------------- */
+/*                                 Triage                                     */
+/* -------------------------------------------------------------------------- */
+
+export interface TriageItemDTO {
+   id: string;
+   identifier: string;
+   title: string;
+   teamId: string; // team key
+   reporterKind: string; // "user" | "integration"
+   reporterUserId: string | null;
+   reporterName: string | null;
+   receivedAt: string;
+   sections: unknown[];
+   intelligence: Record<string, unknown>;
+   preview: Record<string, unknown> | null;
+   status: string; // pending | accepted | declined | snoozed
+}
+
 /* ------------------------------ health mapping ---------------------------- */
 // DB enum (ON_TRACK) <-> mock Health.id (on-track)
 

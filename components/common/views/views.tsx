@@ -11,7 +11,8 @@ import {
    SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { issueViews, projectViews, View } from '@/mock-data/views';
+import type { View } from '@/mock-data/views';
+import { useViewsStore } from '@/store/views-store';
 import { useTeamsStore } from '@/store/teams-store';
 import { useViewsDisplayStore, ViewsOrdering } from '@/store/views-display-store';
 import { ArrowDown, Plus, SlidersHorizontal } from 'lucide-react';
@@ -144,6 +145,8 @@ function ViewRow({ view, orgId }: { view: View; orgId: string }) {
  */
 export default function Views({ teamId }: { teamId?: string }) {
    const teams = useTeamsStore((s) => s.teams);
+   const issueViews = useViewsStore((s) => s.issueViews());
+   const projectViews = useViewsStore((s) => s.projectViews());
    const { orgId } = useParams<{ orgId: string }>();
    const [tab, setTab] = useQueryState('tab', parseAsStringLiteral(TABS).withDefault('issues'));
    const { ordering } = useViewsDisplayStore();
@@ -157,7 +160,7 @@ export default function Views({ teamId }: { teamId?: string }) {
          if (ordering === 'updated') return b.updatedAt.localeCompare(a.updatedAt);
          return a.name.localeCompare(b.name);
       });
-   }, [tab, ordering, teamId]);
+   }, [issueViews, projectViews, tab, ordering, teamId]);
 
    return (
       <div className="w-full h-full overflow-y-auto">
