@@ -1,18 +1,19 @@
-import { Issue } from '@/mock-data/issues';
-import { priorities } from '@/mock-data/priorities';
-import { status } from '@/mock-data/status';
-import { TriageItem, triageItems } from '@/mock-data/triage';
+import { TriageItem } from '@/mock-data/triage';
 import { create } from 'zustand';
+import { toast } from 'sonner';
+
+import { acceptTriageItem, fetchTriageItems, setTriageItemStatus } from '@/lib/api/triage';
 import { useIssuesStore } from './issues-store';
 
 /**
- * The intake queue. Accept promotes the item into a real Todo issue (it lands
- * in the issues store), Decline and Snooze just clear it from the queue —
- * everything in memory, like every other store here.
+ * The team intake queue. Accept promotes the item into a real issue
+ * (persisted, and mirrored into the issues store), Decline / Snooze mark it.
  */
 interface TriageState {
    items: TriageItem[];
    selectedId: string | null;
+   hydrated: boolean;
+   hydrate: () => Promise<void>;
 
    select: (id: string | null) => void;
    itemsForTeam: (teamId: string) => TriageItem[];
@@ -22,59 +23,69 @@ interface TriageState {
    snooze: (id: string) => void;
 }
 
-/** Next item to select once `id` leaves the team's queue. */
 const nextSelection = (items: TriageItem[], id: string): string | null => {
-   const scoped = items.filter((item) => item.id !== id);
    const gone = items.find((item) => item.id === id);
    if (!gone) return null;
-   const sibling = scoped.find((item) => item.teamId === gone.teamId);
+   const sibling = items.find((item) => item.id !== id && item.teamId === gone.teamId);
    return sibling?.id ?? null;
 };
 
-const toIssue = (item: TriageItem): Issue => ({
-   id: `issue-${item.id}`,
-   identifier: item.identifier,
-   title: item.title,
-   description: item.sections.map((section) => section.body).join('\n\n'),
-   status: status.find((s) => s.id === 'to-do') ?? status[0],
-   assignee: item.intelligence.suggestedAssignee ?? null,
-   priority: priorities[0],
-   labels: item.intelligence.suggestedLabels,
-   createdAt: new Date().toISOString().slice(0, 10),
-   cycleId: '',
-   project: item.intelligence.suggestedProject,
-   rank: '',
-});
-
 export const useTriageStore = create<TriageState>((set, get) => ({
-   items: triageItems,
+   items: [],
    selectedId: null,
+   hydrated: false,
+
+   hydrate: async () => {
+      if (get().hydrated) return;
+      try {
+         set({ items: await fetchTriageItems(), hydrated: true });
+      } catch (err) {
+         console.error(err);
+      }
+   },
 
    select: (id) => set({ selectedId: id }),
-
    itemsForTeam: (teamId) => get().items.filter((item) => item.teamId === teamId),
-
    pendingCount: (teamId) => get().items.filter((item) => item.teamId === teamId).length,
 
    accept: (id) => {
-      const item = get().items.find((entry) => entry.id === id);
-      if (!item) return;
-      useIssuesStore.getState().addIssue(toIssue(item));
+      const snapshot = get().items;
       set((state) => ({
          items: state.items.filter((entry) => entry.id !== id),
          selectedId: nextSelection(state.items, id),
       }));
+      acceptTriageItem(id)
+         .then((issue) => useIssuesStore.getState().receiveIssue(issue))
+         .catch((err) => {
+            set({ items: snapshot });
+            toast.error('Failed to accept item');
+            console.error(err);
+         });
    },
 
-   decline: (id) =>
+   decline: (id) => {
+      const snapshot = get().items;
       set((state) => ({
          items: state.items.filter((entry) => entry.id !== id),
          selectedId: nextSelection(state.items, id),
-      })),
+      }));
+      setTriageItemStatus(id, 'declined').catch((err) => {
+         set({ items: snapshot });
+         toast.error('Failed to decline item');
+         console.error(err);
+      });
+   },
 
-   snooze: (id) =>
+   snooze: (id) => {
+      const snapshot = get().items;
       set((state) => ({
          items: state.items.filter((entry) => entry.id !== id),
          selectedId: nextSelection(state.items, id),
-      })),
+      }));
+      setTriageItemStatus(id, 'snoozed').catch((err) => {
+         set({ items: snapshot });
+         toast.error('Failed to snooze item');
+         console.error(err);
+      });
+   },
 }));

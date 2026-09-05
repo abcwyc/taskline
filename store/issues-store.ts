@@ -42,6 +42,8 @@ interface IssuesState {
 
    // Actions (unchanged signatures — now optimistic + persisted)
    addIssue: (issue: Issue) => void;
+   /** Insert an issue that was already created server-side (no POST). */
+   receiveIssue: (issue: Issue) => void;
    updateIssue: (id: string, updatedIssue: Partial<Issue>) => void;
    deleteIssue: (id: string) => void;
 
@@ -111,6 +113,11 @@ export const useIssuesStore = create<IssuesState>((set, get) => ({
             toast.error('Failed to create issue');
             console.error(err);
          });
+   },
+
+   receiveIssue: (issue: Issue) => {
+      if (get().issues.some((i) => i.id === issue.id)) return;
+      set(withDerived([...get().issues, issue]));
    },
 
    /* ------------------------------- update ------------------------------- */
