@@ -2,7 +2,8 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
-import { getInitiativeProjects, Initiative } from '@/mock-data/initiatives';
+import type { Initiative } from '@/mock-data/initiatives';
+import { getInitiativeProjects } from '@/store/initiatives-store';
 import { health as allHealth } from '@/mock-data/projects';
 import { useTeamsStore } from '@/store/teams-store';
 import { UserRound } from 'lucide-react';

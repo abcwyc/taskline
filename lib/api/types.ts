@@ -299,6 +299,55 @@ export interface NotificationDTO {
    timestamp: string; // ISO
 }
 
+/* -------------------------------------------------------------------------- */
+/*                              Initiatives                                   */
+/* -------------------------------------------------------------------------- */
+
+export interface InitiativeDTO {
+   id: string;
+   name: string;
+   description: string | null;
+   icon: string;
+   status: string; // active | planned | completed | canceled
+   priorityId: string;
+   ownerId: string | null;
+   leadTeamId: string | null; // team key
+   target: string | null;
+   healthId: string;
+   projectIds: string[];
+   createdAt: string;
+}
+
+export type InitiativeCreateBody = Partial<
+   Pick<
+      InitiativeDTO,
+      | 'name'
+      | 'description'
+      | 'icon'
+      | 'status'
+      | 'priorityId'
+      | 'ownerId'
+      | 'leadTeamId'
+      | 'target'
+      | 'healthId'
+      | 'projectIds'
+   >
+>;
+export type InitiativeUpdateBody = InitiativeCreateBody;
+
+export const INITIATIVE_STATUS_ENUM_TO_KEY: Record<string, string> = {
+   ACTIVE: 'active',
+   PLANNED: 'planned',
+   COMPLETED: 'completed',
+   CANCELED: 'canceled',
+};
+export const INITIATIVE_STATUS_KEY_TO_ENUM: Record<string, string> = {
+   active: 'ACTIVE',
+   planned: 'PLANNED',
+   completed: 'COMPLETED',
+   canceled: 'CANCELED',
+};
+
 /* ------------------------------ health mapping ---------------------------- */
 // DB enum (ON_TRACK) <-> mock Health.id (on-track)
 

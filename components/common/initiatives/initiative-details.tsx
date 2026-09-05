@@ -3,13 +3,13 @@
 import ProjectsTimeline from '@/components/common/projects/projects-timeline';
 import { ProjectGroup } from '@/components/common/projects/projects';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import type { Initiative } from '@/mock-data/initiatives';
+import { INITIATIVE_STATUS_META } from '@/mock-data/initiatives';
 import {
    countCompletedProjects,
-   getInitiativeById,
    getInitiativeProjects,
-   Initiative,
-   INITIATIVE_STATUS_META,
-} from '@/mock-data/initiatives';
+   useInitiativesStore,
+} from '@/store/initiatives-store';
 import { Project } from '@/mock-data/projects';
 import {
    CalendarRange,
@@ -350,7 +350,7 @@ function Activity({ initiative }: { initiative: Initiative }) {
 /** Initiative detail page: Overview / Activity / Projects tabs. */
 export default function InitiativeDetails({ initiativeId }: { initiativeId: string }) {
    const [tab] = useQueryState('tab', parseAsStringLiteral(TABS).withDefault('overview'));
-   const initiative = getInitiativeById(initiativeId);
+   const initiative = useInitiativesStore((s) => s.getInitiativeById(initiativeId));
 
    const timelineGroups = useMemo<ProjectGroup[]>(() => {
       if (!initiative) return [];

@@ -19,15 +19,13 @@ import {
    SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import type { Initiative, InitiativeStatus } from '@/mock-data/initiatives';
+import { INITIATIVE_STATUS_META } from '@/mock-data/initiatives';
 import {
    countCompletedProjects,
    getInitiativeProjects,
-   getTeamInitiatives,
-   Initiative,
-   INITIATIVE_STATUS_META,
-   initiatives as allInitiatives,
-   InitiativeStatus,
-} from '@/mock-data/initiatives';
+   useInitiativesStore,
+} from '@/store/initiatives-store';
 import { priorities } from '@/mock-data/priorities';
 import { health as allHealth } from '@/mock-data/projects';
 import { useTeamsStore } from '@/store/teams-store';
@@ -426,6 +424,8 @@ function InitiativeRow({
 
 export default function Initiatives({ teamId }: { teamId?: string } = {}) {
    const { orgId } = useParams<{ orgId: string }>();
+   const allInitiatives = useInitiativesStore((s) => s.initiatives);
+   const getTeamInitiatives = useInitiativesStore((s) => s.getTeamInitiatives);
    const [tab, setTab] = useQueryState('tab', parseAsStringLiteral(TABS).withDefault('active'));
    const { filters } = useInitiativesFilterStore();
    const { grouping, ordering, displayProperties } = useInitiativesDisplayStore();
@@ -452,7 +452,7 @@ export default function Initiatives({ teamId }: { teamId?: string } = {}) {
       else if (ordering === 'target')
          list.sort((a, b) => (a.target ?? '').localeCompare(b.target ?? ''));
       return list;
-   }, [tab, filters, ordering, teamId]);
+   }, [allInitiatives, getTeamInitiatives, tab, filters, ordering, teamId]);
 
    const groups = useMemo(() => {
       if (grouping !== 'status') return null;
