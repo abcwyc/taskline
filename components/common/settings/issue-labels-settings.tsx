@@ -2,8 +2,8 @@
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { issues } from '@/mock-data/issues';
-import { labels } from '@/mock-data/labels';
+import { useIssuesStore } from '@/store/issues-store';
+import { useLabelsStore } from '@/store/labels-store';
 import { useMemo, useState } from 'react';
 import { SelectMenu } from './shared';
 
@@ -35,6 +35,8 @@ const formatCount = (count: number) =>
 
 /** Workspace "Issue labels" settings: filterable table of every label. */
 export default function IssueLabelsSettings() {
+   const issues = useIssuesStore((s) => s.issues);
+   const labels = useLabelsStore((s) => s.labels);
    const [query, setQuery] = useState('');
 
    const rows = useMemo(() => {
@@ -54,7 +56,7 @@ export default function IssueLabelsSettings() {
          }))
          .filter((label) => label.name.toLowerCase().includes(query.toLowerCase()))
          .sort((a, b) => a.name.localeCompare(b.name));
-   }, [query]);
+   }, [issues, labels, query]);
 
    return (
       <div className="w-full overflow-y-auto h-full">

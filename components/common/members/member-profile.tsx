@@ -8,7 +8,7 @@ import { SearchIssues } from '@/components/common/issues/search-issues';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Issue, issueCreatorIndex } from '@/mock-data/issues';
-import { labels } from '@/mock-data/labels';
+import { useLabelsStore } from '@/store/labels-store';
 import { priorities } from '@/mock-data/priorities';
 import { useProjectsStore } from '@/store/projects-store';
 import { useTeamsStore } from '@/store/teams-store';
@@ -102,6 +102,7 @@ function useClientTimes(member: User) {
  */
 export default function MemberProfile({ member }: { member: User }) {
    const teams = useTeamsStore((s) => s.teams);
+   const labels = useLabelsStore((s) => s.labels);
    const users = useMembersStore((s) => s.members);
    const { issues } = useIssuesStore();
    const projects = useProjectsStore((s) => s.projects);
@@ -167,7 +168,7 @@ export default function MemberProfile({ member }: { member: User }) {
             count: counts.get(label.id) ?? 0,
          }))
          .sort((a, b) => b.count - a.count);
-   }, [displayedIssues]);
+   }, [labels, displayedIssues]);
 
    const priorityRows = useMemo<BreakdownRow[]>(() => {
       const counts = countBy(displayedIssues, (issue) => [issue.priority.id]);

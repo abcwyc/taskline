@@ -175,6 +175,66 @@ export const ROLE_KEY_TO_ENUM: Record<string, string> = {
    Application: 'APPLICATION',
 };
 
+/* -------------------------------------------------------------------------- */
+/*                                  Labels                                    */
+/* -------------------------------------------------------------------------- */
+
+export interface LabelDTO {
+   id: string; // label key, e.g. "bug"
+   name: string;
+   color: string; // CSS color keyword
+}
+
+export type LabelCreateBody = Partial<Pick<LabelDTO, 'id' | 'name' | 'color'>>;
+export type LabelUpdateBody = Partial<Pick<LabelDTO, 'name' | 'color'>>;
+
+/* -------------------------------------------------------------------------- */
+/*                                  Cycles                                    */
+/* -------------------------------------------------------------------------- */
+
+export interface CycleBurnupPointDTO {
+   date: string;
+   scope: number;
+   started: number;
+   completed: number;
+   ideal: number;
+}
+
+export interface CycleDTO {
+   id: string;
+   number: number;
+   name: string;
+   teamId: string; // team key
+   status: string; // "planned" | "upcoming" | "current" | "completed"
+   startDate: string;
+   endDate: string;
+   capacity: number;
+   scope: number; // DERIVED (issue count in the cycle)
+   scopeDelta: number;
+   started: number; // DERIVED
+   completed: number; // DERIVED
+   successRate?: number;
+   burnup?: CycleBurnupPointDTO[];
+}
+
+export type CycleCreateBody = Partial<
+   Pick<CycleDTO, 'name' | 'teamId' | 'status' | 'startDate' | 'endDate' | 'capacity'>
+>;
+export type CycleUpdateBody = CycleCreateBody;
+
+export const CYCLE_STATUS_ENUM_TO_KEY: Record<string, string> = {
+   PLANNED: 'planned',
+   UPCOMING: 'upcoming',
+   CURRENT: 'current',
+   COMPLETED: 'completed',
+};
+export const CYCLE_STATUS_KEY_TO_ENUM: Record<string, string> = {
+   planned: 'PLANNED',
+   upcoming: 'UPCOMING',
+   current: 'CURRENT',
+   completed: 'COMPLETED',
+};
+
 /* ------------------------------ health mapping ---------------------------- */
 // DB enum (ON_TRACK) <-> mock Health.id (on-track)
 

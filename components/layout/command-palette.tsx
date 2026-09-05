@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/command';
 import { cycles, formatCycleDateRange } from '@/mock-data/cycles';
 import { Issue } from '@/mock-data/issues';
-import { labels as allLabels } from '@/mock-data/labels';
+import { useLabelsStore } from '@/store/labels-store';
 import { priorities } from '@/mock-data/priorities';
 import { useProjectsStore } from '@/store/projects-store';
 import { status as allStatus } from '@/mock-data/status';
@@ -78,6 +78,7 @@ function Keys({ keys }: { keys: string[] }) {
 /** ⌘K command palette — Linear-style, aware of the issue in context. */
 export function CommandPalette() {
    const teams = useTeamsStore((s) => s.teams);
+   const allLabels = useLabelsStore((s) => s.labels);
    const users = useMembersStore((s) => s.members);
    const [open, setOpen] = useState(false);
    const [route, setRoute] = useState<PaletteRoute>('root');

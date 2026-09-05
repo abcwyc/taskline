@@ -6,7 +6,8 @@ import type { ColumnOption, FiltersState } from '@/components/data-table-filter/
 import { multiOptionFilterFn, optionFilterFn } from '@/components/data-table-filter/lib/filter-fns';
 import { cycles, cycleStatusLabel } from '@/mock-data/cycles';
 import { Issue } from '@/mock-data/issues';
-import { labels } from '@/mock-data/labels';
+import { LabelInterface, labels as mockLabels } from '@/mock-data/labels';
+import { useLabelsStore } from '@/store/labels-store';
 import { priorities } from '@/mock-data/priorities';
 import { status, StatusCategory } from '@/mock-data/status';
 import { Project, projects as mockProjects } from '@/mock-data/projects';
@@ -74,11 +75,12 @@ const priorityOptions: ColumnOption[] = priorities.map((priority) => ({
    icon: <priority.icon className="size-4 text-muted-foreground" />,
 }));
 
-const labelOptions: ColumnOption[] = labels.map((label) => ({
-   value: label.id,
-   label: label.name,
-   icon: <span className="size-2.5 rounded-full" style={{ backgroundColor: label.color }} />,
-}));
+const buildLabelOptions = (list: LabelInterface[]): ColumnOption[] =>
+   list.map((label) => ({
+      value: label.id,
+      label: label.name,
+      icon: <span className="size-2.5 rounded-full" style={{ backgroundColor: label.color }} />,
+   }));
 
 /** Project options are the only dynamic list (projects are DB-backed). */
 const buildProjectOptions = (projectList: Project[]): ColumnOption[] =>
@@ -113,7 +115,11 @@ const dtf = createColumnConfigHelper<Issue>();
  * everything else is a static list. Accessors return the raw values the filter
  * functions compare against and never depend on the option lists.
  */
-function buildIssueFilterColumns(projectOptions: ColumnOption[], assigneeOptions: ColumnOption[]) {
+function buildIssueFilterColumns(
+   projectOptions: ColumnOption[],
+   assigneeOptions: ColumnOption[],
+   labelOptions: ColumnOption[]
+) {
    return [
       dtf
          .option()
@@ -181,20 +187,23 @@ function buildIssueFilterColumns(projectOptions: ColumnOption[], assigneeOptions
  */
 export const issueFilterColumns = buildIssueFilterColumns(
    buildProjectOptions(mockProjects),
-   buildAssigneeOptions(mockUsers)
+   buildAssigneeOptions(mockUsers),
+   buildLabelOptions(mockLabels)
 );
 
-/** Filter-UI columns with the live (DB-backed) project + member lists. */
+/** Filter-UI columns with the live (DB-backed) project + member + label lists. */
 export function useIssueFilterColumns() {
    const projectList = useProjectsStore((s) => s.projects);
    const memberList = useMembersStore((s) => s.members);
+   const labelList = useLabelsStore((s) => s.labels);
    return useMemo(
       () =>
          buildIssueFilterColumns(
             buildProjectOptions(projectList.length ? projectList : mockProjects),
-            buildAssigneeOptions(memberList.length ? memberList : mockUsers)
+            buildAssigneeOptions(memberList.length ? memberList : mockUsers),
+            buildLabelOptions(labelList.length ? labelList : mockLabels)
          ),
-      [projectList, memberList]
+      [projectList, memberList, labelList]
    );
 }
 
