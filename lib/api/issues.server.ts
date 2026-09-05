@@ -3,6 +3,7 @@ import { Prisma, Priority } from '@prisma/client';
 
 import { db } from '@/lib/db';
 import { LexoRank } from '@/lib/utils';
+import { blocksToText, readBlocks, storeBlocks, textToBlocks } from './rich-text';
 import {
    IssueDTO,
    IssueCreateBody,
@@ -34,10 +35,7 @@ type IssueRow = Prisma.IssueGetPayload<{ include: typeof issueInclude }>;
 /* ------------------------------- serialize -------------------------------- */
 
 export function serializeIssue(row: IssueRow): IssueDTO {
-   const description =
-      row.description && typeof row.description === 'object' && 'text' in row.description
-         ? String((row.description as { text?: unknown }).text ?? '')
-         : '';
+   const description = blocksToText(readBlocks(row.description));
 
    return {
       id: row.id,
@@ -153,7 +151,7 @@ export async function createIssue(
             sequenceNumber,
             identifier: `${org.issuePrefix}-${sequenceNumber}`,
             title: body.title?.trim() || 'Untitled',
-            description: { type: 'doc', text: body.description ?? '' },
+            description: storeBlocks(textToBlocks(body.description ?? '')),
             state: { connect: { id: body.statusId ?? 'to-do' } },
             priority: toPriority(body.priorityId),
             assignee: connectOrUndef(body.assigneeId),
@@ -191,7 +189,9 @@ export async function updateIssue(
 
    const data: Prisma.IssueUpdateInput = {};
    if (body.title !== undefined) data.title = body.title;
-   if (body.description !== undefined) data.description = { type: 'doc', text: body.description };
+   if (body.description !== undefined) {
+      data.description = storeBlocks(textToBlocks(body.description));
+   }
    if (body.statusId !== undefined) data.state = { connect: { id: body.statusId } };
    if (body.priorityId !== undefined) data.priority = toPriority(body.priorityId);
    if (body.assigneeId !== undefined) data.assignee = relation(body.assigneeId);

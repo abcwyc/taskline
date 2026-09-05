@@ -36,6 +36,7 @@ import { users as mockUsers } from '../mock-data/users';
 import { teams as mockTeams } from '../mock-data/teams';
 import { projects as mockProjects } from '../mock-data/projects';
 import { getProjectDetail } from '../mock-data/project-details';
+import { getIssueDetail } from '../mock-data/issue-details';
 import { cycles as mockCycles } from '../mock-data/cycles';
 import { issues as mockIssues } from '../mock-data/issues';
 import { initiatives as mockInitiatives } from '../mock-data/initiatives';
@@ -458,6 +459,7 @@ async function main() {
    const completedStates = new Set(
       status.filter((s) => s.category === 'completed').map((s) => s.id)
    );
+   const detailByIdentifier = new Map(mockIssues.map((it) => [it.identifier, getIssueDetail(it)]));
 
    await db.issue.createMany({
       data: mockIssues.map((it) => ({
@@ -471,9 +473,9 @@ async function main() {
          sequenceNumber: seqOf(it.identifier),
          identifier: it.identifier,
          title: it.title,
-         description: (it.description
-            ? { type: 'doc', text: it.description }
-            : {}) as Prisma.InputJsonValue,
+         description: {
+            blocks: detailByIdentifier.get(it.identifier)?.description ?? [],
+         } as unknown as Prisma.InputJsonValue,
          stateId: stateId(it.status.id),
          priority: priority(it.priority?.id),
          assigneeId: it.assignee && validUser.has(it.assignee.id) ? it.assignee.id : null,
@@ -499,6 +501,98 @@ async function main() {
    console.log(`  ✓ ${mockIssues.length} issues, ${issueLabelRows.length} label links`);
 
    const issueExists = new Set(mockIssues.map((i) => i.identifier));
+
+   /* -------------------------- issue details ---------------------------- */
+   const PR_STATUS: Record<string, 'OPEN' | 'MERGED' | 'DRAFT'> = {
+      open: 'OPEN',
+      merged: 'MERGED',
+      draft: 'DRAFT',
+   };
+   let commentCount = 0;
+   let eventCount = 0;
+   let relationCount = 0;
+   await safe('issue details (comments / activity / relations / PR links)', async () => {
+      const commentRows: Prisma.IssueCommentCreateManyInput[] = [];
+      const activityRows: Prisma.IssueActivityCreateManyInput[] = [];
+      const prRows: Prisma.PrLinkCreateManyInput[] = [];
+      const relationRows: Prisma.IssueRelationCreateManyInput[] = [];
+      const parentUpdates: { child: string; parent: string }[] = [];
+
+      for (const it of mockIssues) {
+         const d = detailByIdentifier.get(it.identifier);
+         if (!d) continue;
+
+         for (const a of d.activity) {
+            if (a.kind === 'comment') {
+               commentRows.push({
+                  issueId: issueId(it.identifier),
+                  authorId: validUser.has(a.actor.id) ? a.actor.id : mockUsers[0].id,
+                  body: { blocks: a.body } as unknown as Prisma.InputJsonValue,
+                  reactions: (a.reactions ?? []) as unknown as Prisma.InputJsonValue,
+                  createdAt: agoToDate(a.timeAgo),
+               });
+               commentCount++;
+            } else {
+               activityRows.push({
+                  issueId: issueId(it.identifier),
+                  actorId: validUser.has(a.actor.id) ? a.actor.id : mockUsers[0].id,
+                  verb: a.event,
+                  field: a.event,
+                  newValue: a.text,
+                  createdAt: agoToDate(a.timeAgo),
+               });
+               eventCount++;
+            }
+         }
+
+         for (const pr of d.prLinks ?? []) {
+            prRows.push({
+               issueId: issueId(it.identifier),
+               title: pr.title,
+               url: '#',
+               status: PR_STATUS[pr.status] ?? 'OPEN',
+            });
+         }
+
+         for (const ident of d.relatedIds ?? []) {
+            if (issueExists.has(ident)) {
+               relationRows.push({
+                  issueId: issueId(it.identifier),
+                  relatedIssueId: issueId(ident),
+                  type: 'RELATED',
+               });
+               relationCount++;
+            }
+         }
+         for (const ident of d.blockedByIds ?? []) {
+            if (issueExists.has(ident)) {
+               relationRows.push({
+                  issueId: issueId(it.identifier),
+                  relatedIssueId: issueId(ident),
+                  type: 'BLOCKED_BY',
+               });
+               relationCount++;
+            }
+         }
+         for (const ident of d.subIssueIds ?? []) {
+            if (issueExists.has(ident)) parentUpdates.push({ child: ident, parent: it.identifier });
+         }
+      }
+
+      await db.issueComment.createMany({ data: commentRows });
+      await db.issueActivity.createMany({ data: activityRows });
+      await db.prLink.createMany({ data: prRows });
+      await db.issueRelation.createMany({ data: relationRows, skipDuplicates: true });
+      for (const { child, parent } of parentUpdates) {
+         await db.issue.update({
+            where: { id: issueId(child) },
+            data: { parentId: issueId(parent) },
+         });
+      }
+   });
+   console.log(
+      `  ✓ issue details (${commentCount} comments, ${eventCount} events, ${relationCount} relations)`
+   );
 
    /* --------------------------- saved views ----------------------------- */
    await safe(`${mockViews.length} saved views`, () =>

@@ -235,6 +235,56 @@ export const CYCLE_STATUS_KEY_TO_ENUM: Record<string, string> = {
    completed: 'COMPLETED',
 };
 
+/* -------------------------------------------------------------------------- */
+/*                             Issue detail                                   */
+/* -------------------------------------------------------------------------- */
+
+export interface IssueCommentDTO {
+   id: string;
+   authorId: string;
+   body: RichBlocks;
+   reactions: { emoji: string; count: number }[];
+   createdAt: string;
+}
+
+export interface IssueActivityDTO {
+   id: string;
+   actorId: string;
+   verb: string;
+   field: string | null;
+   text: string;
+   createdAt: string;
+}
+
+export interface PrLinkDTO {
+   id: string;
+   title: string;
+   url: string;
+   status: string; // "open" | "merged" | "draft"
+}
+
+export interface IssueDetailDTO {
+   identifier: string;
+   description: RichBlocks;
+   comments: IssueCommentDTO[];
+   activity: IssueActivityDTO[];
+   subIssueIds: string[]; // identifiers
+   relatedIds: string[];
+   blockedByIds: string[];
+   prLinks: PrLinkDTO[];
+   milestone: string | null;
+}
+
+export interface PostCommentBody {
+   text: string;
+}
+
+export const PR_STATUS_ENUM_TO_KEY: Record<string, string> = {
+   OPEN: 'open',
+   MERGED: 'merged',
+   DRAFT: 'draft',
+};
+
 /* ------------------------------ health mapping ---------------------------- */
 // DB enum (ON_TRACK) <-> mock Health.id (on-track)
 

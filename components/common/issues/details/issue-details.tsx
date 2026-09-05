@@ -1,7 +1,7 @@
 'use client';
 
-import { getIssueDetail } from '@/mock-data/issue-details';
 import { useIssuesStore } from '@/store/issues-store';
+import { useIssueDetail } from '@/store/issue-details-store';
 import { Paperclip, Plus, SmilePlus } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -24,7 +24,7 @@ export default function IssueDetails() {
       [issues, issueId]
    );
 
-   const detail = useMemo(() => (issue ? getIssueDetail(issue) : null), [issue]);
+   const detail = useIssueDetail(issue);
 
    if (!issue || !detail) {
       return (
@@ -106,7 +106,7 @@ export default function IssueDetails() {
 
                <div className="border-t border-border/60 mt-8" />
 
-               <ActivityFeed activity={detail.activity} />
+               <ActivityFeed activity={detail.activity} issueIdentifier={issue.identifier} />
             </div>
          </div>
 

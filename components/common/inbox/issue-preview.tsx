@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { getNotificationIcon } from '@/lib/notification-utils';
-import { getIssueDetail } from '@/mock-data/issue-details';
+import { useIssueDetail } from '@/store/issue-details-store';
 import { InboxItem } from '@/mock-data/inbox';
 import { useIssuesStore } from '@/store/issues-store';
 import { useNotificationsStore } from '@/store/notifications-store';
@@ -31,6 +31,11 @@ export default function IssuePreview({ notification, onMarkAsRead }: IssuePrevie
    const { getUnreadCount } = useNotificationsStore();
    const { issues } = useIssuesStore();
 
+   const liveIssue = notification
+      ? (issues.find((c) => c.identifier === notification.identifier) ?? notification)
+      : undefined;
+   const detailMaybe = useIssueDetail(liveIssue);
+
    if (!notification) {
       const unreadCount = getUnreadCount();
 
@@ -48,9 +53,8 @@ export default function IssuePreview({ notification, onMarkAsRead }: IssuePrevie
    }
 
    // Live issue from the store (falls back to the notification snapshot).
-   const issue = issues.find((candidate) => candidate.identifier === notification.identifier);
-   const displayIssue = issue ?? notification;
-   const detail = getIssueDetail(displayIssue);
+   const displayIssue = liveIssue ?? notification;
+   const detail = detailMaybe!;
 
    return (
       <div className="flex flex-col h-full overflow-hidden">
@@ -164,9 +168,9 @@ export default function IssuePreview({ notification, onMarkAsRead }: IssuePrevie
                </div>
             </div>
 
-            {issue && (
+            {liveIssue && (
                <aside className="hidden xl:block w-64 shrink-0 border-l overflow-y-auto bg-container px-4 py-5">
-                  <IssuePropertiesPanel issue={issue} detail={detail} />
+                  <IssuePropertiesPanel issue={liveIssue} detail={detail} />
                </aside>
             )}
          </div>

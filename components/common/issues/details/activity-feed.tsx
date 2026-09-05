@@ -3,7 +3,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ActivityItem } from '@/mock-data/issue-details';
-import { useMembersStore } from '@/store/members-store';
+import { useIssueDetailsStore } from '@/store/issue-details-store';
 import {
    Ban,
    CircleDot,
@@ -77,28 +77,24 @@ function CommentCard({ item }: { item: Extract<ActivityItem, { kind: 'comment' }
 }
 
 /**
- * Issue activity: interleaved events and comments, plus a local
- * comment composer (comments are kept in memory only).
+ * Issue activity: interleaved events and comments, plus a comment composer.
+ * `activity` comes from the issue-details store; posting a comment persists it.
  */
-export function ActivityFeed({ activity }: { activity: ActivityItem[] }) {
-   const users = useMembersStore((s) => s.members);
-   const [items, setItems] = useState<ActivityItem[]>(activity);
+export function ActivityFeed({
+   activity,
+   issueIdentifier,
+}: {
+   activity: ActivityItem[];
+   issueIdentifier?: string;
+}) {
+   const postComment = useIssueDetailsStore((s) => s.postComment);
    const [draft, setDraft] = useState('');
-   const currentUser = users[0];
+   const items = activity;
 
    const submitComment = () => {
       const text = draft.trim();
-      if (!text) return;
-      setItems((previous) => [
-         ...previous,
-         {
-            kind: 'comment',
-            id: `local-${previous.length}`,
-            actor: currentUser,
-            timeAgo: 'just now',
-            body: [{ type: 'paragraph', text }],
-         },
-      ]);
+      if (!text || !issueIdentifier) return;
+      postComment(issueIdentifier, text);
       setDraft('');
    };
 
