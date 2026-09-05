@@ -11,15 +11,15 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import {
-   getProjectDetail,
    ProjectUpdate,
    ProjectUpdateHealth,
    projectUpdateHealthColor,
    projectUpdateHealthLabel,
 } from '@/mock-data/project-details';
-import { getProjectById } from '@/mock-data/projects';
+import { getProjectById as mockGetProjectById } from '@/mock-data/projects';
 import { useIssuesStore } from '@/store/issues-store';
-import { useProjectUpdatesStore } from '@/store/project-updates-store';
+import { useProjectsStore } from '@/store/projects-store';
+import { useProjectDetail, useProjectDetailsStore } from '@/store/project-details-store';
 import { format, parseISO } from 'date-fns';
 import { Paperclip, Sparkles } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -66,22 +66,20 @@ function UpdateCard({ update }: { update: ProjectUpdate }) {
 
 /** Project "Activity" tab: update composer + monthly timeline. */
 export default function ProjectActivity({ projectId }: ProjectActivityProps) {
-   const project = getProjectById(projectId)!;
-   const detail = getProjectDetail(projectId);
+   const project =
+      useProjectsStore((s) => s.getProjectById(projectId)) ?? mockGetProjectById(projectId)!;
+   const detail = useProjectDetail(projectId);
    const { issues: allIssues } = useIssuesStore();
    const issues = useMemo(
       () => allIssues.filter((issue) => issue.project?.id === project.id),
       [allIssues, project.id]
    );
-   const { postedUpdates, postUpdate } = useProjectUpdatesStore();
+   const postUpdate = useProjectDetailsStore((s) => s.postUpdate);
    const [mode, setMode] = useState<'comment' | 'update'>('update');
    const [health, setHealth] = useState<ProjectUpdateHealth>('on-track');
    const [text, setText] = useState('');
 
-   const updates = useMemo<ProjectUpdate[]>(
-      () => [...(postedUpdates[project.id] ?? []), ...detail.updates],
-      [postedUpdates, project.id, detail.updates]
-   );
+   const updates = useMemo<ProjectUpdate[]>(() => detail.updates, [detail.updates]);
 
    const updatesByMonth = useMemo(() => {
       const groups = new Map<string, ProjectUpdate[]>();
@@ -158,7 +156,9 @@ export default function ProjectActivity({ projectId }: ProjectActivityProps) {
                   <textarea
                      value={text}
                      onChange={(event) => setText(event.target.value)}
-                     placeholder={mode === 'update' ? 'Write a project update…' : 'Leave a comment…'}
+                     placeholder={
+                        mode === 'update' ? 'Write a project update…' : 'Leave a comment…'
+                     }
                      className="mt-3 w-full min-h-24 resize-y bg-transparent text-sm outline-none placeholder:text-muted-foreground"
                   />
 
@@ -167,7 +167,8 @@ export default function ProjectActivity({ projectId }: ProjectActivityProps) {
                         <div className="flex gap-6">
                            <span className="w-20">Priority</span>
                            <span>
-                              No priority → <span className="text-foreground">{project.priority.name}</span>
+                              No priority →{' '}
+                              <span className="text-foreground">{project.priority.name}</span>
                            </span>
                         </div>
                         <div className="flex gap-6">
@@ -202,7 +203,11 @@ export default function ProjectActivity({ projectId }: ProjectActivityProps) {
                         Write with Agent
                      </Button>
                      <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="icon" className="size-7 text-muted-foreground">
+                        <Button
+                           variant="ghost"
+                           size="icon"
+                           className="size-7 text-muted-foreground"
+                        >
                            <Paperclip className="size-4" />
                         </Button>
                         <Button size="xs" onClick={handlePost} disabled={text.trim() === ''}>

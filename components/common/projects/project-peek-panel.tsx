@@ -1,10 +1,11 @@
 'use client';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { getProjectDetail } from '@/mock-data/project-details';
-import { getProjectById } from '@/mock-data/projects';
+import { getProjectById as mockGetProjectById } from '@/mock-data/projects';
 import { teams } from '@/mock-data/teams';
 import { useIssuesStore } from '@/store/issues-store';
+import { useProjectsStore } from '@/store/projects-store';
+import { useProjectDetail } from '@/store/project-details-store';
 import { format, parseISO } from 'date-fns';
 import {
    ArrowRight,
@@ -57,8 +58,9 @@ export function ProjectPeekPanel({ projectId, onClose }: ProjectPeekPanelProps) 
    const { orgId } = useParams<{ orgId: string }>();
    const { issues: allIssues } = useIssuesStore();
 
-   const project = getProjectById(projectId);
-   const detail = getProjectDetail(projectId);
+   const project =
+      useProjectsStore((s) => s.getProjectById(projectId)) ?? mockGetProjectById(projectId);
+   const detail = useProjectDetail(projectId);
 
    const issues = useMemo(
       () => allIssues.filter((issue) => issue.project?.id === projectId),

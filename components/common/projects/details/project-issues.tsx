@@ -3,11 +3,12 @@
 import { GroupedIssuesView } from '@/components/common/issues/grouped-issues-view';
 import { applyIssueFilters } from '@/components/common/issues/issue-filter-columns';
 import { IssueFilterBar } from '@/components/common/issues/issue-filter-bar';
-import { getProjectDetail } from '@/mock-data/project-details';
-import { getProjectById } from '@/mock-data/projects';
+import { getProjectById as mockGetProjectById } from '@/mock-data/projects';
 import { displayOrderedStatus } from '@/mock-data/status';
 import { useFilterStore } from '@/store/filter-store';
 import { useIssuesStore } from '@/store/issues-store';
+import { useProjectsStore } from '@/store/projects-store';
+import { useProjectDetail } from '@/store/project-details-store';
 import { useMemo } from 'react';
 import { ProjectSidePanel } from './project-side-panel';
 
@@ -17,8 +18,9 @@ interface ProjectIssuesProps {
 
 /** Project "Issues" tab: the project's issues grouped by status. */
 export default function ProjectIssues({ projectId }: ProjectIssuesProps) {
-   const project = getProjectById(projectId)!;
-   const detail = getProjectDetail(projectId);
+   const project =
+      useProjectsStore((s) => s.getProjectById(projectId)) ?? mockGetProjectById(projectId)!;
+   const detail = useProjectDetail(projectId);
    const { issues: allIssues } = useIssuesStore();
    const { filters } = useFilterStore();
 

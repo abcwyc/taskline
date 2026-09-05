@@ -1,7 +1,8 @@
 import ProjectActivity from '@/components/common/projects/details/project-activity';
 import Header from '@/components/layout/headers/project/header';
 import MainLayout from '@/components/layout/main-layout';
-import { getProjectById } from '@/mock-data/projects';
+import { getRequestContext } from '@/lib/api/context';
+import { getProject } from '@/lib/api/projects.server';
 import { notFound } from 'next/navigation';
 
 interface ProjectPageProps {
@@ -10,7 +11,8 @@ interface ProjectPageProps {
 
 export default async function ProjectPage({ params }: ProjectPageProps) {
    const { projectId } = await params;
-   const project = getProjectById(projectId);
+   const { orgId } = await getRequestContext();
+   const project = await getProject(orgId, projectId);
 
    if (!project) {
       notFound();

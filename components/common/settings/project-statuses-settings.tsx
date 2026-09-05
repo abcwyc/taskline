@@ -1,6 +1,6 @@
 'use client';
 
-import { projects } from '@/mock-data/projects';
+import { useProjectsStore } from '@/store/projects-store';
 import { StatusCategory } from '@/mock-data/status';
 import { Plus } from 'lucide-react';
 import { useMemo } from 'react';
@@ -20,6 +20,7 @@ const CATEGORY_GROUPS: { label: string; categories: StatusCategory[] }[] = [
 
 /** Workspace "Project statuses" settings. */
 export default function ProjectStatusesSettings() {
+   const projects = useProjectsStore((s) => s.projects);
    const groups = useMemo(
       () =>
          CATEGORY_GROUPS.map((group) => {
@@ -40,7 +41,7 @@ export default function ProjectStatusesSettings() {
             }
             return { ...group, statuses: [...buckets.values()].sort((a, b) => b.count - a.count) };
          }),
-      []
+      [projects]
    );
 
    return (

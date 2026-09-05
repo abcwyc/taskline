@@ -2,8 +2,9 @@
 
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { projects as allProjects, Project } from '@/mock-data/projects';
+import { Project } from '@/mock-data/projects';
 import { teams } from '@/mock-data/teams';
+import { useProjectsStore } from '@/store/projects-store';
 import { useProjectsFilterStore } from '@/store/projects-filter-store';
 import { useProjectsDisplayStore } from '@/store/projects-display-store';
 import { useRightPanelStore } from '@/store/right-panel-store';
@@ -41,6 +42,7 @@ const CLOSED_CATEGORIES = new Set(['completed', 'canceled']);
  * options, views, insights) is scoped to that team's projects.
  */
 export default function Projects({ teamId }: { teamId?: string }) {
+   const allProjects = useProjectsStore((s) => s.projects);
    const { filters } = useProjectsFilterStore();
    const { viewTypes, grouping, ordering, closedProjects, showEmptyGroups } =
       useProjectsDisplayStore();
@@ -81,7 +83,7 @@ export default function Projects({ teamId }: { teamId?: string }) {
          }
       };
       return list.sort(compare);
-   }, [tab, closedProjects, filters, ordering, teamId]);
+   }, [allProjects, tab, closedProjects, filters, ordering, teamId]);
 
    const groups = useMemo<ProjectGroup[]>(() => {
       if (grouping === 'none') {

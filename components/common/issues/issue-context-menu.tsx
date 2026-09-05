@@ -39,7 +39,7 @@ import { status } from '@/mock-data/status';
 import { priorities } from '@/mock-data/priorities';
 import { users } from '@/mock-data/users';
 import { labels } from '@/mock-data/labels';
-import { projects } from '@/mock-data/projects';
+import { useProjectsStore } from '@/store/projects-store';
 import { toast } from 'sonner';
 
 interface IssueContextMenuProps {
@@ -60,6 +60,7 @@ export function IssueContextMenu({ issueId }: IssueContextMenuProps) {
       updateIssue,
       getIssueById,
    } = useIssuesStore();
+   const projects = useProjectsStore((s) => s.projects);
 
    const handleStatusChange = (statusId: string) => {
       if (!issueId) return;

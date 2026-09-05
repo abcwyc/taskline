@@ -1,0 +1,705 @@
+// Circle — production schema
+// Derived 1:1 from the shapes in `mock-data/*`. The API layer is expected to
+// re-assemble circle-shaped DTOs (nested `status` / `assignee` / `labels` /
+// `project` objects) from these normalized tables so the React components and
+// Zustand stores barely change.
+//
+//   pnpm add -D prisma tsx        &&  pnpm add @prisma/client
+//   npx prisma migrate dev --name init
+//   npx prisma db seed
+//
+// package.json:  "prisma": { "seed": "tsx prisma/seed.ts" }
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===================  Enums  ===================
+
+enum Role {
+  ADMIN
+  MEMBER
+  GUEST
+  APPLICATION // mock `role: 'Application'` — bots / integrations
+}
+
+enum PresenceStatus {
+  ONLINE
+  OFFLINE
+  AWAY
+}
+
+/// mock-data/status.tsx — StatusCategory
+enum StateCategory {
+  TRIAGE
+  BACKLOG
+  UNSTARTED
+  STARTED
+  COMPLETED
+  CANCELED
+}
+
+/// mock-data/priorities.tsx — 'no-priority' | 'urgent' | 'high' | 'medium' | 'low'
+enum Priority {
+  NO_PRIORITY
+  URGENT
+  HIGH
+  MEDIUM
+  LOW
+}
+
+/// mock-data/projects.ts — Health.id
+enum Health {
+  NO_UPDATE
+  OFF_TRACK
+  ON_TRACK
+  AT_RISK
+}
+
+/// mock-data/cycles.ts — CycleStatus
+enum CycleStatus {
+  PLANNED
+  UPCOMING
+  CURRENT
+  COMPLETED
+}
+
+/// mock-data/issue-details.ts — IssueRelation intent
+enum RelationType {
+  BLOCKS
+  BLOCKED_BY
+  RELATED
+  DUPLICATE
+}
+
+/// mock-data/issue-details.ts — PrLink.status
+enum PrStatus {
+  OPEN
+  MERGED
+  DRAFT
+}
+
+/// mock-data/initiatives.ts — InitiativeStatus
+enum InitiativeStatus {
+  ACTIVE
+  PLANNED
+  COMPLETED
+  CANCELED
+}
+
+/// mock-data/views.ts — ViewType
+enum ViewType {
+  ISSUE
+  PROJECT
+}
+
+/// mock-data/triage-store.ts — queue item lifecycle
+enum TriageStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  SNOOZED
+}
+
+/// mock-data/project-details.ts — ProjectUpdateHealth
+enum ProjectUpdateHealth {
+  ON_TRACK
+  AT_RISK
+  OFF_TRACK
+}
+
+/// mock-data/reviews.ts
+enum ReviewStatus {
+  OPEN
+  MERGED
+  CLOSED
+}
+
+enum ReviewList {
+  FOR_YOU
+  CREATED
+}
+
+// ===================  Organization / users / auth  ===================
+
+model Organization {
+  id          String   @id @default(cuid())
+  slug        String   @unique // the `[orgId]` route segment (mock: "lndev-ui")
+  name        String
+  issuePrefix String   @default("LNUI") // identifier prefix, mock: "LNUI-701"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members     Membership[]
+  teams       Team[]
+  states      WorkflowState[]
+  labels      Label[]
+  projects    Project[]
+  issues      Issue[]
+  initiatives Initiative[]
+  folders     DocumentFolder[]
+  views       SavedView[]
+  triageItems TriageItem[]
+  reviews     Review[]
+}
+
+model User {
+  id        String         @id @default(cuid())
+  email     String         @unique
+  name      String
+  avatarUrl String?
+  timezone  String         @default("UTC") // IANA — powers "Local time" on profiles
+  presence  PresenceStatus @default(OFFLINE)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  memberships        Membership[]
+  teamMemberships    TeamMembership[]
+  ledProjects        Project[]        @relation("ProjectLead")
+  ownedInitiatives   Initiative[]     @relation("InitiativeOwner")
+  assignedIssues     Issue[]          @relation("IssueAssignee")
+  comments           IssueComment[]
+  activities         IssueActivity[]
+  projectUpdates     ProjectUpdate[]
+  documents          Document[]
+  views              SavedView[]
+  notifications      Notification[]   @relation("NotificationRecipient")
+  actedNotifications Notification[]   @relation("NotificationActor")
+  triageReports      TriageItem[]     @relation("TriageReporter")
+
+  // Auth.js
+  accounts Account[]
+  sessions Session[]
+}
+
+model Membership {
+  id       String   @id @default(cuid())
+  userId   String
+  orgId    String
+  role     Role     @default(MEMBER)
+  joinedAt DateTime @default(now())
+
+  user User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  org  Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, orgId])
+  @@index([orgId])
+}
+
+// ---- Auth.js (next-auth) Prisma adapter models ----
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ===================  Teams  ===================
+
+model Team {
+  id        String   @id @default(cuid())
+  orgId     String
+  key       String // mock `Team.id` e.g. "CORE" — used as the `[teamId]` segment
+  name      String
+  icon      String // emoji
+  color     String
+  joined    Boolean  @default(false) // mock `Team.joined` (per-viewer in reality — kept for parity)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  org            Organization     @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  members        TeamMembership[]
+  projects       Project[]
+  cycles         Cycle[]
+  issues         Issue[]
+  views          SavedView[]
+  folders        DocumentFolder[]
+  triageItems    TriageItem[]
+  ledInitiatives Initiative[]     @relation("InitiativeLeadTeam")
+
+  @@unique([orgId, key])
+}
+
+model TeamMembership {
+  id     String @id @default(cuid())
+  userId String
+  teamId String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, teamId])
+  @@index([teamId])
+}
+
+// ===================  Workflow states / labels  ===================
+
+/// mock-data/status.tsx — the 13 preset statuses, made per-org configurable.
+/// `key` keeps the historical string id ("in-progress") so the UI's icon map,
+/// filters and category views keep working unchanged.
+model WorkflowState {
+  id            String        @id @default(cuid())
+  orgId         String
+  key           String // "in-progress", "technical-review", ...
+  name          String
+  color         String
+  category      StateCategory
+  iconKey       String // which SVG builder the frontend renders
+  workflowOrder Int // insights table order
+  displayOrder  Int // grouped-view order
+
+  org      Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  issues   Issue[]
+  projects Project[]
+
+  @@unique([orgId, key])
+}
+
+/// mock-data/labels.ts
+model Label {
+  id    String @id @default(cuid())
+  orgId String
+  key   String // "ui", "bug", ...
+  name  String
+  color String // CSS color keyword
+
+  org      Organization   @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  issues   IssueLabel[]
+  projects ProjectLabel[]
+
+  @@unique([orgId, key])
+}
+
+// ===================  Projects  ===================
+
+model Project {
+  id              String    @id @default(cuid())
+  orgId           String
+  teamId          String
+  name            String
+  icon            String // lucide/remix icon name (mock passes the component; store the name)
+  stateId         String
+  priority        Priority  @default(NO_PRIORITY)
+  health          Health    @default(NO_UPDATE)
+  healthUpdatedAt DateTime?
+  startDate       DateTime?
+  targetDate      DateTime?
+  leadId          String?
+  initiativeId    String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  // percentComplete is DERIVED (completed issues / total) — never stored.
+
+  org        Organization       @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  team       Team               @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  state      WorkflowState      @relation(fields: [stateId], references: [id])
+  lead       User?              @relation("ProjectLead", fields: [leadId], references: [id])
+  initiative Initiative?        @relation(fields: [initiativeId], references: [id])
+  labels     ProjectLabel[]
+  milestones ProjectMilestone[]
+  updates    ProjectUpdate[]
+  issues     Issue[]
+  detail     ProjectDetail?
+
+  @@index([orgId])
+  @@index([teamId])
+  @@index([initiativeId])
+}
+
+model ProjectLabel {
+  projectId String
+  labelId   String
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  label   Label   @relation(fields: [labelId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, labelId])
+}
+
+/// mock-data/project-details.ts — ProjectDetail (rich page content)
+model ProjectDetail {
+  projectId   String   @id
+  summary     String
+  description Json     @default("[]") // ContentBlock[]
+  resources   Json     @default("[]") // ProjectResource[]
+  activity    Json     @default("[]") // ProjectActivityEvent[]
+  updatedAt   DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model ProjectMilestone {
+  id         String    @id @default(cuid())
+  projectId  String
+  name       String
+  targetDate DateTime?
+  completed  Boolean   @default(false)
+  order      Int       @default(0)
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+model ProjectUpdate {
+  id        String              @id @default(cuid())
+  projectId String
+  authorId  String
+  health    ProjectUpdateHealth
+  blocks    Json // ContentBlock[]
+  createdAt DateTime            @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  author  User    @relation(fields: [authorId], references: [id])
+
+  @@index([projectId])
+}
+
+// ===================  Cycles  ===================
+
+model Cycle {
+  id        String      @id @default(cuid())
+  teamId    String
+  number    Int
+  name      String
+  status    CycleStatus
+  startDate DateTime
+  endDate   DateTime
+  capacity  Int         @default(0)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  // scope / scopeDelta / started / completed / successRate are DERIVED.
+
+  team   Team               @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  issues Issue[]
+  burnup CycleBurnupPoint[]
+
+  @@unique([teamId, number])
+  @@index([teamId])
+}
+
+/// Daily snapshot written by a scheduled job (mock: deterministic `generateBurnup`).
+model CycleBurnupPoint {
+  id        String   @id @default(cuid())
+  cycleId   String
+  date      DateTime @db.Date
+  scope     Int
+  started   Int
+  completed Int
+  ideal     Float
+
+  cycle Cycle @relation(fields: [cycleId], references: [id], onDelete: Cascade)
+
+  @@unique([cycleId, date])
+}
+
+// ===================  Issues  ===================
+
+model Issue {
+  id             String    @id @default(cuid())
+  orgId          String
+  teamId         String
+  sequenceNumber Int // 701 — identifier = org.issuePrefix + "-" + sequenceNumber
+  identifier     String // denormalized "LNUI-701" for fast lookup + URLs
+  title          String
+  description    Json      @default("{}") // rich doc (TipTap/ContentBlock JSON)
+  stateId        String
+  priority       Priority  @default(NO_PRIORITY)
+  assigneeId     String? // circle is single-assignee; switch to a join table for multi
+  cycleId        String?
+  projectId      String?
+  parentId       String? // sub-issue parent
+  rank           String // LexoRank
+  dueDate        DateTime?
+  startedAt      DateTime?
+  completedAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  org                Organization    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  team               Team            @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  state              WorkflowState   @relation(fields: [stateId], references: [id])
+  assignee           User?           @relation("IssueAssignee", fields: [assigneeId], references: [id])
+  cycle              Cycle?          @relation(fields: [cycleId], references: [id])
+  project            Project?        @relation(fields: [projectId], references: [id])
+  parent             Issue?          @relation("SubIssues", fields: [parentId], references: [id])
+  children           Issue[]         @relation("SubIssues")
+  labels             IssueLabel[]
+  comments           IssueComment[]
+  activity           IssueActivity[]
+  prLinks            PrLink[]
+  relations          IssueRelation[] @relation("RelationFrom")
+  relatedRelations   IssueRelation[] @relation("RelationTo")
+  notifications      Notification[]
+  milestoneId        String? // mock-data/issue-details.ts — free-text milestone ref for now
+  promotedFromTriage TriageItem?     @relation("TriagePromotedIssue")
+
+  @@unique([orgId, identifier])
+  @@unique([teamId, sequenceNumber])
+  @@index([orgId, stateId])
+  @@index([assigneeId])
+  @@index([cycleId])
+  @@index([projectId])
+  @@index([parentId])
+  @@index([rank])
+}
+
+model IssueLabel {
+  issueId String
+  labelId String
+
+  issue Issue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  label Label @relation(fields: [labelId], references: [id], onDelete: Cascade)
+
+  @@id([issueId, labelId])
+  @@index([labelId])
+}
+
+/// mock-data/issue-details.ts — ActivityItem (comment variant)
+model IssueComment {
+  id        String   @id @default(cuid())
+  issueId   String
+  authorId  String
+  body      Json // rich text
+  reactions Json     @default("[]") // CommentReaction[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  issue  Issue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  author User  @relation(fields: [authorId], references: [id])
+
+  @@index([issueId])
+}
+
+/// mock-data/issue-details.ts — ActivityItem (event variant) / Plane-style activity log
+model IssueActivity {
+  id        String   @id @default(cuid())
+  issueId   String
+  actorId   String
+  verb      String   @default("updated") // created | updated | commented | ...
+  field     String? // "status", "assignee", "priority", ...
+  oldValue  String?
+  newValue  String?
+  createdAt DateTime @default(now())
+
+  issue Issue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  actor User  @relation(fields: [actorId], references: [id])
+
+  @@index([issueId])
+}
+
+model IssueRelation {
+  id             String       @id @default(cuid())
+  issueId        String
+  relatedIssueId String
+  type           RelationType
+
+  issue        Issue @relation("RelationFrom", fields: [issueId], references: [id], onDelete: Cascade)
+  relatedIssue Issue @relation("RelationTo", fields: [relatedIssueId], references: [id], onDelete: Cascade)
+
+  @@unique([issueId, relatedIssueId, type])
+  @@index([relatedIssueId])
+}
+
+model PrLink {
+  id        String   @id @default(cuid())
+  issueId   String
+  title     String
+  url       String
+  status    PrStatus @default(OPEN)
+  createdAt DateTime @default(now())
+
+  issue Issue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+
+  @@index([issueId])
+}
+
+// ===================  Initiatives  ===================
+
+model Initiative {
+  id          String           @id @default(cuid())
+  orgId       String
+  name        String
+  description String?
+  icon        String // emoji
+  status      InitiativeStatus
+  priority    Priority         @default(NO_PRIORITY)
+  ownerId     String?
+  leadTeamId  String?
+  target      String? // mock stores free text ("Q3 2026"); keep as-is
+  health      Health           @default(NO_UPDATE)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  org      Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  owner    User?        @relation("InitiativeOwner", fields: [ownerId], references: [id])
+  leadTeam Team?        @relation("InitiativeLeadTeam", fields: [leadTeamId], references: [id])
+  projects Project[]
+
+  @@index([orgId])
+}
+
+// ===================  Documents / saved views  ===================
+
+model DocumentFolder {
+  id        String   @id @default(cuid())
+  orgId     String
+  teamId    String?
+  name      String
+  icon      String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  org       Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  team      Team?        @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  documents Document[]
+
+  @@index([orgId])
+}
+
+model Document {
+  id        String   @id @default(cuid())
+  folderId  String
+  name      String
+  icon      String
+  content   Json     @default("{}")
+  pinned    Boolean  @default(false)
+  creatorId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  folder  DocumentFolder @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  creator User           @relation(fields: [creatorId], references: [id])
+
+  @@index([folderId])
+}
+
+/// mock-data/views.ts — View (named SavedView to avoid the DB keyword)
+model SavedView {
+  id          String   @id @default(cuid())
+  orgId       String
+  teamId      String?
+  ownerId     String
+  name        String
+  description String
+  icon        String
+  type        ViewType
+  filter      Json // ViewFilter
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  org   Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  team  Team?        @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  owner User         @relation(fields: [ownerId], references: [id])
+
+  @@index([orgId])
+}
+
+// ===================  Notifications (inbox)  ===================
+
+/// mock-data/inbox.ts — InboxItem (notification fields; the issue is referenced)
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String // recipient
+  actorId   String?
+  issueId   String?
+  type      String // comment | mention | assignment | status | reopened | closed | edited | created | upload
+  content   String
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user  User   @relation("NotificationRecipient", fields: [userId], references: [id], onDelete: Cascade)
+  actor User?  @relation("NotificationActor", fields: [actorId], references: [id])
+  issue Issue? @relation(fields: [issueId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt])
+}
+
+// ===================  Triage  ===================
+
+/// mock-data/triage.ts — TriageItem (team intake queue)
+model TriageItem {
+  id              String       @id @default(cuid())
+  orgId           String
+  teamId          String
+  identifier      String
+  title           String
+  reporterKind    String // "user" | "integration"
+  reporterUserId  String?
+  reporterName    String? // integration name
+  receivedAt      DateTime     @default(now())
+  sections        Json         @default("[]") // TriageSection[]
+  intelligence    Json         @default("{}") // TriageIntelligence
+  preview         Json? // TriagePreviewCard
+  status          TriageStatus @default(PENDING)
+  promotedIssueId String?      @unique
+
+  org           Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  team          Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  reporterUser  User?        @relation("TriageReporter", fields: [reporterUserId], references: [id])
+  promotedIssue Issue?       @relation("TriagePromotedIssue", fields: [promotedIssueId], references: [id])
+
+  @@index([teamId, status])
+}
+
+// ===================  Reviews  ===================
+
+/// mock-data/reviews.ts — Review (circle-specific PR review surface).
+/// Core columns are queryable; the heavy nested content (diffs, guide,
+/// verdict tables) lives in `data` until a real VCS integration replaces it.
+model Review {
+  id                 String       @id @default(cuid())
+  orgId              String
+  title              String
+  status             ReviewStatus
+  list               ReviewList
+  repo               String
+  prNumber           Int
+  targetBranch       String
+  sourceBranch       String
+  additions          Int          @default(0)
+  deletions          Int          @default(0)
+  checksPassed       Int          @default(0)
+  checksTotal        Int          @default(0)
+  resolvesIdentifier String?
+  data               Json // files, commits, summary, testPlan, deployment, reviewNote, guide, diffs
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@index([orgId, list])
+}

@@ -11,7 +11,8 @@ import {
 } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useIssuesStore } from '@/store/issues-store';
-import { Project, projects } from '@/mock-data/projects';
+import { useProjectsStore } from '@/store/projects-store';
+import { Project } from '@/mock-data/projects';
 import { Box, CheckIcon, FolderIcon } from 'lucide-react';
 import { useEffect, useId, useState } from 'react';
 
@@ -26,6 +27,7 @@ export function ProjectSelector({ project, onChange }: ProjectSelectorProps) {
    const [value, setValue] = useState<string | undefined>(project?.id);
 
    const { filterByProject } = useIssuesStore();
+   const projects = useProjectsStore((s) => s.projects);
 
    useEffect(() => {
       setValue(project?.id);

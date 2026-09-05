@@ -3,7 +3,8 @@
 import { Button } from '@/components/ui/button';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
-import { getProjectById } from '@/mock-data/projects';
+import { getProjectById as mockGetProjectById } from '@/mock-data/projects';
+import { useProjectsStore } from '@/store/projects-store';
 import { useRightPanelStore } from '@/store/right-panel-store';
 import { BarChart3, ChevronRight, Link2, MoreHorizontal, PanelRight, Star } from 'lucide-react';
 import Link from 'next/link';
@@ -71,7 +72,8 @@ function PanelToggles() {
 
 export default function Header({ projectId }: { projectId: string }) {
    const { orgId } = useParams<{ orgId: string }>();
-   const project = getProjectById(projectId);
+   const project =
+      useProjectsStore((s) => s.getProjectById(projectId)) ?? mockGetProjectById(projectId);
    if (!project) return null;
 
    return (

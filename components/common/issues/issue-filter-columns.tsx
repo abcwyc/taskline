@@ -9,8 +9,10 @@ import { Issue } from '@/mock-data/issues';
 import { labels } from '@/mock-data/labels';
 import { priorities } from '@/mock-data/priorities';
 import { status, StatusCategory } from '@/mock-data/status';
-import { projects } from '@/mock-data/projects';
+import { Project, projects as mockProjects } from '@/mock-data/projects';
 import { users } from '@/mock-data/users';
+import { useProjectsStore } from '@/store/projects-store';
+import { useMemo } from 'react';
 import {
    BarChart3,
    CircleCheck,
@@ -76,11 +78,13 @@ const labelOptions: ColumnOption[] = labels.map((label) => ({
    icon: <span className="size-2.5 rounded-full" style={{ backgroundColor: label.color }} />,
 }));
 
-const projectOptions: ColumnOption[] = projects.map((project) => ({
-   value: project.id,
-   label: project.name,
-   icon: <project.icon className="size-4 text-muted-foreground" />,
-}));
+/** Project options are the only dynamic list (projects are DB-backed). */
+const buildProjectOptions = (projectList: Project[]): ColumnOption[] =>
+   projectList.map((project) => ({
+      value: project.id,
+      label: project.name,
+      icon: <project.icon className="size-4 text-muted-foreground" />,
+   }));
 
 const cycleOptions: ColumnOption[] = [
    {
@@ -102,67 +106,90 @@ const cycleOptions: ColumnOption[] = [
 const dtf = createColumnConfigHelper<Issue>();
 
 /**
- * Filterable issue columns for the bazza/ui data-table-filter component.
- * Accessors return the raw values the filter functions compare against.
+ * Builds the filterable issue columns for the bazza/ui data-table-filter.
+ * Only `projectOptions` varies (projects are DB-backed) — everything else is a
+ * static list. Accessors return the raw values the filter functions compare
+ * against and never depend on the option lists.
  */
-export const issueFilterColumns = [
-   dtf
-      .option()
-      .id('status')
-      .accessor((issue: Issue) => issue.status.id)
-      .displayName('Status')
-      .icon(CircleCheck)
-      .options(statusOptions)
-      .build(),
-   dtf
-      .option()
-      .id('statusType')
-      .accessor((issue: Issue) => issue.status.category)
-      .displayName('Status type')
-      .icon(CircleDashed)
-      .options(statusTypeOptions)
-      .build(),
-   dtf
-      .option()
-      .id('assignee')
-      .accessor((issue: Issue) => issue.assignee?.id ?? 'unassigned')
-      .displayName('Assignee')
-      .icon(CircleUserRound)
-      .options(assigneeOptions)
-      .build(),
-   dtf
-      .option()
-      .id('priority')
-      .accessor((issue: Issue) => issue.priority.id)
-      .displayName('Priority')
-      .icon(BarChart3)
-      .options(priorityOptions)
-      .build(),
-   dtf
-      .multiOption()
-      .id('labels')
-      .accessor((issue: Issue) => issue.labels.map((label) => label.id))
-      .displayName('Labels')
-      .icon(Tag)
-      .options(labelOptions)
-      .build(),
-   dtf
-      .option()
-      .id('project')
-      .accessor((issue: Issue) => issue.project?.id ?? '')
-      .displayName('Project')
-      .icon(Folder)
-      .options(projectOptions)
-      .build(),
-   dtf
-      .option()
-      .id('cycle')
-      .accessor((issue: Issue) => (issue.cycleId === '' ? 'no-cycle' : issue.cycleId))
-      .displayName('Cycle')
-      .icon(RefreshCcw)
-      .options(cycleOptions)
-      .build(),
-] as const;
+function buildIssueFilterColumns(projectOptions: ColumnOption[]) {
+   return [
+      dtf
+         .option()
+         .id('status')
+         .accessor((issue: Issue) => issue.status.id)
+         .displayName('Status')
+         .icon(CircleCheck)
+         .options(statusOptions)
+         .build(),
+      dtf
+         .option()
+         .id('statusType')
+         .accessor((issue: Issue) => issue.status.category)
+         .displayName('Status type')
+         .icon(CircleDashed)
+         .options(statusTypeOptions)
+         .build(),
+      dtf
+         .option()
+         .id('assignee')
+         .accessor((issue: Issue) => issue.assignee?.id ?? 'unassigned')
+         .displayName('Assignee')
+         .icon(CircleUserRound)
+         .options(assigneeOptions)
+         .build(),
+      dtf
+         .option()
+         .id('priority')
+         .accessor((issue: Issue) => issue.priority.id)
+         .displayName('Priority')
+         .icon(BarChart3)
+         .options(priorityOptions)
+         .build(),
+      dtf
+         .multiOption()
+         .id('labels')
+         .accessor((issue: Issue) => issue.labels.map((label) => label.id))
+         .displayName('Labels')
+         .icon(Tag)
+         .options(labelOptions)
+         .build(),
+      dtf
+         .option()
+         .id('project')
+         .accessor((issue: Issue) => issue.project?.id ?? '')
+         .displayName('Project')
+         .icon(Folder)
+         .options(projectOptions)
+         .build(),
+      dtf
+         .option()
+         .id('cycle')
+         .accessor((issue: Issue) => (issue.cycleId === '' ? 'no-cycle' : issue.cycleId))
+         .displayName('Cycle')
+         .icon(RefreshCcw)
+         .options(cycleOptions)
+         .build(),
+   ];
+}
+
+/**
+ * Static column set — used by `applyIssueFilters` (accessors + operators only,
+ * no options needed) and as the SSR/pre-hydrate fallback. The filter UI uses
+ * `useIssueFilterColumns()` instead so the Project list stays live.
+ */
+export const issueFilterColumns = buildIssueFilterColumns(buildProjectOptions(mockProjects));
+
+/** Filter-UI columns with the live (DB-backed) project list. */
+export function useIssueFilterColumns() {
+   const projectList = useProjectsStore((s) => s.projects);
+   return useMemo(
+      () =>
+         buildIssueFilterColumns(
+            buildProjectOptions(projectList.length ? projectList : mockProjects)
+         ),
+      [projectList]
+   );
+}
 
 const columnById = new Map<string, (typeof issueFilterColumns)[number]>(
    issueFilterColumns.map((column) => [column.id, column])
