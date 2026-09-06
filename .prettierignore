@@ -5,3 +5,7 @@ pnpm-lock.yaml
 .github
 build
 dist
+
+# vendored third-party — keep as upstream ships it
+components/data-table-filter
+components/ui
