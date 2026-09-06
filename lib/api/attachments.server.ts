@@ -3,6 +3,7 @@ import 'server-only';
 import { db } from '@/lib/db';
 import { deleteBlob, makeStorageKey, MAX_ATTACHMENT_BYTES, readBlob, saveBlob } from './storage';
 import { AttachmentDTO } from './types';
+import { PublicError } from './http';
 
 interface Row {
    id: string;
@@ -51,9 +52,11 @@ export async function addAttachment(
 ): Promise<AttachmentDTO | null> {
    const issue = await resolveIssue(orgId, idOrIdentifier);
    if (!issue) return null;
-   if (file.bytes.length === 0) throw new Error('empty file');
+   if (file.bytes.length === 0) throw new PublicError('empty file');
    if (file.bytes.length > MAX_ATTACHMENT_BYTES) {
-      throw new Error(`file is larger than ${Math.round(MAX_ATTACHMENT_BYTES / 1024 / 1024)} MB`);
+      throw new PublicError(
+         `file is larger than ${Math.round(MAX_ATTACHMENT_BYTES / 1024 / 1024)} MB`
+      );
    }
 
    const filename = file.name.replace(/[\r\n"]/g, '').slice(0, 255) || 'file';

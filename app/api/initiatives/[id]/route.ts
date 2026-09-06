@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { isContext, requireContext, requireWrite } from '@/lib/api/context';
+import { errorResponse } from '@/lib/api/http';
 import { deleteInitiative, getInitiative, updateInitiative } from '@/lib/api/initiatives.server';
 import { InitiativeUpdateBody } from '@/lib/api/types';
 
@@ -37,7 +38,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       if (!updated) return NextResponse.json({ error: 'not found' }, { status: 404 });
       return NextResponse.json(updated);
    } catch (err) {
-      return NextResponse.json({ error: (err as Error).message }, { status: 422 });
+      return errorResponse(err);
    }
 }
 

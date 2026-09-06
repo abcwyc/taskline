@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { addAttachment, listAttachments } from '@/lib/api/attachments.server';
 import { isContext, requireContext, requireWrite } from '@/lib/api/context';
+import { errorResponse } from '@/lib/api/http';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,6 +46,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
          ? NextResponse.json(dto, { status: 201 })
          : NextResponse.json({ error: 'issue not found' }, { status: 404 });
    } catch (err) {
-      return NextResponse.json({ error: (err as Error).message }, { status: 422 });
+      return errorResponse(err);
    }
 }

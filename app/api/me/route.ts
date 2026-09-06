@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { isContext, requireContext } from '@/lib/api/context';
+import { errorResponse, parseBody } from '@/lib/api/http';
 import { getMe, updateMe } from '@/lib/api/me.server';
+import { meUpdate } from '@/lib/api/schemas';
 import { MeUpdateBody } from '@/lib/api/types';
 
 export const dynamic = 'force-dynamic';
@@ -19,13 +21,13 @@ export async function PATCH(req: NextRequest) {
    const ctx = await requireContext();
    if (!isContext(ctx)) return ctx;
 
-   let body: MeUpdateBody;
    try {
-      body = (await req.json()) as MeUpdateBody;
-   } catch {
-      return NextResponse.json({ error: 'invalid json' }, { status: 400 });
+      const body = await parseBody(req, meUpdate);
+      const me = await updateMe(ctx.userId, body as MeUpdateBody);
+      return me
+         ? NextResponse.json(me)
+         : NextResponse.json({ error: 'not found' }, { status: 404 });
+   } catch (err) {
+      return errorResponse(err);
    }
-
-   const me = await updateMe(ctx.userId, body);
-   return me ? NextResponse.json(me) : NextResponse.json({ error: 'not found' }, { status: 404 });
 }

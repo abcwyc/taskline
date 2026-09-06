@@ -2,6 +2,7 @@ import 'server-only';
 
 import { db } from '@/lib/db';
 import { InviteCreateBody, InviteDTO, ROLE_ENUM_TO_KEY, ROLE_KEY_TO_ENUM } from './types';
+import { PublicError } from './http';
 
 /**
  * Workspace invitations. An invite is a single-use token redeemed at
@@ -85,7 +86,7 @@ export async function createInvite(
          where: { email, memberships: { some: { orgId } } },
          select: { id: true },
       });
-      if (existing) throw new Error('that email is already a member');
+      if (existing) throw new PublicError('that email is already a member');
    }
 
    const row = await db.invite.create({

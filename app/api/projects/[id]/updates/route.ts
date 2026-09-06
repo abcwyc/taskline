@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { isContext, requireWrite } from '@/lib/api/context';
+import { errorResponse } from '@/lib/api/http';
 import { addProjectUpdate } from '@/lib/api/project-details.server';
 import { PostProjectUpdateBody } from '@/lib/api/types';
 
@@ -28,6 +29,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       if (!created) return NextResponse.json({ error: 'not found' }, { status: 404 });
       return NextResponse.json(created, { status: 201 });
    } catch (err) {
-      return NextResponse.json({ error: (err as Error).message }, { status: 422 });
+      return errorResponse(err);
    }
 }

@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client';
 
 import { db } from '@/lib/db';
 import { TeamCreateBody, TeamDTO, TeamUpdateBody } from './types';
+import { PublicError } from './http';
 
 /**
  * Server-side data access + Prisma <-> DTO translation for teams.
@@ -130,7 +131,7 @@ export async function deleteTeam(orgId: string, key: string): Promise<boolean> {
       db.cycle.count({ where: { teamId: existing.id } }),
    ]);
    if (projects || issues || cycles) {
-      throw new Error('team still has projects, issues or cycles');
+      throw new PublicError('team still has projects, issues or cycles');
    }
 
    await db.team.delete({ where: { id: existing.id } });

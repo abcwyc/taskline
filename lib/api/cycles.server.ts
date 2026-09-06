@@ -1,4 +1,5 @@
 import 'server-only';
+import { PublicError } from './http';
 import { Prisma } from '@prisma/client';
 
 import { db } from '@/lib/db';
@@ -115,7 +116,7 @@ async function resolveTeam(orgId: string, teamKey: string | undefined) {
    const team = teamKey
       ? await db.team.findFirst({ where: { orgId, key: teamKey } })
       : await db.team.findFirst({ where: { orgId }, orderBy: { key: 'asc' } });
-   if (!team) throw new Error('team not found');
+   if (!team) throw new PublicError('team not found');
    return team;
 }
 

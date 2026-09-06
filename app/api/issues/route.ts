@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { isContext, requireContext, requireWrite } from '@/lib/api/context';
+import { errorResponse, parseBody } from '@/lib/api/http';
 import { createIssue, listIssues } from '@/lib/api/issues.server';
+import { issueCreate } from '@/lib/api/schemas';
 import { IssueCreateBody, ListIssuesQuery } from '@/lib/api/types';
 
 export const dynamic = 'force-dynamic';
@@ -27,22 +29,12 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
    const ctx = await requireWrite();
    if (!isContext(ctx)) return ctx;
-   const { orgId, userId } = ctx;
-
-   let body: unknown;
-   try {
-      body = await req.json();
-   } catch {
-      return NextResponse.json({ error: 'invalid json' }, { status: 400 });
-   }
-   if (typeof body !== 'object' || body === null) {
-      return NextResponse.json({ error: 'expected an object' }, { status: 400 });
-   }
 
    try {
-      const created = await createIssue(orgId, body as IssueCreateBody, userId);
+      const body = await parseBody(req, issueCreate);
+      const created = await createIssue(ctx.orgId, body as IssueCreateBody, ctx.userId);
       return NextResponse.json(created, { status: 201 });
    } catch (err) {
-      return NextResponse.json({ error: (err as Error).message }, { status: 422 });
+      return errorResponse(err);
    }
 }

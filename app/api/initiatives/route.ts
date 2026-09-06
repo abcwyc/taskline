@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { isContext, requireContext, requireWrite } from '@/lib/api/context';
+import { errorResponse } from '@/lib/api/http';
 import { createInitiative, listInitiatives } from '@/lib/api/initiatives.server';
 import { InitiativeCreateBody } from '@/lib/api/types';
 
@@ -30,6 +31,6 @@ export async function POST(req: NextRequest) {
       const created = await createInitiative(ctx.orgId, body as InitiativeCreateBody);
       return NextResponse.json(created, { status: 201 });
    } catch (err) {
-      return NextResponse.json({ error: (err as Error).message }, { status: 422 });
+      return errorResponse(err);
    }
 }

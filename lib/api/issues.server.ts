@@ -1,10 +1,12 @@
 import 'server-only';
+import { PublicError } from './http';
 import { Prisma, Priority } from '@prisma/client';
 
 import { db } from '@/lib/db';
 import { LexoRank } from '@/lib/utils';
 import { purgeAttachmentBlobs } from './attachments.server';
 import { onIssueUpdated } from './issue-events.server';
+import { assertOrgScope } from './ownership.server';
 import { blocksToText, readBlocks, storeBlocks, textToBlocks } from './rich-text';
 import {
    IssueDTO,
@@ -117,6 +119,14 @@ export async function createIssue(
    return db.$transaction(async (tx) => {
       const org = await tx.organization.findUniqueOrThrow({ where: { id: orgId } });
 
+      await assertOrgScope(tx, orgId, {
+         projectId: body.projectId ?? undefined,
+         cycleId: body.cycleId,
+         assigneeId: body.assigneeId ?? undefined,
+         statusId: body.statusId,
+         labelIds: body.labelIds,
+      });
+
       // Sub-issue: validate the parent is in this org and inherit its project.
       let parent: { id: string; projectId: string | null } | null = null;
       if (body.parentId) {
@@ -124,7 +134,7 @@ export async function createIssue(
             where: { orgId, OR: [{ id: body.parentId }, { identifier: body.parentId }] },
             select: { id: true, projectId: true },
          });
-         if (!parent) throw new Error('parent issue not found');
+         if (!parent) throw new PublicError('parent issue not found');
       }
       const projectId = body.projectId ?? parent?.projectId ?? null;
 
@@ -156,7 +166,7 @@ export async function createIssue(
       if (!teamId) {
          teamId = (await tx.team.findFirst({ where: { orgId }, orderBy: { key: 'asc' } }))?.id;
       }
-      if (!teamId) throw new Error('no team to attach the issue to');
+      if (!teamId) throw new PublicError('no team to attach the issue to');
 
       const created = await tx.issue.create({
          data: {
@@ -205,6 +215,14 @@ export async function updateIssue(
    if (!existingRow) return null;
    const existing = { id: existingRow.id, stateId: existingRow.stateId };
    const before = serializeIssue(existingRow);
+
+   await assertOrgScope(db, orgId, {
+      ...('projectId' in body ? { projectId: body.projectId } : {}),
+      ...('cycleId' in body ? { cycleId: body.cycleId } : {}),
+      ...('assigneeId' in body ? { assigneeId: body.assigneeId } : {}),
+      ...('statusId' in body ? { statusId: body.statusId } : {}),
+      ...('labelIds' in body ? { labelIds: body.labelIds } : {}),
+   });
 
    const data: Prisma.IssueUpdateInput = {};
    if (body.title !== undefined) data.title = body.title;

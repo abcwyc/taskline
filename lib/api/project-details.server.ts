@@ -1,4 +1,5 @@
 import 'server-only';
+import { PublicError } from './http';
 import { Prisma, ProjectUpdateHealth } from '@prisma/client';
 
 import { db } from '@/lib/db';
@@ -99,7 +100,7 @@ async function fallbackAuthorId(orgId: string): Promise<string> {
    });
    if (admin) return admin.userId;
    const any = await db.membership.findFirst({ where: { orgId }, select: { userId: true } });
-   if (!any) throw new Error('no member to attribute the update to');
+   if (!any) throw new PublicError('no member to attribute the update to');
    return any.userId;
 }
 
@@ -114,7 +115,7 @@ export async function addProjectUpdate(
       select: { id: true },
    });
    if (!project) return null;
-   if (!body?.text?.trim()) throw new Error('update text is required');
+   if (!body?.text?.trim()) throw new PublicError('update text is required');
 
    const authorId = actorId ?? (await fallbackAuthorId(orgId));
 

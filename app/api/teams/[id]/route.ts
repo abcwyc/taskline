@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { isContext, requireContext, requireWrite, requireAdmin } from '@/lib/api/context';
+import { errorResponse } from '@/lib/api/http';
 import { deleteTeam, getTeam, updateTeam } from '@/lib/api/teams.server';
 import { TeamUpdateBody } from '@/lib/api/types';
 
@@ -38,7 +39,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       if (!updated) return NextResponse.json({ error: 'not found' }, { status: 404 });
       return NextResponse.json(updated);
    } catch (err) {
-      return NextResponse.json({ error: (err as Error).message }, { status: 422 });
+      return errorResponse(err);
    }
 }
 
@@ -52,6 +53,6 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
       if (!ok) return NextResponse.json({ error: 'not found' }, { status: 404 });
       return new NextResponse(null, { status: 204 });
    } catch (err) {
-      return NextResponse.json({ error: (err as Error).message }, { status: 422 });
+      return errorResponse(err);
    }
 }

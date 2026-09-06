@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { isContext, requireAdmin } from '@/lib/api/context';
+import { errorResponse, parseBody } from '@/lib/api/http';
 import { createInvite, listInvites } from '@/lib/api/invites.server';
+import { inviteCreate } from '@/lib/api/schemas';
 import { InviteCreateBody } from '@/lib/api/types';
 
 export const dynamic = 'force-dynamic';
@@ -23,17 +25,16 @@ export async function POST(req: NextRequest) {
    const ctx = await requireAdmin();
    if (!isContext(ctx)) return ctx;
 
-   let body: InviteCreateBody;
    try {
-      body = (await req.json()) as InviteCreateBody;
-   } catch {
-      return NextResponse.json({ error: 'invalid json' }, { status: 400 });
-   }
-
-   try {
-      const invite = await createInvite(ctx.orgId, body, ctx.userId, inviteOrigin(req));
+      const body = await parseBody(req, inviteCreate);
+      const invite = await createInvite(
+         ctx.orgId,
+         body as InviteCreateBody,
+         ctx.userId,
+         inviteOrigin(req)
+      );
       return NextResponse.json(invite, { status: 201 });
    } catch (err) {
-      return NextResponse.json({ error: (err as Error).message }, { status: 422 });
+      return errorResponse(err);
    }
 }

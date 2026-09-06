@@ -1,4 +1,5 @@
 import 'server-only';
+import { PublicError } from './http';
 import { Prisma } from '@prisma/client';
 
 import { db } from '@/lib/db';
@@ -143,7 +144,7 @@ export async function addIssueComment(
       select: { id: true, identifier: true },
    });
    if (!issue) return null;
-   if (!body?.text?.trim()) throw new Error('comment text is required');
+   if (!body?.text?.trim()) throw new PublicError('comment text is required');
 
    const c = await db.$transaction(async (tx) => {
       const comment = await tx.issueComment.create({

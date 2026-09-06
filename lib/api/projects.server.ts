@@ -1,7 +1,9 @@
 import 'server-only';
+import { PublicError } from './http';
 import { Health, Prisma, Priority } from '@prisma/client';
 
 import { db } from '@/lib/db';
+import { assertOrgScope } from './ownership.server';
 import {
    HEALTH_ENUM_TO_KEY,
    HEALTH_KEY_TO_ENUM,
@@ -138,11 +140,19 @@ const relation = (id: string | null | undefined) =>
    id ? { connect: { id } } : id === null ? { disconnect: true as const } : undefined;
 
 export async function createProject(orgId: string, body: ProjectCreateBody): Promise<ProjectDTO> {
+   await assertOrgScope(db, orgId, {
+      teamId: body.teamId,
+      statusId: body.statusId,
+      leadId: body.leadId ?? undefined,
+      initiativeId: body.initiativeId ?? undefined,
+      labelIds: body.labelIds,
+   });
+
    let teamId = body.teamId;
    if (!teamId) {
       teamId = (await db.team.findFirst({ where: { orgId }, orderBy: { key: 'asc' } }))?.id;
    }
-   if (!teamId) throw new Error('no team to attach the project to');
+   if (!teamId) throw new PublicError('no team to attach the project to');
 
    const row = await db.project.create({
       data: {
@@ -177,6 +187,14 @@ export async function updateProject(
       select: { id: true, health: true },
    });
    if (!existing) return null;
+
+   await assertOrgScope(db, orgId, {
+      ...('teamId' in body ? { teamId: body.teamId } : {}),
+      ...('statusId' in body ? { statusId: body.statusId } : {}),
+      ...('leadId' in body ? { leadId: body.leadId } : {}),
+      ...('initiativeId' in body ? { initiativeId: body.initiativeId } : {}),
+      ...('labelIds' in body ? { labelIds: body.labelIds } : {}),
+   });
 
    const data: Prisma.ProjectUpdateInput = {};
    if (body.name !== undefined) data.name = body.name;
