@@ -15,11 +15,15 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
    if (!found) return NextResponse.json({ error: 'not found' }, { status: 404 });
 
    const { row, bytes } = found;
+   // `attachment` (not `inline`): the browser downloads rather than renders, so a
+   // user-uploaded .html/.svg can't execute on our origin.
+   const asciiName = row.filename.replace(/[^\x20-\x7e]/g, '_').replace(/"/g, '');
    return new NextResponse(bytes as unknown as BodyInit, {
       headers: {
          'content-type': row.contentType,
          'content-length': String(row.size),
-         'content-disposition': `inline; filename="${row.filename.replace(/[^\x20-\x7e]/g, '_')}"`,
+         'content-disposition': `attachment; filename="${asciiName}"; filename*=UTF-8''${encodeURIComponent(row.filename)}`,
+         'x-content-type-options': 'nosniff',
          'cache-control': 'private, max-age=3600',
       },
    });

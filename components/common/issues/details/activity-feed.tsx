@@ -3,6 +3,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ActivityItem } from '@/mock-data/issue-details';
+import { useAttachmentsStore } from '@/store/attachments-store';
 import { useIssueDetailsStore } from '@/store/issue-details-store';
 import { useMeStore } from '@/store/me-store';
 import {
@@ -10,13 +11,14 @@ import {
    CircleDot,
    GitPullRequestArrow,
    Link2,
+   Loader2,
+   Paperclip,
    PenLine,
-   Plus,
    RefreshCcw,
    Tag,
    Unlock,
 } from 'lucide-react';
-import { ReactNode, useState } from 'react';
+import { ReactNode, useRef, useState } from 'react';
 import { ContentBlocks } from './content-blocks';
 
 const EVENT_ICONS: Record<string, ReactNode> = {
@@ -88,8 +90,19 @@ export function ActivityFeed({
 }) {
    const postComment = useIssueDetailsStore((s) => s.postComment);
    const submitOn = useMeStore((s) => s.preferences.submitCommentOn);
+   const uploadAttachment = useAttachmentsStore((s) => s.upload);
+   const uploadingAttachment = useAttachmentsStore((s) =>
+      issueIdentifier ? s.uploading[issueIdentifier] : false
+   );
+   const fileRef = useRef<HTMLInputElement>(null);
    const [draft, setDraft] = useState('');
    const items = activity;
+
+   const onAttach = async (files: FileList | null) => {
+      if (!files || !issueIdentifier) return;
+      for (const file of Array.from(files)) await uploadAttachment(issueIdentifier, file);
+      if (fileRef.current) fileRef.current.value = '';
+   };
 
    const submitComment = () => {
       const text = draft.trim();
@@ -137,7 +150,26 @@ export function ActivityFeed({
                className="w-full resize-none bg-transparent outline-none text-sm placeholder:text-muted-foreground"
             />
             <div className="flex items-center justify-between">
-               <Plus className="size-4 text-muted-foreground" />
+               <button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  disabled={uploadingAttachment}
+                  className="text-muted-foreground hover:text-foreground disabled:opacity-50"
+                  aria-label="Attach a file to this issue"
+               >
+                  {uploadingAttachment ? (
+                     <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                     <Paperclip className="size-4" />
+                  )}
+               </button>
+               <input
+                  ref={fileRef}
+                  type="file"
+                  multiple
+                  className="hidden"
+                  onChange={(e) => onAttach(e.target.files)}
+               />
                <Button size="xs" onClick={submitComment} disabled={!draft.trim()}>
                   Comment
                </Button>
