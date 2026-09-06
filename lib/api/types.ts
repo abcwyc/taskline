@@ -168,6 +168,24 @@ export interface InviteCreateBody {
    role?: string; // role key; defaults to "Member"
 }
 
+export interface MeDTO {
+   id: string;
+   name: string;
+   email: string;
+   avatarUrl: string | null;
+   jobTitle: string | null;
+   timezone: string;
+   role: string; // role key in the primary workspace
+   preferences: import('./preferences').Preferences;
+}
+
+export interface MeUpdateBody {
+   name?: string;
+   jobTitle?: string | null;
+   timezone?: string;
+   preferences?: Partial<import('./preferences').Preferences>;
+}
+
 export const PRESENCE_ENUM_TO_KEY: Record<string, string> = {
    ONLINE: 'online',
    OFFLINE: 'offline',

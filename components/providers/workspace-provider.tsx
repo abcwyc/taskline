@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import { useCyclesStore } from '@/store/cycles-store';
 import { useDocumentsStore } from '@/store/documents-store';
 import { useLabelsStore } from '@/store/labels-store';
+import { useMeStore } from '@/store/me-store';
 import { useMembersStore } from '@/store/members-store';
 import { useReviewsStore } from '@/store/reviews-store';
 import { useTeamsStore } from '@/store/teams-store';
@@ -24,8 +25,10 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
    const hydrateTriage = useTriageStore((s) => s.hydrate);
    const hydrateDocuments = useDocumentsStore((s) => s.hydrate);
    const hydrateReviews = useReviewsStore((s) => s.hydrate);
+   const hydrateMe = useMeStore((s) => s.hydrate);
 
    useEffect(() => {
+      void hydrateMe();
       void hydrateMembers();
       void hydrateTeams();
       void hydrateLabels();
@@ -35,6 +38,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       void hydrateDocuments();
       void hydrateReviews();
    }, [
+      hydrateMe,
       hydrateMembers,
       hydrateTeams,
       hydrateLabels,

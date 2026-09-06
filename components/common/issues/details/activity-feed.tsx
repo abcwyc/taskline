@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ActivityItem } from '@/mock-data/issue-details';
 import { useIssueDetailsStore } from '@/store/issue-details-store';
+import { useMeStore } from '@/store/me-store';
 import {
    Ban,
    CircleDot,
@@ -88,6 +89,7 @@ export function ActivityFeed({
    issueIdentifier?: string;
 }) {
    const postComment = useIssueDetailsStore((s) => s.postComment);
+   const submitOn = useMeStore((s) => s.preferences.submitCommentOn);
    const [draft, setDraft] = useState('');
    const items = activity;
 
@@ -96,6 +98,15 @@ export function ActivityFeed({
       if (!text || !issueIdentifier) return;
       postComment(issueIdentifier, text);
       setDraft('');
+   };
+
+   const onComposerKeyDown = (event: React.KeyboardEvent) => {
+      if (event.key !== 'Enter') return;
+      const withMod = event.metaKey || event.ctrlKey;
+      if (submitOn === 'enter' ? !event.shiftKey && !withMod : withMod) {
+         event.preventDefault();
+         submitComment();
+      }
    };
 
    return (
@@ -122,11 +133,7 @@ export function ActivityFeed({
             <textarea
                value={draft}
                onChange={(event) => setDraft(event.target.value)}
-               onKeyDown={(event) => {
-                  if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
-                     submitComment();
-                  }
-               }}
+               onKeyDown={onComposerKeyDown}
                placeholder="Leave a comment..."
                rows={2}
                className="w-full resize-none bg-transparent outline-none text-sm placeholder:text-muted-foreground"

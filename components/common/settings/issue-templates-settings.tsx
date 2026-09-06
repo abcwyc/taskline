@@ -34,7 +34,6 @@ export default function IssueTemplatesSettings() {
                      icon={<FileText className="size-4" />}
                      title={template.name}
                      description={template.meta}
-                     onClick={() => {}}
                   />
                ))}
             </SettingsCard>

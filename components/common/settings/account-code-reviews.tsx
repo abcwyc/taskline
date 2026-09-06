@@ -148,7 +148,6 @@ export default function AccountCodeReviews() {
                   title="Configure coding tools"
                   description="Configure the external coding tools you can open issues in"
                   trailing={<ChevronRight className="size-4" />}
-                  onClick={() => {}}
                />
                <SettingsRow
                   title="Git attachment format"

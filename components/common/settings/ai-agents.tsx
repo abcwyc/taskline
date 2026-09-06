@@ -74,8 +74,6 @@ export default function AiAgents() {
                      }
                      description={feature.description}
                      trailing={<span>Enabled</span>}
-                     chevron
-                     onClick={() => {}}
                   />
                ))}
             </SettingsCard>
@@ -96,16 +94,12 @@ export default function AiAgents() {
                   title="Slack"
                   description="Settings and additional guidance for creating issues from Slack messages"
                   trailing={<span>Enabled</span>}
-                  chevron
-                  onClick={() => {}}
                />
                <SettingsRow
                   icon={<MessageCircleQuestion className="size-4" />}
                   title="Asks for Slack"
                   description="Settings and issue templates for creating issues from Asks for Slack"
                   trailing={<span>Enabled</span>}
-                  chevron
-                  onClick={() => {}}
                />
             </SettingsCard>
          </SettingsSection>

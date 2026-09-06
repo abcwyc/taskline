@@ -34,8 +34,6 @@ export default function AccountNotifications() {
                      icon={channel.icon}
                      title={channel.title}
                      description={<EnabledDot>{channel.status}</EnabledDot>}
-                     chevron
-                     onClick={() => {}}
                   />
                ))}
             </SettingsCard>

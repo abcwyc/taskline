@@ -12,6 +12,8 @@ import { priorities } from '@/mock-data/priorities';
 import { status } from '@/mock-data/status';
 import { useIssuesStore } from '@/store/issues-store';
 import { useCreateIssueStore } from '@/store/create-issue-store';
+import { useCurrentUser } from '@/lib/hooks/use-current-user';
+import { useMeStore } from '@/store/me-store';
 import { toast } from 'sonner';
 import { v4 as uuidv4 } from 'uuid';
 import { StatusSelector } from './status-selector';
@@ -26,6 +28,8 @@ export function CreateNewIssue() {
    const [createMore, setCreateMore] = useState<boolean>(false);
    const { isOpen, defaultStatus, openModal, closeModal } = useCreateIssueStore();
    const { addIssue, getAllIssues } = useIssuesStore();
+   const me = useCurrentUser();
+   const autoAssignSelf = useMeStore((s) => s.preferences.autoAssignSelf);
 
    const generateUniqueIdentifier = useCallback(() => {
       const identifiers = getAllIssues().map((issue) => issue.identifier);
@@ -48,7 +52,7 @@ export function CreateNewIssue() {
          title: '',
          description: '',
          status: defaultStatus || status.find((s) => s.id === 'to-do')!,
-         assignee: null,
+         assignee: autoAssignSelf ? (me ?? null) : null,
          priority: priorities.find((p) => p.id === 'no-priority')!,
          labels: [],
          createdAt: new Date().toISOString(),
@@ -57,7 +61,7 @@ export function CreateNewIssue() {
          subissues: [],
          rank: ranks[ranks.length - 1],
       };
-   }, [defaultStatus, generateUniqueIdentifier]);
+   }, [defaultStatus, generateUniqueIdentifier, autoAssignSelf, me]);
 
    const [addIssueForm, setAddIssueForm] = useState<Issue>(createDefaultData());
 

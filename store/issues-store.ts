@@ -7,6 +7,9 @@ import { User } from '@/mock-data/users';
 import { create } from 'zustand';
 import { toast } from 'sonner';
 
+import { useMeStore } from '@/store/me-store';
+import { useMembersStore } from '@/store/members-store';
+
 import {
    createIssue as apiCreateIssue,
    deleteIssue as apiDeleteIssue,
@@ -231,7 +234,19 @@ export const useIssuesStore = create<IssuesState>((set, get) => ({
    },
 
    /* ----------------------- convenience mutators ------------------------ */
-   updateIssueStatus: (issueId, newStatus) => get().updateIssue(issueId, { status: newStatus }),
+   updateIssueStatus: (issueId, newStatus) => {
+      const patch: Partial<Issue> = { status: newStatus };
+      // Preference: moving an unassigned issue to a started status assigns it to me.
+      if (newStatus.category === 'started') {
+         const issue = get().getIssueById(issueId);
+         const me = useMeStore.getState();
+         if (issue && !issue.assignee && me.preferences.assignSelfOnStart && me.me) {
+            const self = useMembersStore.getState().getMemberById(me.me.id);
+            if (self) patch.assignee = self;
+         }
+      }
+      get().updateIssue(issueId, patch);
+   },
    updateIssuePriority: (issueId, newPriority) =>
       get().updateIssue(issueId, { priority: newPriority }),
    updateIssueAssignee: (issueId, newAssignee) =>
