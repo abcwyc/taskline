@@ -2,8 +2,18 @@
 
 import { Cycle, cycleStatusLabel } from '@/mock-data/cycles';
 import { cn } from '@/lib/utils';
+import {
+   DropdownMenu,
+   DropdownMenuContent,
+   DropdownMenuItem,
+   DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { CycleDialog } from '@/components/common/forms/cycle-dialog';
+import { useCyclesStore } from '@/store/cycles-store';
+import { MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { useState } from 'react';
 import { CapacityRing } from './capacity-ring';
 
 export function CyclePlayIcon({ className }: { className?: string }) {
@@ -33,6 +43,25 @@ interface CycleLineProps {
  */
 export default function CycleLine({ cycle }: CycleLineProps) {
    const { orgId, teamId } = useParams<{ orgId: string; teamId: string }>();
+   const deleteCycle = useCyclesStore((s) => s.deleteCycle);
+   const [editOpen, setEditOpen] = useState(false);
+
+   const rowMenu = (
+      <DropdownMenu>
+         <DropdownMenuTrigger
+            onClick={(e) => e.preventDefault()}
+            className="text-muted-foreground hover:text-foreground shrink-0"
+         >
+            <MoreHorizontal className="size-4" />
+         </DropdownMenuTrigger>
+         <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+            <DropdownMenuItem onClick={() => setEditOpen(true)}>Edit</DropdownMenuItem>
+            <DropdownMenuItem className="text-destructive" onClick={() => deleteCycle(cycle.id)}>
+               Delete
+            </DropdownMenuItem>
+         </DropdownMenuContent>
+      </DropdownMenu>
+   );
 
    const href =
       cycle.status === 'current'
@@ -78,17 +107,26 @@ export default function CycleLine({ cycle }: CycleLineProps) {
             <span className="text-sm w-14 sm:w-20 text-right whitespace-nowrap">
                {cycle.scope} <span className="text-muted-foreground">scope</span>
             </span>
+            {rowMenu}
          </div>
       </div>
    );
 
-   if (href) {
-      return (
-         <Link href={href} className="block w-full">
-            {content}
-         </Link>
-      );
-   }
-
-   return content;
+   return (
+      <>
+         {href ? (
+            <Link href={href} className="block w-full">
+               {content}
+            </Link>
+         ) : (
+            content
+         )}
+         <CycleDialog
+            open={editOpen}
+            onOpenChange={setEditOpen}
+            teamId={cycle.teamId}
+            cycle={cycle}
+         />
+      </>
+   );
 }

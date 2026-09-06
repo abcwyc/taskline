@@ -2,8 +2,17 @@
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+   DropdownMenu,
+   DropdownMenuContent,
+   DropdownMenuItem,
+   DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { LabelDialog } from '@/components/common/forms/label-dialog';
+import type { LabelInterface } from '@/mock-data/labels';
 import { useIssuesStore } from '@/store/issues-store';
 import { useLabelsStore } from '@/store/labels-store';
+import { MoreHorizontal } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { SelectMenu } from './shared';
 
@@ -37,7 +46,19 @@ const formatCount = (count: number) =>
 export default function IssueLabelsSettings() {
    const issues = useIssuesStore((s) => s.issues);
    const labels = useLabelsStore((s) => s.labels);
+   const deleteLabel = useLabelsStore((s) => s.deleteLabel);
    const [query, setQuery] = useState('');
+   const [dialogOpen, setDialogOpen] = useState(false);
+   const [editing, setEditing] = useState<LabelInterface | undefined>(undefined);
+
+   const openCreate = () => {
+      setEditing(undefined);
+      setDialogOpen(true);
+   };
+   const openEdit = (label: LabelInterface) => {
+      setEditing(label);
+      setDialogOpen(true);
+   };
 
    const rows = useMemo(() => {
       const counts = new Map<string, number>();
@@ -74,10 +95,9 @@ export default function IssueLabelsSettings() {
                   <SelectMenu options={['Workspace', 'All teams']} />
                </div>
                <div className="flex items-center gap-2">
-                  <Button size="xs" variant="secondary">
-                     New group
+                  <Button size="xs" onClick={openCreate}>
+                     New label
                   </Button>
-                  <Button size="xs">New label</Button>
                </div>
             </div>
 
@@ -112,12 +132,28 @@ export default function IssueLabelsSettings() {
                      {label.issues > 0 && label.lastApplied}
                   </div>
                   <div className="w-[80px] text-xs text-muted-foreground">{label.created}</div>
+                  <DropdownMenu>
+                     <DropdownMenuTrigger className="text-muted-foreground hover:text-foreground shrink-0">
+                        <MoreHorizontal className="size-4" />
+                     </DropdownMenuTrigger>
+                     <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => openEdit(label)}>Edit</DropdownMenuItem>
+                        <DropdownMenuItem
+                           className="text-destructive"
+                           onClick={() => deleteLabel(label.id)}
+                        >
+                           Delete
+                        </DropdownMenuItem>
+                     </DropdownMenuContent>
+                  </DropdownMenu>
                </div>
             ))}
             {rows.length === 0 && (
                <p className="text-sm text-muted-foreground py-6">No labels match your filter.</p>
             )}
          </div>
+
+         <LabelDialog open={dialogOpen} onOpenChange={setDialogOpen} label={editing} />
       </div>
    );
 }
