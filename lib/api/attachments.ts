@@ -10,9 +10,15 @@ export async function fetchAttachments(idOrIdentifier: string): Promise<Attachme
 }
 
 export async function uploadAttachment(idOrIdentifier: string, file: File): Promise<AttachmentDTO> {
-   const body = new FormData();
-   body.append('file', file);
-   const res = await fetch(forIssue(idOrIdentifier), { method: 'POST', body });
+   // Send the file as the raw body so the server can stream + size-cap it.
+   const res = await fetch(forIssue(idOrIdentifier), {
+      method: 'POST',
+      headers: {
+         'content-type': file.type || 'application/octet-stream',
+         'x-filename': encodeURIComponent(file.name),
+      },
+      body: file,
+   });
    if (!res.ok) {
       const detail = await res.json().catch(() => ({}));
       throw new Error((detail as { error?: string }).error || `upload → ${res.status}`);

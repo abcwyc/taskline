@@ -13,9 +13,10 @@
 - **Registration** — invite-only by default (`SIGNUP_MODE`). The first admin is
   created only via `pnpm create-admin` or a `BOOTSTRAP_SECRET` typed into the
   form — never "whoever registers first".
-- **Uploads** — per-file and per-workspace size caps; `Content-Length` checked
-  before buffering; downloads served `Content-Disposition: attachment` +
-  `nosniff`.
+- **Uploads** — the file is the raw request body, read as a stream and aborted
+  the moment it passes the limit (so a chunked request with no `Content-Length`
+  can't force unbounded buffering); per-file and per-workspace size caps;
+  downloads served `Content-Disposition: attachment` + `nosniff`.
 - **Headers** — HSTS, `X-Frame-Options: DENY`, `nosniff`, baseline CSP,
   `Referrer-Policy`, `Permissions-Policy` (`next.config.ts`).
 - **Concurrency** — issue-number allocation is serialized per workspace.

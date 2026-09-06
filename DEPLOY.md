@@ -98,11 +98,12 @@ Dockerfile does this; for a bare run, `cp -r .next/static public .next/standalon
 
 ## Behind a reverse proxy
 
-Terminate TLS at the proxy and forward `Host` / `X-Forwarded-*`. Set a request
-body limit a little above `MAX_ATTACHMENT_BYTES` (nginx `client_max_body_size
-12m;`) — the app rejects oversized uploads too, but the proxy should stop them
-first. The app already sends HSTS, `X-Frame-Options: DENY`, `nosniff`, a
-baseline CSP and `Referrer-Policy` (see `next.config.ts`).
+Terminate TLS at the proxy and forward `Host` / `X-Forwarded-*`. A request body
+limit near `MAX_ATTACHMENT_BYTES` (nginx `client_max_body_size 12m;`) is still
+good defence in depth, though the app now streams uploads and aborts oversized
+ones itself. The app sends HSTS, `X-Frame-Options: DENY`, `nosniff`, a baseline
+CSP and `Referrer-Policy` (see `next.config.ts`). Add rate limiting here —
+there is none in the app.
 
 ## Roles
 

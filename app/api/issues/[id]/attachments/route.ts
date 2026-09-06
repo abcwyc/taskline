@@ -18,41 +18,56 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       : NextResponse.json({ error: 'not found' }, { status: 404 });
 }
 
-// POST /api/issues/:id/attachments  (multipart/form-data, field "file")
+const OVER_LIMIT = () =>
+   NextResponse.json(
+      { error: `file is larger than ${Math.round(MAX_ATTACHMENT_BYTES / 1024 / 1024)} MB` },
+      { status: 413 }
+   );
+
+/**
+ * POST /api/issues/:id/attachments — the file is the raw request body.
+ * Headers: `Content-Type` = the file's mime type, `X-Filename` = its name.
+ * The body is read as a stream and aborted the moment it exceeds the limit, so
+ * a client can't force us to buffer an arbitrarily large payload.
+ */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
    const ctx = await requireWrite();
    if (!isContext(ctx)) return ctx;
    const { id } = await params;
 
-   // Reject oversized uploads from the header before reading the body into memory.
-   // (multipart framing adds a little overhead, hence the * 1.1 slack.)
    const declared = Number(req.headers.get('content-length') ?? 0);
-   if (declared > MAX_ATTACHMENT_BYTES * 1.1) {
-      return NextResponse.json(
-         { error: `file is larger than ${Math.round(MAX_ATTACHMENT_BYTES / 1024 / 1024)} MB` },
-         { status: 413 }
-      );
-   }
+   if (declared > MAX_ATTACHMENT_BYTES) return OVER_LIMIT();
+   if (!req.body) return NextResponse.json({ error: 'empty body' }, { status: 400 });
 
-   let form: FormData;
+   let filename = 'file';
    try {
-      form = await req.formData();
+      filename = decodeURIComponent(req.headers.get('x-filename') ?? 'file').slice(0, 255);
    } catch {
-      return NextResponse.json({ error: 'expected multipart/form-data' }, { status: 400 });
+      /* keep default */
    }
-   const file = form.get('file');
-   if (!(file instanceof File)) {
-      return NextResponse.json({ error: 'missing "file"' }, { status: 400 });
+   const type = req.headers.get('content-type') || 'application/octet-stream';
+
+   const chunks: Uint8Array[] = [];
+   let total = 0;
+   const reader = req.body.getReader();
+   try {
+      for (;;) {
+         const { done, value } = await reader.read();
+         if (done) break;
+         total += value.byteLength;
+         if (total > MAX_ATTACHMENT_BYTES) {
+            await reader.cancel();
+            return OVER_LIMIT();
+         }
+         chunks.push(value);
+      }
+   } catch {
+      return NextResponse.json({ error: 'upload interrupted' }, { status: 400 });
    }
 
    try {
-      const bytes = Buffer.from(await file.arrayBuffer());
-      const dto = await addAttachment(
-         ctx.orgId,
-         id,
-         { name: file.name, type: file.type, bytes },
-         ctx.userId
-      );
+      const bytes = Buffer.concat(chunks);
+      const dto = await addAttachment(ctx.orgId, id, { name: filename, type, bytes }, ctx.userId);
       return dto
          ? NextResponse.json(dto, { status: 201 })
          : NextResponse.json({ error: 'issue not found' }, { status: 404 });
