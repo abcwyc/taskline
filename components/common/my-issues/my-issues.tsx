@@ -13,7 +13,7 @@ import { useRightPanelStore } from '@/store/right-panel-store';
 import { useSearchStore } from '@/store/search-store';
 import { useViewStore } from '@/store/view-store';
 import { useMemo } from 'react';
-import { scopeMyIssues, useMyIssuesTab } from './use-my-issues';
+import { scopeMyIssues, useMe, useMyIssuesTab } from './use-my-issues';
 
 /**
  * "My issues" body — the exact same machinery as the team issue views
@@ -22,6 +22,7 @@ import { scopeMyIssues, useMyIssuesTab } from './use-my-issues';
  */
 export default function MyIssues() {
    const [tab] = useMyIssuesTab();
+   const meId = useMe()?.id;
    const { isSearchOpen, searchQuery } = useSearchStore();
    const { viewType } = useViewStore();
    const { filters } = useFilterStore();
@@ -31,7 +32,7 @@ export default function MyIssues() {
    const isSearching = isSearchOpen && searchQuery.trim() !== '';
    const isViewTypeGrid = viewType === 'grid';
 
-   const scopedIssues = useMemo(() => scopeMyIssues(issues, tab), [issues, tab]);
+   const scopedIssues = useMemo(() => scopeMyIssues(issues, tab, meId), [issues, tab, meId]);
 
    const displayedIssues = useMemo(
       () => applyIssueFilters(scopedIssues, filters),

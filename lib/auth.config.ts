@@ -12,7 +12,7 @@ export const authConfig = {
    callbacks: {
       authorized({ auth, request }) {
          const { pathname } = request.nextUrl;
-         if (pathname === '/sign-in') return true;
+         if (pathname === '/sign-in' || pathname === '/sign-up') return true;
          return Boolean(auth?.user);
       },
       jwt({ token, user }) {

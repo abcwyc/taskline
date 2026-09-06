@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 
 import { IssuesProvider } from '@/components/providers/issues-provider';
 import { ProjectsProvider } from '@/components/providers/projects-provider';
+import { AuthSessionProvider } from '@/components/providers/session-provider';
 import { WorkspaceProvider } from '@/components/providers/workspace-provider';
 import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
@@ -30,10 +31,12 @@ export default async function OrgLayout({
    if (!member) redirect('/');
 
    return (
-      <WorkspaceProvider>
-         <ProjectsProvider>
-            <IssuesProvider>{children}</IssuesProvider>
-         </ProjectsProvider>
-      </WorkspaceProvider>
+      <AuthSessionProvider session={session}>
+         <WorkspaceProvider>
+            <ProjectsProvider>
+               <IssuesProvider>{children}</IssuesProvider>
+            </ProjectsProvider>
+         </WorkspaceProvider>
+      </AuthSessionProvider>
    );
 }

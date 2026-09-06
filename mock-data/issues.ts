@@ -12,6 +12,7 @@ export interface Issue {
    description: string;
    status: Status;
    assignee: User | null;
+   creatorId?: string;
    priority: Priority;
    labels: LabelInterface[];
    createdAt: string;

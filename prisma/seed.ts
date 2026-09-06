@@ -38,7 +38,7 @@ import { projects as mockProjects } from '../mock-data/projects';
 import { getProjectDetail } from '../mock-data/project-details';
 import { getIssueDetail } from '../mock-data/issue-details';
 import { cycles as mockCycles } from '../mock-data/cycles';
-import { issues as mockIssues } from '../mock-data/issues';
+import { issues as mockIssues, issueCreatorIndex } from '../mock-data/issues';
 import { initiatives as mockInitiatives } from '../mock-data/initiatives';
 import { views as mockViews } from '../mock-data/views';
 import { documentFolders as mockFolders } from '../mock-data/documents';
@@ -479,6 +479,7 @@ async function main() {
          stateId: stateId(it.status.id),
          priority: priority(it.priority?.id),
          assigneeId: it.assignee && validUser.has(it.assignee.id) ? it.assignee.id : null,
+         createdById: mockUsers[issueCreatorIndex(it, mockUsers.length)]?.id ?? null,
          cycleId: it.cycleId && validCycle.has(it.cycleId) ? cycleId(it.cycleId) : null,
          projectId: it.project && validProject.has(it.project.id) ? projectId(it.project.id) : null,
          rank: it.rank,
