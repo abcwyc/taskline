@@ -72,7 +72,7 @@ export function dtoToIssue(dto: IssueDTO): Issue {
 }
 
 /** Full `Issue` (from the create modal) → the body the POST route accepts. */
-export function issueToCreateBody(issue: Issue): IssueCreateBody {
+export function issueToCreateBody(issue: Issue, parentId?: string): IssueCreateBody {
    return {
       title: issue.title,
       description: issue.description,
@@ -83,6 +83,7 @@ export function issueToCreateBody(issue: Issue): IssueCreateBody {
       projectId: issue.project?.id ?? null,
       cycleId: issue.cycleId || undefined,
       dueDate: issue.dueDate ?? undefined,
+      ...(parentId ? { parentId } : {}),
    };
 }
 

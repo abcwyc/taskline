@@ -13,7 +13,6 @@ import {
    PenLine,
    Plus,
    RefreshCcw,
-   SmilePlus,
    Tag,
    Unlock,
 } from 'lucide-react';
@@ -60,19 +59,18 @@ function CommentCard({ item }: { item: Extract<ActivityItem, { kind: 'comment' }
          <div className="text-sm [&_p]:my-1.5">
             <ContentBlocks blocks={item.body} />
          </div>
-         <div className="flex items-center gap-1.5 mt-1">
-            {item.reactions?.map((reaction) => (
-               <span
-                  key={reaction.emoji}
-                  className="inline-flex items-center gap-1 text-xs bg-accent/60 border border-border/60 rounded-full px-2 py-0.5"
-               >
-                  {reaction.emoji} {reaction.count}
-               </span>
-            ))}
-            <button className="text-muted-foreground hover:text-foreground">
-               <SmilePlus className="size-3.5" />
-            </button>
-         </div>
+         {item.reactions && item.reactions.length > 0 && (
+            <div className="flex items-center gap-1.5 mt-1">
+               {item.reactions.map((reaction) => (
+                  <span
+                     key={reaction.emoji}
+                     className="inline-flex items-center gap-1 text-xs bg-accent/60 border border-border/60 rounded-full px-2 py-0.5"
+                  >
+                     {reaction.emoji} {reaction.count}
+                  </span>
+               ))}
+            </div>
+         )}
       </div>
    );
 }

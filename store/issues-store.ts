@@ -7,6 +7,7 @@ import { User } from '@/mock-data/users';
 import { create } from 'zustand';
 import { toast } from 'sonner';
 
+import { useIssueDetailsStore } from '@/store/issue-details-store';
 import { useMeStore } from '@/store/me-store';
 import { useMembersStore } from '@/store/members-store';
 
@@ -44,7 +45,7 @@ interface IssuesState {
    getAllIssues: () => Issue[];
 
    // Actions (unchanged signatures — now optimistic + persisted)
-   addIssue: (issue: Issue) => void;
+   addIssue: (issue: Issue, parentId?: string) => void;
    /** Insert an issue that was already created server-side (no POST). */
    receiveIssue: (issue: Issue) => void;
    updateIssue: (id: string, updatedIssue: Partial<Issue>) => void;
@@ -102,14 +103,16 @@ export const useIssuesStore = create<IssuesState>((set, get) => ({
    getAllIssues: () => get().issues,
 
    /* ------------------------------- create ------------------------------- */
-   addIssue: (issue: Issue) => {
+   addIssue: (issue: Issue, parentId?: string) => {
       // optimistic: show the client-built issue immediately
       set(withDerived([...get().issues, issue]));
 
-      apiCreateIssue(issueToCreateBody(issue))
+      apiCreateIssue(issueToCreateBody(issue, parentId))
          .then((saved) => {
             // swap the temp row for the authoritative one (real id / identifier / rank)
             set(withDerived(get().issues.map((i) => (i.id === issue.id ? saved : i))));
+            // parent's cached sub-issue list is now stale
+            if (parentId) useIssueDetailsStore.getState().invalidate(parentId);
          })
          .catch((err) => {
             set(withDerived(get().issues.filter((i) => i.id !== issue.id)));

@@ -75,7 +75,7 @@ export function GroupIssues({ group, issues, count }: GroupIssuesProps) {
                   variant="ghost"
                   onClick={(e) => {
                      e.stopPropagation();
-                     openModal(group.status);
+                     openModal({ status: group.status });
                   }}
                >
                   <Plus className="size-4" />

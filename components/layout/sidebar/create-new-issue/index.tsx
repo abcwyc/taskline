@@ -26,7 +26,7 @@ import { DialogTitle } from '@radix-ui/react-dialog';
 
 export function CreateNewIssue() {
    const [createMore, setCreateMore] = useState<boolean>(false);
-   const { isOpen, defaultStatus, openModal, closeModal } = useCreateIssueStore();
+   const { isOpen, defaultStatus, parentIssue, openModal, closeModal } = useCreateIssueStore();
    const { addIssue, getAllIssues } = useIssuesStore();
    const me = useCurrentUser();
    const autoAssignSelf = useMeStore((s) => s.preferences.autoAssignSelf);
@@ -57,11 +57,11 @@ export function CreateNewIssue() {
          labels: [],
          createdAt: new Date().toISOString(),
          cycleId: '',
-         project: undefined,
+         project: parentIssue?.project,
          subissues: [],
          rank: ranks[ranks.length - 1],
       };
-   }, [defaultStatus, generateUniqueIdentifier, autoAssignSelf, me]);
+   }, [defaultStatus, generateUniqueIdentifier, autoAssignSelf, me, parentIssue]);
 
    const [addIssueForm, setAddIssueForm] = useState<Issue>(createDefaultData());
 
@@ -74,8 +74,8 @@ export function CreateNewIssue() {
          toast.error('Title is required');
          return;
       }
-      toast.success('Issue created');
-      addIssue(addIssueForm);
+      toast.success(parentIssue ? 'Sub-issue created' : 'Issue created');
+      addIssue(addIssueForm, parentIssue?.identifier);
       if (!createMore) {
          closeModal();
       }
@@ -97,6 +97,14 @@ export function CreateNewIssue() {
                         <Heart className="size-4 text-orange-500 fill-orange-500" />
                         <span className="font-medium">CORE</span>
                      </Button>
+                     {parentIssue && (
+                        <span className="text-xs text-muted-foreground">
+                           Sub-issue of{' '}
+                           <span className="font-medium text-foreground">
+                              {parentIssue.identifier}
+                           </span>
+                        </span>
+                     )}
                   </div>
                </DialogTitle>
             </DialogHeader>

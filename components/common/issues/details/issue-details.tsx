@@ -1,5 +1,6 @@
 'use client';
 
+import { useCreateIssueStore } from '@/store/create-issue-store';
 import { useIssuesStore } from '@/store/issues-store';
 import { useIssueDetail } from '@/store/issue-details-store';
 import { Plus } from 'lucide-react';
@@ -19,6 +20,7 @@ import { IssuePropertiesPanel } from './issue-properties-panel';
 export default function IssueDetails() {
    const { orgId, issueId } = useParams<{ orgId: string; issueId: string }>();
    const { issues } = useIssuesStore();
+   const openCreateIssue = useCreateIssueStore((s) => s.openModal);
 
    const issue = useMemo(
       () => issues.find((candidate) => candidate.identifier === issueId),
@@ -59,17 +61,26 @@ export default function IssueDetails() {
                <div className="mt-8">
                   {subIssues.length > 0 ? (
                      <>
-                        <h2 className="text-sm font-medium mb-1">
-                           Sub-issues{' '}
-                           <span className="text-muted-foreground">
-                              {
-                                 subIssues.filter(
-                                    (subIssue) => subIssue.status.category === 'completed'
-                                 ).length
-                              }
-                              /{subIssues.length}
-                           </span>
-                        </h2>
+                        <div className="flex items-center justify-between mb-1">
+                           <h2 className="text-sm font-medium">
+                              Sub-issues{' '}
+                              <span className="text-muted-foreground">
+                                 {
+                                    subIssues.filter(
+                                       (subIssue) => subIssue.status.category === 'completed'
+                                    ).length
+                                 }
+                                 /{subIssues.length}
+                              </span>
+                           </h2>
+                           <button
+                              onClick={() => openCreateIssue({ parentIssue: issue })}
+                              className="text-muted-foreground hover:text-foreground"
+                              aria-label="Add sub-issue"
+                           >
+                              <Plus className="size-4" />
+                           </button>
+                        </div>
                         <div className="flex flex-col border-t border-border/50">
                            {subIssues.map((subIssue) => (
                               <Link
@@ -90,7 +101,10 @@ export default function IssueDetails() {
                         </div>
                      </>
                   ) : (
-                     <button className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
+                     <button
+                        onClick={() => openCreateIssue({ parentIssue: issue })}
+                        className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+                     >
                         <Plus className="size-4" />
                         Add sub-issues
                      </button>

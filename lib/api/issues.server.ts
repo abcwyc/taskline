@@ -116,6 +116,17 @@ export async function createIssue(
    return db.$transaction(async (tx) => {
       const org = await tx.organization.findUniqueOrThrow({ where: { id: orgId } });
 
+      // Sub-issue: validate the parent is in this org and inherit its project.
+      let parent: { id: string; projectId: string | null } | null = null;
+      if (body.parentId) {
+         parent = await tx.issue.findFirst({
+            where: { orgId, OR: [{ id: body.parentId }, { identifier: body.parentId }] },
+            select: { id: true, projectId: true },
+         });
+         if (!parent) throw new Error('parent issue not found');
+      }
+      const projectId = body.projectId ?? parent?.projectId ?? null;
+
       const last = await tx.issue.findFirst({
          where: { orgId },
          orderBy: { sequenceNumber: 'desc' },
@@ -135,8 +146,8 @@ export async function createIssue(
       // Team: issues aren't team-scoped in the UI — inherit from the project,
       // else the cycle, else the org's first team.
       let teamId: string | undefined;
-      if (body.projectId) {
-         teamId = (await tx.project.findUnique({ where: { id: body.projectId } }))?.teamId;
+      if (projectId) {
+         teamId = (await tx.project.findUnique({ where: { id: projectId } }))?.teamId;
       }
       if (!teamId && body.cycleId) {
          teamId = (await tx.cycle.findUnique({ where: { id: body.cycleId } }))?.teamId;
@@ -158,7 +169,8 @@ export async function createIssue(
             priority: toPriority(body.priorityId),
             assignee: connectOrUndef(body.assigneeId),
             creator: connectOrUndef(actorId),
-            project: connectOrUndef(body.projectId),
+            project: connectOrUndef(projectId),
+            parent: parent ? { connect: { id: parent.id } } : undefined,
             cycle: connectOrUndef(body.cycleId),
             dueDate: body.dueDate ? new Date(body.dueDate) : null,
             rank,

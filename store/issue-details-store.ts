@@ -22,6 +22,8 @@ interface IssueDetailsState {
    ensureDetail: (issue: Issue) => void;
    getDetail: (identifier: string) => IssueDetail | undefined;
    postComment: (identifier: string, text: string) => void;
+   /** Drop the cached detail so the next view refetches (e.g. after a sub-issue is added). */
+   invalidate: (identifier: string) => void;
 }
 
 export const useIssueDetailsStore = create<IssueDetailsState>((set, get) => ({
@@ -46,6 +48,14 @@ export const useIssueDetailsStore = create<IssueDetailsState>((set, get) => ({
    },
 
    getDetail: (identifier) => get().byIdentifier[identifier],
+
+   invalidate: (identifier) =>
+      set((s) => {
+         if (!s.byIdentifier[identifier]) return {};
+         const next = { ...s.byIdentifier };
+         delete next[identifier];
+         return { byIdentifier: next };
+      }),
 
    postComment: (identifier, text) => {
       const current = get().byIdentifier[identifier];

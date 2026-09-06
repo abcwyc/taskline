@@ -39,6 +39,7 @@ export type IssueCreateBody = Partial<
       | 'projectId'
       | 'cycleId'
       | 'dueDate'
+      | 'parentId'
    >
 >;
 
