@@ -15,6 +15,10 @@ export const UPLOAD_DIR = process.env.UPLOAD_DIR
    : path.join(process.cwd(), 'uploads');
 
 export const MAX_ATTACHMENT_BYTES = Number(process.env.MAX_ATTACHMENT_BYTES ?? 10 * 1024 * 1024);
+/** Total attachment bytes allowed per workspace (default 2 GiB; 0 disables the cap). */
+export const MAX_WORKSPACE_ATTACHMENT_BYTES = Number(
+   process.env.MAX_WORKSPACE_ATTACHMENT_BYTES ?? 2 * 1024 * 1024 * 1024
+);
 
 /** Build a collision-proof, traversal-proof storage key for an issue's file. */
 export function makeStorageKey(issueId: string, filename: string): string {

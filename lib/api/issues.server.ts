@@ -117,6 +117,10 @@ export async function createIssue(
    actorId: string | null
 ): Promise<IssueDTO> {
    return db.$transaction(async (tx) => {
+      // Serialize issue creation per org so the sequenceNumber / rank "read max,
+      // then +1" can't race two concurrent inserts into a unique-constraint 500.
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${'issue:' + orgId}, 0))`;
+
       const org = await tx.organization.findUniqueOrThrow({ where: { id: orgId } });
 
       await assertOrgScope(tx, orgId, {

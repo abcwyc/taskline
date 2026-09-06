@@ -1,7 +1,14 @@
 import 'server-only';
 
 import { db } from '@/lib/db';
-import { deleteBlob, makeStorageKey, MAX_ATTACHMENT_BYTES, readBlob, saveBlob } from './storage';
+import {
+   deleteBlob,
+   makeStorageKey,
+   MAX_ATTACHMENT_BYTES,
+   MAX_WORKSPACE_ATTACHMENT_BYTES,
+   readBlob,
+   saveBlob,
+} from './storage';
 import { AttachmentDTO } from './types';
 import { PublicError } from './http';
 
@@ -57,6 +64,13 @@ export async function addAttachment(
       throw new PublicError(
          `file is larger than ${Math.round(MAX_ATTACHMENT_BYTES / 1024 / 1024)} MB`
       );
+   }
+
+   if (MAX_WORKSPACE_ATTACHMENT_BYTES > 0) {
+      const used = await db.attachment.aggregate({ where: { orgId }, _sum: { size: true } });
+      if ((used._sum.size ?? 0) + file.bytes.length > MAX_WORKSPACE_ATTACHMENT_BYTES) {
+         throw new PublicError('workspace attachment storage quota exceeded', 413);
+      }
    }
 
    const filename = file.name.replace(/[\r\n"]/g, '').slice(0, 255) || 'file';

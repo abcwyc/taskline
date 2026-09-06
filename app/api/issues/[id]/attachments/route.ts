@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { addAttachment, listAttachments } from '@/lib/api/attachments.server';
 import { isContext, requireContext, requireWrite } from '@/lib/api/context';
 import { errorResponse } from '@/lib/api/http';
+import { MAX_ATTACHMENT_BYTES } from '@/lib/api/storage';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,6 +23,16 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
    const ctx = await requireWrite();
    if (!isContext(ctx)) return ctx;
    const { id } = await params;
+
+   // Reject oversized uploads from the header before reading the body into memory.
+   // (multipart framing adds a little overhead, hence the * 1.1 slack.)
+   const declared = Number(req.headers.get('content-length') ?? 0);
+   if (declared > MAX_ATTACHMENT_BYTES * 1.1) {
+      return NextResponse.json(
+         { error: `file is larger than ${Math.round(MAX_ATTACHMENT_BYTES / 1024 / 1024)} MB` },
+         { status: 413 }
+      );
+   }
 
    let form: FormData;
    try {
