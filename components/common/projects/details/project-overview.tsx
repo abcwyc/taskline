@@ -25,18 +25,22 @@ const formatDay = (iso?: string) => (iso ? format(parseISO(iso), 'MMM do') : 'â€
 export default function ProjectOverview({ projectId }: ProjectOverviewProps) {
    const teams = useTeamsStore((s) => s.teams);
    const project =
-      useProjectsStore((s) => s.getProjectById(projectId)) ?? mockGetProjectById(projectId)!;
+      useProjectsStore((s) => s.getProjectById(projectId)) ?? mockGetProjectById(projectId);
    const detail = useProjectDetail(projectId);
    const { issues: allIssues } = useIssuesStore();
    const issues = useMemo(
-      () => allIssues.filter((issue) => issue.project?.id === project.id),
-      [allIssues, project.id]
+      () => allIssues.filter((issue) => issue.project?.id === projectId),
+      [allIssues, projectId]
    );
 
    const { orgId } = useParams<{ orgId: string }>();
-   const team = teams.find((candidate) => candidate.id === project.teamId);
+   const team = teams.find((candidate) => candidate.id === project?.teamId);
    const scrollRef = useRef<HTMLDivElement>(null);
    const outlineItems = useMemo(() => getOutlineItems(detail.description), [detail.description]);
+
+   if (!project) {
+      return <div className="p-10 text-sm text-muted-foreground">Loading projectâ€¦</div>;
+   }
 
    return (
       <div className="w-full h-full flex overflow-hidden">

@@ -1,6 +1,13 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { ProjectDialog } from '@/components/common/forms/project-dialog';
+import {
+   DropdownMenu,
+   DropdownMenuContent,
+   DropdownMenuItem,
+   DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 import { getProjectById as mockGetProjectById } from '@/mock-data/projects';
@@ -8,7 +15,8 @@ import { useProjectsStore } from '@/store/projects-store';
 import { useRightPanelStore } from '@/store/right-panel-store';
 import { BarChart3, ChevronRight, Link2, MoreHorizontal, PanelRight, Star } from 'lucide-react';
 import Link from 'next/link';
-import { useParams, usePathname } from 'next/navigation';
+import { useParams, usePathname, useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 const PROJECT_TABS = [
    { label: 'Overview', segment: 'overview' },
@@ -72,8 +80,11 @@ function PanelToggles() {
 
 export default function Header({ projectId }: { projectId: string }) {
    const { orgId } = useParams<{ orgId: string }>();
-   const project =
-      useProjectsStore((s) => s.getProjectById(projectId)) ?? mockGetProjectById(projectId);
+   const router = useRouter();
+   const storeProject = useProjectsStore((s) => s.getProjectById(projectId));
+   const deleteProject = useProjectsStore((s) => s.deleteProject);
+   const [editOpen, setEditOpen] = useState(false);
+   const project = storeProject ?? mockGetProjectById(projectId);
    if (!project) return null;
 
    return (
@@ -102,11 +113,35 @@ export default function Header({ projectId }: { projectId: string }) {
                <Button variant="ghost" size="icon" className="size-7 text-muted-foreground">
                   <Link2 className="size-4" />
                </Button>
-               <Button variant="ghost" size="icon" className="size-7 text-muted-foreground">
-                  <MoreHorizontal className="size-4" />
-               </Button>
+               <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                     <Button variant="ghost" size="icon" className="size-7 text-muted-foreground">
+                        <MoreHorizontal className="size-4" />
+                     </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                     <DropdownMenuItem onClick={() => setEditOpen(true)}>
+                        Edit project
+                     </DropdownMenuItem>
+                     <DropdownMenuItem
+                        className="text-destructive"
+                        onClick={() => {
+                           if (confirm(`Delete project "${project.name}"?`)) {
+                              deleteProject(project.id);
+                              router.push(`/${orgId}/projects`);
+                           }
+                        }}
+                     >
+                        Delete project
+                     </DropdownMenuItem>
+                  </DropdownMenuContent>
+               </DropdownMenu>
             </div>
          </div>
+
+         {storeProject && (
+            <ProjectDialog open={editOpen} onOpenChange={setEditOpen} project={storeProject} />
+         )}
          <div className="w-full flex justify-between items-center border-b py-1.5 px-6 h-10">
             <ProjectTabs projectId={project.id} />
             <PanelToggles />
