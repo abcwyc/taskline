@@ -39,17 +39,21 @@ The `web` container runs `prisma migrate deploy` on every start (see
 service has a `/api/health` healthcheck.
 
 **Create the first admin.** Registration is invite-only by default, and the
-first account can only be created two ways — never "whoever registers first":
+first account is never "whoever registers first". Put `BOOTSTRAP_SECRET` in
+`.env` (`openssl rand -hex 24`), then either:
 
-- **CLI (recommended):**
+- **API:**
    ```bash
-   docker compose exec web pnpm create-admin you@example.com 'a-strong-password' 'Your Name'
+   curl -X POST http://localhost:3000/api/bootstrap \
+     -H 'content-type: application/json' \
+     -d '{"secret":"'"$BOOTSTRAP_SECRET"'","email":"you@example.com","password":"a-strong-password"}'
    ```
-- **Web:** set `BOOTSTRAP_SECRET` in `.env`, then open
-  <http://localhost:3000/sign-up> and enter that secret in the form.
+- **Web:** open <http://localhost:3000/sign-up> and type the secret into the form.
 
-After that, admins invite everyone else from the **Members** page. Set
-`SIGNUP_MODE=open` if you actually want anyone to be able to register.
+`/api/bootstrap` refuses once the workspace has any members. After that, invite
+everyone else from the **Members** page. `SIGNUP_MODE=open` allows open
+registration. (For a bare-Node deploy you can also run `pnpm create-admin
+<email> <password>`.)
 
 **Demo data (optional).** To start from the sample dataset, run the seed against
 the compose database (it isn't published, so exec into the db container or add a

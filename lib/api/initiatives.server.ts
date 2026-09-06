@@ -116,6 +116,14 @@ export async function updateInitiative(
    const existing = await db.initiative.findFirst({ where: { orgId, id }, select: { id: true } });
    if (!existing) return null;
 
+   if ('ownerId' in body) {
+      await assertOrgScope(db, orgId, { ownerId: body.ownerId ?? undefined });
+   }
+   if (body.projectIds?.length) {
+      const n = await db.project.count({ where: { id: { in: body.projectIds }, orgId } });
+      if (n !== new Set(body.projectIds).size) throw new PublicError('unknown project', 400);
+   }
+
    const data: Prisma.InitiativeUpdateInput = {};
    if (body.name !== undefined) data.name = body.name;
    if (body.description !== undefined) data.description = body.description;

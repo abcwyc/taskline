@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 
 import { db } from '@/lib/db';
 import { authConfig } from '@/lib/auth.config';
+import { rateLimit } from '@/lib/api/rate-limit';
 
 /**
  * Full Auth.js setup (Node runtime — imports Prisma + bcrypt).
@@ -21,12 +22,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             email: { label: 'Email', type: 'email' },
             password: { label: 'Password', type: 'password' },
          },
-         async authorize(raw) {
+         async authorize(raw, request) {
             const email = String(raw?.email ?? '')
                .trim()
                .toLowerCase();
             const password = String(raw?.password ?? '');
             if (!email || !password) return null;
+
+            // Throttle here (not just in signInAction) so the raw Auth.js
+            // callback route can't be hammered directly. Email is the primary
+            // key — it can't be forged the way X-Forwarded-For can.
+            const ip = (request?.headers?.get('x-forwarded-for')?.split(',')[0] ?? 'local').trim();
+            if (
+               !rateLimit(`authorize:email:${email}`, { windowMs: 15 * 60_000, max: 10 }) ||
+               !rateLimit(`authorize:ip:${ip}`, { windowMs: 5 * 60_000, max: 50 })
+            ) {
+               return null;
+            }
 
             const user = await db.user.findUnique({ where: { email } });
             if (!user?.passwordHash) return null;

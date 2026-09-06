@@ -14,9 +14,11 @@ d('workspace authorization', () => {
    let claimInvite: typeof import('@/lib/api/invites.server').claimInvite;
    let updateMember: typeof import('@/lib/api/members.server').updateMember;
 
+   const tag = `t${Date.now()}${Math.floor(Math.random() * 1000)}`;
    let orgId = '';
    let otherOrgId = '';
    let adminId = '';
+   let foreignProjectId = '';
 
    beforeAll(async () => {
       process.env.DATABASE_URL = url;
@@ -25,7 +27,6 @@ d('workspace authorization', () => {
       ({ claimInvite } = await import('@/lib/api/invites.server'));
       ({ updateMember } = await import('@/lib/api/members.server'));
 
-      const tag = `t${Date.now()}`;
       const org = await db.organization.create({
          data: { slug: `${tag}-a`, name: 'A', issuePrefix: 'A' },
       });
@@ -34,6 +35,7 @@ d('workspace authorization', () => {
       });
       orgId = org.id;
       otherOrgId = other.id;
+
       const admin = await db.user.create({
          data: {
             email: `${tag}-admin@x.com`,
@@ -42,28 +44,42 @@ d('workspace authorization', () => {
          },
       });
       adminId = admin.id;
-      await db.project
-         .create({
-            data: {
-               orgId: otherOrgId,
-               name: 'B project',
-               icon: 'Box',
-               teamId: (
-                  await db.team.create({
-                     data: {
-                        id: `${tag}B`,
-                        orgId: otherOrgId,
-                        key: `${tag}B`,
-                        name: 'B',
-                        icon: '📋',
-                        color: '#000',
-                     },
-                  })
-               ).id,
-               stateId: 'to-do',
-            } as never,
-         })
-         .catch(() => {});
+
+      // a project that belongs to the OTHER org, plus the rows it needs
+      const state = await db.workflowState.create({
+         data: {
+            id: `${tag}-todo`,
+            orgId: otherOrgId,
+            key: 'to-do',
+            name: 'Todo',
+            color: '#888',
+            category: 'UNSTARTED',
+            iconKey: 'to-do',
+            workflowOrder: 0,
+            displayOrder: 0,
+         },
+      });
+      const team = await db.team.create({
+         data: {
+            id: `${tag}-B`,
+            orgId: otherOrgId,
+            key: `${tag}B`,
+            name: 'B',
+            icon: '📋',
+            color: '#000',
+         },
+      });
+      const project = await db.project.create({
+         data: {
+            orgId: otherOrgId,
+            name: 'B project',
+            icon: 'Box',
+            teamId: team.id,
+            stateId: state.id,
+         },
+      });
+      foreignProjectId = project.id;
+      expect(foreignProjectId).toBeTruthy(); // fixture must exist or the test below is meaningless
    });
 
    afterAll(async () => {
@@ -72,9 +88,45 @@ d('workspace authorization', () => {
    });
 
    it('assertOrgScope rejects a foreign project id', async () => {
-      const foreign = await db.project.findFirst({ where: { orgId: otherOrgId } });
-      if (!foreign) return;
-      await expect(assertOrgScope(db, orgId, { projectId: foreign.id })).rejects.toThrow();
+      await expect(assertOrgScope(db, orgId, { projectId: foreignProjectId })).rejects.toThrow();
+   });
+
+   it('assertOrgScope accepts an in-org project id', async () => {
+      const mine = await db.project.create({
+         data: {
+            orgId,
+            name: 'mine',
+            icon: 'Box',
+            teamId: (
+               await db.team.create({
+                  data: {
+                     id: `${tag}-A`,
+                     orgId,
+                     key: `${tag}A`,
+                     name: 'A',
+                     icon: '📋',
+                     color: '#000',
+                  },
+               })
+            ).id,
+            stateId: (
+               await db.workflowState.create({
+                  data: {
+                     id: `${tag}-a-todo`,
+                     orgId,
+                     key: 'to-do',
+                     name: 'Todo',
+                     color: '#888',
+                     category: 'UNSTARTED',
+                     iconKey: 'to-do',
+                     workflowOrder: 0,
+                     displayOrder: 0,
+                  },
+               })
+            ).id,
+         },
+      });
+      await expect(assertOrgScope(db, orgId, { projectId: mine.id })).resolves.toBeUndefined();
    });
 
    it('assertOrgScope passes for null / omitted refs', async () => {
@@ -94,20 +146,26 @@ d('workspace authorization', () => {
       await expect(updateMember(orgId, adminId, { role: 'Member' })).rejects.toThrow(
          /at least one admin/
       );
-      // still an admin
       const m = await db.membership.findFirst({ where: { orgId, userId: adminId } });
       expect(m?.role).toBe('ADMIN');
    });
 
-   it('allows demoting an admin when another remains', async () => {
-      const tag = `t${Date.now()}`;
-      const admin2 = await db.user.create({
+   it('two concurrent last-two-admin demotions still leave one admin', async () => {
+      const a2 = await db.user.create({
          data: {
             email: `${tag}-a2@x.com`,
             name: 'A2',
             memberships: { create: { orgId, role: 'ADMIN' } },
          },
       });
-      await expect(updateMember(orgId, admin2.id, { role: 'Member' })).resolves.toBeTruthy();
+      // both try to self-demote at once
+      const outcomes = await Promise.allSettled([
+         updateMember(orgId, adminId, { role: 'Member' }),
+         updateMember(orgId, a2.id, { role: 'Member' }),
+      ]);
+      const ok = outcomes.filter((o) => o.status === 'fulfilled').length;
+      expect(ok).toBe(1); // exactly one demotion succeeds
+      const admins = await db.membership.count({ where: { orgId, role: 'ADMIN' } });
+      expect(admins).toBe(1);
    });
 });

@@ -57,5 +57,7 @@ jobs:
       - name: Build
         run: pnpm build
 
-      - name: Production audit (non-blocking)
-        run: pnpm audit --prod || true
+      - name: Production audit
+        # build-time-only advisories are listed in package.json pnpm.auditConfig;
+        # this fails on anything new that isn't.
+        run: pnpm audit --prod

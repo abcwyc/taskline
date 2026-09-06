@@ -72,19 +72,24 @@ export async function updateMember(
    if (body.role !== undefined) {
       const role = ROLE_KEY_TO_ENUM[body.role];
       if (role) {
-         const current = await db.membership.findUnique({
-            where: { id: membership.id },
-            select: { role: true },
-         });
-         if (current?.role === 'ADMIN' && role !== 'ADMIN') {
-            const admins = await db.membership.count({ where: { orgId, role: 'ADMIN' } });
-            if (admins <= 1) {
-               throw new PublicError('the workspace must keep at least one admin', 409);
+         await db.$transaction(async (tx) => {
+            // serialize role changes per org so two concurrent demotions can't
+            // both see "2 admins" and leave the workspace with none
+            await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${'members:' + orgId}, 0))`;
+            const current = await tx.membership.findUnique({
+               where: { id: membership.id },
+               select: { role: true },
+            });
+            if (current?.role === 'ADMIN' && role !== 'ADMIN') {
+               const admins = await tx.membership.count({ where: { orgId, role: 'ADMIN' } });
+               if (admins <= 1) {
+                  throw new PublicError('the workspace must keep at least one admin', 409);
+               }
             }
-         }
-         await db.membership.update({
-            where: { id: membership.id },
-            data: { role: role as never },
+            await tx.membership.update({
+               where: { id: membership.id },
+               data: { role: role as never },
+            });
          });
       }
    }

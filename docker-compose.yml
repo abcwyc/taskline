@@ -28,6 +28,7 @@ services:
          AUTH_URL: ${AUTH_URL:-http://localhost:3000}
          AUTH_TRUST_HOST: 'true'
          SIGNUP_MODE: ${SIGNUP_MODE:-invite}
+         BOOTSTRAP_SECRET: ${BOOTSTRAP_SECRET:-}
          UPLOAD_DIR: /app/uploads
       volumes:
          - uploads:/app/uploads

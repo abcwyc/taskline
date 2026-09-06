@@ -66,29 +66,38 @@ export async function addAttachment(
       );
    }
 
-   if (MAX_WORKSPACE_ATTACHMENT_BYTES > 0) {
-      const used = await db.attachment.aggregate({ where: { orgId }, _sum: { size: true } });
-      if ((used._sum.size ?? 0) + file.bytes.length > MAX_WORKSPACE_ATTACHMENT_BYTES) {
-         throw new PublicError('workspace attachment storage quota exceeded', 413);
-      }
-   }
-
    const filename = file.name.replace(/[\r\n"]/g, '').slice(0, 255) || 'file';
    const storageKey = makeStorageKey(issue.id, filename);
    await saveBlob(storageKey, file.bytes);
 
-   const row = await db.attachment.create({
-      data: {
-         orgId,
-         issueId: issue.id,
-         uploadedById,
-         filename,
-         contentType: file.type || 'application/octet-stream',
-         size: file.bytes.length,
-         storageKey,
-      },
-   });
-   return serialize(row);
+   try {
+      const row = await db.$transaction(async (tx) => {
+         if (MAX_WORKSPACE_ATTACHMENT_BYTES > 0) {
+            // serialize the quota check + insert per org so concurrent uploads
+            // can't both slip under the cap
+            await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${'attach:' + orgId}, 0))`;
+            const used = await tx.attachment.aggregate({ where: { orgId }, _sum: { size: true } });
+            if ((used._sum.size ?? 0) + file.bytes.length > MAX_WORKSPACE_ATTACHMENT_BYTES) {
+               throw new PublicError('workspace attachment storage quota exceeded', 413);
+            }
+         }
+         return tx.attachment.create({
+            data: {
+               orgId,
+               issueId: issue.id,
+               uploadedById,
+               filename,
+               contentType: file.type || 'application/octet-stream',
+               size: file.bytes.length,
+               storageKey,
+            },
+         });
+      });
+      return serialize(row);
+   } catch (err) {
+      await deleteBlob(storageKey).catch(() => {}); // don't leave an orphan blob
+      throw err;
+   }
 }
 
 /** For the download route: the row + its bytes, scoped to the org. */
