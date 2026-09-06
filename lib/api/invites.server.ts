@@ -110,13 +110,27 @@ export async function revokeInvite(orgId: string, id: string): Promise<boolean> 
 }
 
 /**
- * Mark an invite redeemed. Call inside the sign-up transaction right after the
- * user + membership are created. Best-effort: a race that double-redeems just
- * means two members, which is harmless.
+ * Atomically claim an invite so it can't be redeemed twice. Returns true if this
+ * caller won the claim; false if the token was already consumed / is invalid.
+ * Call this BEFORE creating the user; on a later failure call `releaseInvite`.
  */
-export async function markInviteAccepted(token: string, userId: string): Promise<void> {
+export async function claimInvite(token: string): Promise<boolean> {
+   const res = await db.invite.updateMany({
+      where: { token, acceptedAt: null, expiresAt: { gt: new Date() } },
+      data: { acceptedAt: new Date() },
+   });
+   return res.count === 1;
+}
+
+/** Attach the redeeming user to a claimed invite. */
+export async function finalizeInvite(token: string, userId: string): Promise<void> {
+   await db.invite.updateMany({ where: { token }, data: { acceptedById: userId } });
+}
+
+/** Undo a `claimInvite` when the sign-up it was for did not complete. */
+export async function releaseInvite(token: string): Promise<void> {
    await db.invite.updateMany({
-      where: { token, acceptedAt: null },
-      data: { acceptedAt: new Date(), acceptedById: userId },
+      where: { token, acceptedById: null },
+      data: { acceptedAt: null },
    });
 }

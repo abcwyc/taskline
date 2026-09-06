@@ -5,7 +5,12 @@ import { AuthError } from 'next-auth';
 import { redirect } from 'next/navigation';
 
 import { ensureWorkspace } from '@/lib/api/bootstrap';
-import { getInviteByToken, markInviteAccepted } from '@/lib/api/invites.server';
+import {
+   claimInvite,
+   finalizeInvite,
+   getInviteByToken,
+   releaseInvite,
+} from '@/lib/api/invites.server';
 import { signIn, signOut } from '@/lib/auth';
 import { db } from '@/lib/db';
 
@@ -31,16 +36,24 @@ export async function signUpAction(formData: FormData) {
    const password = String(formData.get('password') ?? '');
    const name = String(formData.get('name') ?? '').trim() || email.split('@')[0];
    const token = String(formData.get('invite') ?? '').trim();
-   const inviteOnly = process.env.SIGNUP_MODE === 'invite';
+   const bootstrapArg = String(formData.get('bootstrap') ?? '').trim();
+   // invite-only unless explicitly opened
+   const inviteOnly = process.env.SIGNUP_MODE !== 'open';
+   const bootstrapSecret = process.env.BOOTSTRAP_SECRET?.trim();
 
    const invite = token ? await getInviteByToken(token) : null;
    const qs = token ? `&invite=${encodeURIComponent(token)}` : '';
 
-   // The very first account always gets through (it becomes the admin) — even in
-   // invite-only mode, otherwise a fresh deploy could never be bootstrapped.
-   const isBootstrap = (await db.user.count()) === 0;
+   // The first-ever account bootstraps the workspace as ADMIN. If BOOTSTRAP_SECRET
+   // is set it must be supplied (`/sign-up?bootstrap=<secret>`); otherwise any
+   // first sign-up works (fine for a trusted / non-public first boot).
+   const noUsersYet = (await db.user.count()) === 0;
+   const isBootstrap = noUsersYet && (!bootstrapSecret || bootstrapArg === bootstrapSecret);
 
    if (token && !invite) redirect('/sign-up?error=badinvite');
+   if (noUsersYet && bootstrapSecret && bootstrapArg !== bootstrapSecret) {
+      redirect('/sign-up?error=bootstrap');
+   }
    if (inviteOnly && !invite && !isBootstrap) redirect('/sign-up?error=inviteonly');
    if (invite?.email && invite.email !== email) redirect(`/sign-up?error=inviteemail${qs}`);
 
@@ -49,6 +62,12 @@ export async function signUpAction(formData: FormData) {
    }
    if (await db.user.findUnique({ where: { email }, select: { id: true } })) {
       redirect(`/sign-up?error=exists${qs}`);
+   }
+
+   // Atomically claim the invite before we create anything, so a link that two
+   // people open at once is redeemed exactly once.
+   if (invite && !(await claimInvite(token))) {
+      redirect('/sign-up?error=badinvite');
    }
 
    let orgId: string;
@@ -63,16 +82,23 @@ export async function signUpAction(formData: FormData) {
       role = isFirstMember ? 'ADMIN' : 'MEMBER';
    }
 
-   const user = await db.user.create({
-      data: {
-         email,
-         name,
-         passwordHash: bcrypt.hashSync(password, 10),
-         memberships: { create: { orgId, role } },
-      },
-      select: { id: true },
-   });
-   if (token) await markInviteAccepted(token, user.id);
+   let userId: string;
+   try {
+      const user = await db.user.create({
+         data: {
+            email,
+            name,
+            passwordHash: bcrypt.hashSync(password, 10),
+            memberships: { create: { orgId, role } },
+         },
+         select: { id: true },
+      });
+      userId = user.id;
+   } catch (err) {
+      if (invite) await releaseInvite(token);
+      throw err;
+   }
+   if (invite) await finalizeInvite(token, userId);
 
    try {
       await signIn('credentials', { email, password, redirectTo: '/' });

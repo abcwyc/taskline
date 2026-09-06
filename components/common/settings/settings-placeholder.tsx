@@ -62,9 +62,17 @@ export default function SettingsPlaceholder({ config }: { config: PlaceholderCon
                <p className="text-sm text-muted-foreground mt-1">{config.description}</p>
             )}
 
-            <div className="flex items-center justify-between gap-3 mt-6">
-               <Input placeholder="Filter by name..." className="w-72 h-8" />
-               {config.actionLabel && <Button size="xs">{config.actionLabel}</Button>}
+            <div className="mt-5 rounded-md border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-sm text-amber-700 dark:text-amber-400">
+               This section isn&apos;t available in this build yet.
+            </div>
+
+            <div className="flex items-center justify-between gap-3 mt-6 opacity-50 pointer-events-none">
+               <Input placeholder="Filter by name..." className="w-72 h-8" disabled />
+               {config.actionLabel && (
+                  <Button size="xs" disabled>
+                     {config.actionLabel}
+                  </Button>
+               )}
             </div>
 
             <div className="flex flex-col items-center justify-center gap-5 py-32">

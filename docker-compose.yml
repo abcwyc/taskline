@@ -3,19 +3,18 @@ services:
       image: postgres:16-alpine
       restart: unless-stopped
       environment:
-         POSTGRES_USER: circle
-         POSTGRES_PASSWORD: circle
-         POSTGRES_DB: circle
+         POSTGRES_USER: ${POSTGRES_USER:-circle}
+         POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+         POSTGRES_DB: ${POSTGRES_DB:-circle}
       volumes:
          - pgdata:/var/lib/postgresql/data
       healthcheck:
-         test: ['CMD-SHELL', 'pg_isready -U circle -d circle']
+         test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-circle} -d ${POSTGRES_DB:-circle}']
          interval: 5s
          timeout: 5s
          retries: 10
-      # expose to the host so you can run `pnpm db:seed` against it once
-      ports:
-         - '5432:5432'
+      # Not published to the host by default. To seed from a checkout, run:
+      #   docker compose --profile tools run --rm -p 5432:5432 db   (or add a port here)
 
    web:
       build: .
@@ -24,15 +23,28 @@ services:
          db:
             condition: service_healthy
       environment:
-         DATABASE_URL: postgresql://circle:circle@db:5432/circle?schema=public
+         DATABASE_URL: postgresql://${POSTGRES_USER:-circle}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@db:5432/${POSTGRES_DB:-circle}?schema=public
          AUTH_SECRET: ${AUTH_SECRET:?set AUTH_SECRET in .env (npx auth secret)}
          AUTH_URL: ${AUTH_URL:-http://localhost:3000}
          AUTH_TRUST_HOST: 'true'
+         SIGNUP_MODE: ${SIGNUP_MODE:-invite}
          UPLOAD_DIR: /app/uploads
       volumes:
          - uploads:/app/uploads
       ports:
-         - '3000:3000'
+         - '${WEB_PORT:-3000}:3000'
+      healthcheck:
+         test:
+            [
+               'CMD',
+               'node',
+               '-e',
+               "fetch('http://localhost:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+            ]
+         interval: 15s
+         timeout: 5s
+         retries: 5
+         start_period: 30s
 
 volumes:
    pgdata:

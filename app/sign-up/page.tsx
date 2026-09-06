@@ -14,23 +14,27 @@ export const metadata = { title: 'Create account' };
 const ERRORS: Record<string, string> = {
    invalid: 'Enter a valid email and a password of at least 8 characters.',
    exists: 'An account with that email already exists.',
-   badinvite: 'That invite link is invalid or has expired.',
+   badinvite: 'That invite link is invalid or has already been used.',
    inviteonly: 'This workspace is invite-only. Ask an admin for an invite link.',
    inviteemail: 'This invite was issued for a different email address.',
+   bootstrap: 'A valid bootstrap secret is required to create the first account.',
 };
 
 export default async function SignUpPage({
    searchParams,
 }: {
-   searchParams: Promise<{ error?: string; invite?: string }>;
+   searchParams: Promise<{ error?: string; invite?: string; bootstrap?: string }>;
 }) {
    const session = await auth();
    if (session?.user) redirect('/');
-   const { error, invite: token } = await searchParams;
+   const { error, invite: token, bootstrap } = await searchParams;
 
    const invite = token ? await getInviteByToken(token) : null;
-   const isBootstrap = (await db.user.count()) === 0;
-   const inviteOnly = process.env.SIGNUP_MODE === 'invite' && !isBootstrap;
+   const noUsersYet = (await db.user.count()) === 0;
+   const bootstrapSecret = process.env.BOOTSTRAP_SECRET?.trim();
+   const canBootstrap = noUsersYet && (!bootstrapSecret || bootstrap === bootstrapSecret);
+   // invite-only unless explicitly opened
+   const inviteOnly = process.env.SIGNUP_MODE !== 'open' && !canBootstrap;
    const blocked = (inviteOnly && !invite) || (!!token && !invite);
 
    return (
@@ -47,9 +51,11 @@ export default async function SignUpPage({
             <p className="mt-1 text-sm text-muted-foreground">
                {invite
                   ? `You've been invited to join ${invite.orgName}.`
-                  : inviteOnly
-                    ? 'This workspace is invite-only.'
-                    : 'The first account becomes the workspace admin.'}
+                  : canBootstrap
+                    ? 'The first account becomes the workspace admin.'
+                    : inviteOnly
+                      ? 'This workspace is invite-only.'
+                      : 'The first account becomes the workspace admin.'}
             </p>
 
             {error && (
@@ -67,6 +73,7 @@ export default async function SignUpPage({
             ) : (
                <form action={signUpAction} className="mt-6 flex flex-col gap-4">
                   {token && <input type="hidden" name="invite" value={token} />}
+                  {bootstrap && <input type="hidden" name="bootstrap" value={bootstrap} />}
                   <div className="flex flex-col gap-1.5">
                      <Label htmlFor="name">Name</Label>
                      <Input id="name" name="name" autoComplete="name" placeholder="Ada Lovelace" />
