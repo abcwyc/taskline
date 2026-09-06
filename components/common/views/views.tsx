@@ -12,14 +12,21 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import type { View } from '@/mock-data/views';
+import { ViewDialog } from '@/components/common/forms/view-dialog';
+import {
+   DropdownMenu,
+   DropdownMenuContent,
+   DropdownMenuItem,
+   DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useViewsStore } from '@/store/views-store';
 import { useTeamsStore } from '@/store/teams-store';
 import { useViewsDisplayStore, ViewsOrdering } from '@/store/views-display-store';
-import { ArrowDown, Plus, SlidersHorizontal } from 'lucide-react';
+import { ArrowDown, MoreHorizontal, Plus, SlidersHorizontal } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { parseAsStringLiteral, useQueryState } from 'nuqs';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 const TABS = ['issues', 'projects'] as const;
 
@@ -101,6 +108,8 @@ function DisplayOptions() {
 
 function ViewRow({ view, orgId }: { view: View; orgId: string }) {
    const { displayProperties } = useViewsDisplayStore();
+   const deleteView = useViewsStore((s) => s.deleteView);
+   const [editOpen, setEditOpen] = useState(false);
    return (
       <Link
          href={`/${orgId}/view/${view.id}`}
@@ -134,6 +143,34 @@ function ViewRow({ view, orgId }: { view: View; orgId: string }) {
                </span>
             </span>
          )}
+         <DropdownMenu>
+            <DropdownMenuTrigger
+               onClick={(e) => e.preventDefault()}
+               className="text-muted-foreground hover:text-foreground shrink-0"
+            >
+               <MoreHorizontal className="size-4" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+               <DropdownMenuItem
+                  onClick={(e) => {
+                     e.preventDefault();
+                     setEditOpen(true);
+                  }}
+               >
+                  Edit
+               </DropdownMenuItem>
+               <DropdownMenuItem
+                  className="text-destructive"
+                  onClick={(e) => {
+                     e.preventDefault();
+                     deleteView(view.id);
+                  }}
+               >
+                  Delete
+               </DropdownMenuItem>
+            </DropdownMenuContent>
+         </DropdownMenu>
+         <ViewDialog open={editOpen} onOpenChange={setEditOpen} view={view} />
       </Link>
    );
 }
@@ -151,6 +188,7 @@ export default function Views({ teamId }: { teamId?: string }) {
    const [tab, setTab] = useQueryState('tab', parseAsStringLiteral(TABS).withDefault('issues'));
    const { ordering } = useViewsDisplayStore();
    const team = teamId ? teams.find((entry) => entry.id === teamId) : undefined;
+   const [newOpen, setNewOpen] = useState(false);
 
    const list = useMemo(() => {
       let source = tab === 'issues' ? issueViews : projectViews;
@@ -205,8 +243,9 @@ export default function Views({ teamId }: { teamId?: string }) {
                   · {team ? 'Team' : 'Workspace'}
                </span>
             </span>
-            <Button size="xs" variant="ghost">
+            <Button size="xs" onClick={() => setNewOpen(true)}>
                <Plus className="size-3.5" />
+               New view
             </Button>
          </div>
 
@@ -218,6 +257,8 @@ export default function Views({ teamId }: { teamId?: string }) {
                No views yet
             </div>
          )}
+
+         <ViewDialog open={newOpen} onOpenChange={setNewOpen} teamId={teamId} />
       </div>
    );
 }

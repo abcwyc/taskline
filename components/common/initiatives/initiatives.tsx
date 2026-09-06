@@ -49,6 +49,14 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { parseAsStringLiteral, useQueryState } from 'nuqs';
 import { useMemo, useState } from 'react';
+import { InitiativeDialog } from '@/components/common/forms/initiative-dialog';
+import {
+   DropdownMenu,
+   DropdownMenuContent,
+   DropdownMenuItem,
+   DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { MoreHorizontal, Plus } from 'lucide-react';
 import { InitiativeStatusIcon } from './initiative-status-icon';
 import { InitiativesSidePanel } from './initiatives-side-panel';
 
@@ -325,6 +333,8 @@ function InitiativeRow({
    showStatus: boolean;
 }) {
    const teams = useTeamsStore((s) => s.teams);
+   const deleteInitiative = useInitiativesStore((s) => s.deleteInitiative);
+   const [editOpen, setEditOpen] = useState(false);
    const { displayProperties } = useInitiativesDisplayStore();
    const projects = getInitiativeProjects(initiative);
    const completed = countCompletedProjects(initiative);
@@ -416,6 +426,34 @@ function InitiativeRow({
                <ActiveProjectDots initiative={initiative} />
             </span>
          )}
+         <DropdownMenu>
+            <DropdownMenuTrigger
+               onClick={(e) => e.preventDefault()}
+               className="text-muted-foreground hover:text-foreground shrink-0"
+            >
+               <MoreHorizontal className="size-4" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+               <DropdownMenuItem
+                  onClick={(e) => {
+                     e.preventDefault();
+                     setEditOpen(true);
+                  }}
+               >
+                  Edit
+               </DropdownMenuItem>
+               <DropdownMenuItem
+                  className="text-destructive"
+                  onClick={(e) => {
+                     e.preventDefault();
+                     deleteInitiative(initiative.id);
+                  }}
+               >
+                  Delete
+               </DropdownMenuItem>
+            </DropdownMenuContent>
+         </DropdownMenu>
+         <InitiativeDialog open={editOpen} onOpenChange={setEditOpen} initiative={initiative} />
       </Link>
    );
 }
@@ -430,6 +468,7 @@ export default function Initiatives({ teamId }: { teamId?: string } = {}) {
    const { filters } = useInitiativesFilterStore();
    const { grouping, ordering, displayProperties } = useInitiativesDisplayStore();
    const [showPanel, setShowPanel] = useState(true);
+   const [newOpen, setNewOpen] = useState(false);
 
    const displayed = useMemo(() => {
       let list = teamId ? getTeamInitiatives(teamId) : allInitiatives.slice();
@@ -487,6 +526,10 @@ export default function Initiatives({ teamId }: { teamId?: string } = {}) {
                   ))}
                </div>
                <div className="flex items-center gap-1">
+                  <Button size="xs" onClick={() => setNewOpen(true)}>
+                     <Plus className="size-3.5" />
+                     New initiative
+                  </Button>
                   <InitiativesFilter />
                   <InitiativesDisplayOptions />
                   <Button
@@ -557,6 +600,7 @@ export default function Initiatives({ teamId }: { teamId?: string } = {}) {
                  ))}
          </div>
          {showPanel && <InitiativesSidePanel initiatives={displayed} />}
+         <InitiativeDialog open={newOpen} onOpenChange={setNewOpen} />
       </div>
    );
 }
