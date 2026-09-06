@@ -10,6 +10,17 @@ const compat = new FlatCompat({
 });
 
 const eslintConfig = [
+   {
+      ignores: [
+         '.next/**',
+         'node_modules/**',
+         'next-env.d.ts',
+         'coverage/**',
+         'public/**',
+         'prisma/migrations/**',
+         '*.config.{js,mjs,ts,mts}',
+      ],
+   },
    ...compat.extends('next/core-web-vitals', 'next/typescript'),
    {
       // Vendored bazza/ui data-table-filter (kept close to upstream for easy updates)
@@ -20,6 +31,13 @@ const eslintConfig = [
          '@typescript-eslint/no-this-alias': 'off',
          'react-hooks/rules-of-hooks': 'off',
          'react-hooks/exhaustive-deps': 'off',
+      },
+   },
+   {
+      // test helpers + one-off scripts: looser
+      files: ['test/**/*.ts', 'scripts/**/*.{ts,mjs}'],
+      rules: {
+         '@typescript-eslint/no-explicit-any': 'off',
       },
    },
 ];

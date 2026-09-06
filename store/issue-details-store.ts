@@ -10,6 +10,8 @@ import {
 } from '@/mock-data/issue-details';
 
 import { fetchIssueDetail, postIssueComment, setIssueSubscription } from '@/lib/api/issue-details';
+import { useMeStore } from '@/store/me-store';
+import { useMembersStore } from '@/store/members-store';
 
 /**
  * Per-issue detail cache (rich description, comments, activity, relations,
@@ -79,12 +81,16 @@ export const useIssueDetailsStore = create<IssueDetailsState>((set, get) => ({
    postComment: (identifier, text) => {
       const current = get().byIdentifier[identifier];
       if (!current) return;
+      const me = useMeStore.getState().me;
+      const actor =
+         (me && useMembersStore.getState().getMemberById(me.id)) ??
+         current.activity.find((a) => a.kind === 'comment')?.actor ??
+         current.activity[0]?.actor ??
+         useMembersStore.getState().members[0];
       const optimistic: ActivityItem = {
          kind: 'comment',
          id: `pending-${Date.now()}`,
-         actor:
-            current.activity.find((a) => a.kind === 'comment')?.actor ??
-            current.activity[0]?.actor!,
+         actor,
          timeAgo: 'just now',
          body: [{ type: 'paragraph', text }],
       };
