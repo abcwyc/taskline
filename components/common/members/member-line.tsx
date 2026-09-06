@@ -1,12 +1,22 @@
 'use client';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+   Select,
+   SelectContent,
+   SelectItem,
+   SelectTrigger,
+   SelectValue,
+} from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { User } from '@/mock-data/users';
+import { useMembersStore } from '@/store/members-store';
 import { format, parseISO } from 'date-fns';
 import { SquareUser } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+
+const ROLES: User['role'][] = ['Admin', 'Member', 'Guest'];
 
 interface MemberLineProps {
    user: User;
@@ -33,6 +43,7 @@ const hashString = (value: string): number => {
 
 export default function MemberLine({ user }: MemberLineProps) {
    const { orgId } = useParams<{ orgId: string }>();
+   const updateMember = useMembersStore((s) => s.updateMember);
    const isApplication = user.role === 'Application';
    // Like Linear, some accounts show their e-mail as the primary line.
    const showEmailAsName = !isApplication && hashString(user.id) % 4 === 0;
@@ -57,20 +68,31 @@ export default function MemberLine({ user }: MemberLineProps) {
          </div>
 
          {/* Status (role) */}
-         <div className="w-[110px] shrink-0">
+         <div className="w-[110px] shrink-0" onClick={(e) => e.preventDefault()}>
             {isApplication ? (
                <span className="text-xs text-muted-foreground">Application</span>
             ) : (
-               <span
-                  className={cn(
-                     'inline-flex items-center text-xs border rounded-md px-1.5 py-0.5',
-                     user.role === 'Admin'
-                        ? 'text-indigo-500 dark:text-indigo-400 border-indigo-500/30 bg-indigo-500/5'
-                        : 'text-muted-foreground'
-                  )}
+               <Select
+                  value={user.role}
+                  onValueChange={(role) => updateMember(user.id, { role: role as User['role'] })}
                >
-                  {user.role}
-               </span>
+                  <SelectTrigger
+                     className={cn(
+                        'h-6 w-[92px] text-xs border px-1.5',
+                        user.role === 'Admin' &&
+                           'text-indigo-500 dark:text-indigo-400 border-indigo-500/30 bg-indigo-500/5'
+                     )}
+                  >
+                     <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                     {ROLES.map((r) => (
+                        <SelectItem key={r} value={r} className="text-xs">
+                           {r}
+                        </SelectItem>
+                     ))}
+                  </SelectContent>
+               </Select>
             )}
          </div>
 

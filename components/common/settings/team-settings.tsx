@@ -1,9 +1,12 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { TeamDialog } from '@/components/common/forms/team-dialog';
 import { useCyclesStore } from '@/store/cycles-store';
 import { status } from '@/mock-data/status';
 import { useTeamsStore } from '@/store/teams-store';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import {
    Bot,
    ChevronRight,
@@ -31,8 +34,12 @@ interface TeamSettingsProps {
 /** Per-team settings page (general, workflow, AI and danger zone). */
 export default function TeamSettings({ teamId }: TeamSettingsProps) {
    const teams = useTeamsStore((s) => s.teams);
+   const updateTeam = useTeamsStore((s) => s.updateTeam);
+   const deleteTeam = useTeamsStore((s) => s.deleteTeam);
    const cycles = useCyclesStore((s) => s.getCyclesByTeam(teamId));
    const { orgId } = useParams<{ orgId: string }>();
+   const router = useRouter();
+   const [editOpen, setEditOpen] = useState(false);
    const team = teams.find((candidate) => candidate.id === teamId);
 
    if (!team) {
@@ -56,6 +63,9 @@ export default function TeamSettings({ teamId }: TeamSettingsProps) {
                      Accessible to all workspace members
                   </p>
                </div>
+               <Button size="xs" variant="secondary" onClick={() => setEditOpen(true)}>
+                  Edit
+               </Button>
                <Link
                   href={`/${orgId}/team/${team.id}/overview`}
                   className="text-sm inline-flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
@@ -218,30 +228,40 @@ export default function TeamSettings({ teamId }: TeamSettingsProps) {
                <SettingsSection title="Danger zone">
                   <SettingsCard>
                      <SettingsRow
-                        title="Leave team"
-                        description="Remove yourself as a member of this team"
-                        trailing={
-                           <Button size="xs" variant="ghost">
-                              Leave team...
-                           </Button>
+                        title={team.joined ? 'Leave team' : 'Join team'}
+                        description={
+                           team.joined
+                              ? 'Remove yourself as a member of this team'
+                              : 'Add yourself as a member of this team'
                         }
-                     />
-                     <SettingsRow
-                        title="Retire team"
-                        description="Prevent creating and updating issues in this team while preserving all historical data"
-                        muted
                         trailing={
-                           <Button size="xs" variant="ghost">
-                              Retire...
+                           <Button
+                              size="xs"
+                              variant="ghost"
+                              onClick={() => updateTeam(team.id, { joined: !team.joined })}
+                           >
+                              {team.joined ? 'Leave team' : 'Join team'}
                            </Button>
                         }
                      />
                      <SettingsRow
                         title="Delete team"
-                        description="Permanently delete this team and all its data, with a 30-day restoration window"
+                        description="Permanently delete this team. Only empty teams (no projects, issues or cycles) can be deleted."
                         muted
                         trailing={
-                           <Button size="xs" variant="ghost">
+                           <Button
+                              size="xs"
+                              variant="ghost"
+                              className="text-destructive"
+                              onClick={() => {
+                                 if (
+                                    confirm(`Delete team "${team.name}"? This cannot be undone.`)
+                                 ) {
+                                    deleteTeam(team.id);
+                                    router.push(`/${orgId}/teams`);
+                                 }
+                              }}
+                           >
                               Delete...
                            </Button>
                         }
@@ -250,6 +270,8 @@ export default function TeamSettings({ teamId }: TeamSettingsProps) {
                </SettingsSection>
             </div>
          </div>
+
+         <TeamDialog open={editOpen} onOpenChange={setEditOpen} team={team} />
       </div>
    );
 }
