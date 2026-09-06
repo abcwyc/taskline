@@ -89,6 +89,10 @@ export function ActivityFeed({
    issueIdentifier?: string;
 }) {
    const postComment = useIssueDetailsStore((s) => s.postComment);
+   const toggleSubscription = useIssueDetailsStore((s) => s.toggleSubscription);
+   const subscribed = useIssueDetailsStore((s) =>
+      issueIdentifier ? Boolean(s.byIdentifier[issueIdentifier]?.subscribed) : false
+   );
    const submitOn = useMeStore((s) => s.preferences.submitCommentOn);
    const uploadAttachment = useAttachmentsStore((s) => s.upload);
    const uploadingAttachment = useAttachmentsStore((s) =>
@@ -124,9 +128,14 @@ export function ActivityFeed({
       <div className="mt-10">
          <div className="flex items-center justify-between mb-2">
             <h2 className="text-base font-semibold">Activity</h2>
-            <button className="text-xs text-muted-foreground hover:text-foreground">
-               Subscribe
-            </button>
+            {issueIdentifier && (
+               <button
+                  onClick={() => toggleSubscription(issueIdentifier)}
+                  className="text-xs text-muted-foreground hover:text-foreground"
+               >
+                  {subscribed ? 'Unsubscribe' : 'Subscribe'}
+               </button>
+            )}
          </div>
 
          <div className="flex flex-col">

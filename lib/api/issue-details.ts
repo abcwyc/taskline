@@ -45,16 +45,26 @@ export function dtoToIssueDetail(dto: IssueDetailDTO, fallbackIssue?: Issue): Is
    const mock = fallbackIssue ? mockGetIssueDetail(fallbackIssue) : null;
    const hasDescription = dto.description.length > 0;
 
-   const events: ActivityItem[] = dto.activity.map((a) => ({
-      kind: 'event',
-      id: a.id,
-      actor: user(a.actorId),
-      event: a.field ?? a.verb,
-      text: a.text,
-      timeAgo: ago(a.createdAt),
-   }));
-   const comments = dto.comments.map(commentToItem);
-   const activity = [...events, ...comments];
+   // interleave events + comments in chronological order
+   const dated: { at: number; item: ActivityItem }[] = [
+      ...dto.activity.map((a) => ({
+         at: new Date(a.createdAt).getTime(),
+         item: {
+            kind: 'event' as const,
+            id: a.id,
+            actor: user(a.actorId),
+            event: a.field ?? a.verb,
+            text: a.text,
+            timeAgo: ago(a.createdAt),
+         },
+      })),
+      ...dto.comments.map((c) => ({
+         at: new Date(c.createdAt).getTime(),
+         item: commentToItem(c),
+      })),
+   ];
+   dated.sort((x, y) => x.at - y.at);
+   const activity = dated.map((d) => d.item);
 
    return {
       identifier: dto.identifier,
@@ -69,7 +79,19 @@ export function dtoToIssueDetail(dto: IssueDetailDTO, fallbackIssue?: Issue): Is
          status: p.status as 'open' | 'merged' | 'draft',
       })),
       ...(dto.milestone ? { milestone: dto.milestone } : {}),
+      subscribed: dto.subscribed,
    };
+}
+
+export async function setIssueSubscription(
+   idOrIdentifier: string,
+   subscribed: boolean
+): Promise<boolean> {
+   const res = await http<{ subscribed: boolean }>(
+      `${BASE}/${encodeURIComponent(idOrIdentifier)}/subscription`,
+      { method: subscribed ? 'PUT' : 'DELETE' }
+   );
+   return res.subscribed;
 }
 
 /* -------------------------------- calls --------------------------------- */

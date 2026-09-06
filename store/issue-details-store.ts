@@ -9,7 +9,7 @@ import {
    IssueDetail,
 } from '@/mock-data/issue-details';
 
-import { fetchIssueDetail, postIssueComment } from '@/lib/api/issue-details';
+import { fetchIssueDetail, postIssueComment, setIssueSubscription } from '@/lib/api/issue-details';
 
 /**
  * Per-issue detail cache (rich description, comments, activity, relations,
@@ -24,6 +24,7 @@ interface IssueDetailsState {
    postComment: (identifier: string, text: string) => void;
    /** Drop the cached detail so the next view refetches (e.g. after a sub-issue is added). */
    invalidate: (identifier: string) => void;
+   toggleSubscription: (identifier: string) => void;
 }
 
 export const useIssueDetailsStore = create<IssueDetailsState>((set, get) => ({
@@ -56,6 +57,24 @@ export const useIssueDetailsStore = create<IssueDetailsState>((set, get) => ({
          delete next[identifier];
          return { byIdentifier: next };
       }),
+
+   toggleSubscription: (identifier) => {
+      const current = get().byIdentifier[identifier];
+      if (!current) return;
+      const next = !current.subscribed;
+      set((s) => ({
+         byIdentifier: { ...s.byIdentifier, [identifier]: { ...current, subscribed: next } },
+      }));
+      setIssueSubscription(identifier, next).catch(() => {
+         set((s) => {
+            const d = s.byIdentifier[identifier];
+            return d
+               ? { byIdentifier: { ...s.byIdentifier, [identifier]: { ...d, subscribed: !next } } }
+               : {};
+         });
+         toast.error('Failed to update subscription');
+      });
+   },
 
    postComment: (identifier, text) => {
       const current = get().byIdentifier[identifier];

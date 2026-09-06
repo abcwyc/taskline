@@ -4,6 +4,7 @@ import { Prisma, Priority } from '@prisma/client';
 import { db } from '@/lib/db';
 import { LexoRank } from '@/lib/utils';
 import { purgeAttachmentBlobs } from './attachments.server';
+import { onIssueUpdated } from './issue-events.server';
 import { blocksToText, readBlocks, storeBlocks, textToBlocks } from './rich-text';
 import {
    IssueDTO,
@@ -194,13 +195,16 @@ export async function createIssue(
 export async function updateIssue(
    orgId: string,
    id: string,
-   body: IssueUpdateBody
+   body: IssueUpdateBody,
+   actorId: string | null = null
 ): Promise<IssueDTO | null> {
-   const existing = await db.issue.findFirst({
+   const existingRow = await db.issue.findFirst({
       where: { orgId, OR: [{ id }, { identifier: id }] },
-      select: { id: true, stateId: true },
+      include: issueInclude,
    });
-   if (!existing) return null;
+   if (!existingRow) return null;
+   const existing = { id: existingRow.id, stateId: existingRow.stateId };
+   const before = serializeIssue(existingRow);
 
    const data: Prisma.IssueUpdateInput = {};
    if (body.title !== undefined) data.title = body.title;
@@ -225,10 +229,37 @@ export async function updateIssue(
       data.completedAt = next?.category === 'COMPLETED' ? new Date() : null;
    }
 
-   const row = await db.issue.update({
-      where: { id: existing.id },
-      data,
-      include: issueInclude,
+   const row = await db.$transaction(async (tx) => {
+      const updated = await tx.issue.update({
+         where: { id: existing.id },
+         data,
+         include: issueInclude,
+      });
+      await onIssueUpdated(tx, {
+         issueId: existing.id,
+         orgId,
+         actorId,
+         before: {
+            statusId: before.statusId,
+            priorityId: before.priorityId,
+            assigneeId: before.assigneeId,
+            projectId: before.projectId,
+            title: before.title,
+            dueDate: before.dueDate,
+            labelIds: before.labelIds,
+         },
+         patch: {
+            statusId: body.statusId,
+            priorityId: body.priorityId,
+            assigneeId: body.assigneeId,
+            projectId: body.projectId,
+            title: body.title,
+            description: body.description,
+            dueDate: body.dueDate,
+            labelIds: body.labelIds,
+         },
+      });
+      return updated;
    });
    return serializeIssue(row);
 }

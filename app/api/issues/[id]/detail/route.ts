@@ -11,7 +11,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
    if (!isContext(ctx)) return ctx;
    const { id } = await params;
 
-   const detail = await getIssueDetail(ctx.orgId, id);
+   const detail = await getIssueDetail(ctx.orgId, id, ctx.userId);
    if (!detail) return NextResponse.json({ error: 'not found' }, { status: 404 });
    return NextResponse.json(detail);
 }

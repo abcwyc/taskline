@@ -38,7 +38,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
    }
 
    try {
-      const updated = await updateIssue(orgId, id, body as IssueUpdateBody);
+      const updated = await updateIssue(orgId, id, body as IssueUpdateBody, ctx.userId);
       if (!updated) return NextResponse.json({ error: 'not found' }, { status: 404 });
       return NextResponse.json(updated);
    } catch (err) {

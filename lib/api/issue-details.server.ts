@@ -2,6 +2,7 @@ import 'server-only';
 import { Prisma } from '@prisma/client';
 
 import { db } from '@/lib/db';
+import { onIssueCommented } from './issue-events.server';
 import { readBlocks, storeBlocks, textToBlocks } from './rich-text';
 import {
    IssueActivityDTO,
@@ -35,10 +36,34 @@ function serializeComment(c: DetailRow['comments'][number]): IssueCommentDTO {
 }
 
 function serializeActivity(a: DetailRow['activity'][number]): IssueActivityDTO {
-   const text =
-      a.field && (a.oldValue || a.newValue)
-         ? `changed ${a.field}` + (a.newValue ? ` to ${a.newValue}` : '')
-         : a.verb;
+   const label: Record<string, string> = {
+      status: 'status',
+      assignee: 'assignee',
+      priority: 'priority',
+      project: 'project',
+      title: 'title',
+      dueDate: 'due date',
+      label: 'labels',
+      description: 'description',
+   };
+   let text: string;
+   if (a.verb === 'created' || a.field === 'created') {
+      text = 'created the issue';
+   } else if (a.field === 'description') {
+      text = 'edited the description';
+   } else if (a.field === 'cycle') {
+      text = a.newValue ?? 'updated the cycle';
+   } else if (a.field === 'assignee') {
+      text = a.newValue ? `assigned this to ${a.newValue}` : 'unassigned this';
+   } else if (a.field && a.newValue) {
+      text = `changed ${label[a.field] ?? a.field} to ${a.newValue}`;
+   } else if (a.field && a.oldValue) {
+      text = `cleared the ${label[a.field] ?? a.field}`;
+   } else if (a.verb === 'created') {
+      text = 'created the issue';
+   } else {
+      text = a.verb;
+   }
    return {
       id: a.id,
       actorId: a.actorId,
@@ -51,13 +76,23 @@ function serializeActivity(a: DetailRow['activity'][number]): IssueActivityDTO {
 
 export async function getIssueDetail(
    orgId: string,
-   idOrIdentifier: string
+   idOrIdentifier: string,
+   userId?: string
 ): Promise<IssueDetailDTO | null> {
    const row = await db.issue.findFirst({
       where: { orgId, OR: [{ id: idOrIdentifier }, { identifier: idOrIdentifier }] },
       include: detailInclude,
    });
    if (!row) return null;
+
+   const subscribed = userId
+      ? Boolean(
+           await db.issueSubscriber.findUnique({
+              where: { issueId_userId: { issueId: row.id, userId } },
+              select: { issueId: true },
+           })
+        )
+      : false;
 
    // relation targets -> identifiers
    const relatedIssueIds = row.relations.map((r) => r.relatedIssueId);
@@ -93,6 +128,7 @@ export async function getIssueDetail(
          status: PR_STATUS_ENUM_TO_KEY[p.status] ?? 'open',
       })),
       milestone: row.milestoneId,
+      subscribed,
    };
 }
 
@@ -104,17 +140,25 @@ export async function addIssueComment(
 ): Promise<IssueCommentDTO | null> {
    const issue = await db.issue.findFirst({
       where: { orgId, OR: [{ id: idOrIdentifier }, { identifier: idOrIdentifier }] },
-      select: { id: true },
+      select: { id: true, identifier: true },
    });
    if (!issue) return null;
    if (!body?.text?.trim()) throw new Error('comment text is required');
 
-   const c = await db.issueComment.create({
-      data: {
-         issue: { connect: { id: issue.id } },
-         author: { connect: { id: authorId } },
-         body: storeBlocks(textToBlocks(body.text)),
-      },
+   const c = await db.$transaction(async (tx) => {
+      const comment = await tx.issueComment.create({
+         data: {
+            issue: { connect: { id: issue.id } },
+            author: { connect: { id: authorId } },
+            body: storeBlocks(textToBlocks(body.text)),
+         },
+      });
+      await onIssueCommented(tx, {
+         issueId: issue.id,
+         actorId: authorId,
+         preview: body.text.trim(),
+      });
+      return comment;
    });
    return serializeComment(c as DetailRow['comments'][number]);
 }

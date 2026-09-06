@@ -309,6 +309,7 @@ export interface IssueDetailDTO {
    blockedByIds: string[];
    prLinks: PrLinkDTO[];
    milestone: string | null;
+   subscribed: boolean;
 }
 
 export interface PostCommentBody {

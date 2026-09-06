@@ -180,6 +180,7 @@ model User {
   createdInvites      Invite[]         @relation("InviteCreator")
   acceptedInvites     Invite[]         @relation("InviteAcceptor")
   uploadedAttachments Attachment[]
+  issueSubscriptions  IssueSubscriber[]
 
   // Auth.js
   accounts Account[]
@@ -493,6 +494,7 @@ model Issue {
   comments           IssueComment[]
   activity           IssueActivity[]
   attachments        Attachment[]
+  subscribers        IssueSubscriber[]
   prLinks            PrLink[]
   relations          IssueRelation[] @relation("RelationFrom")
   relatedRelations   IssueRelation[] @relation("RelationTo")
@@ -578,6 +580,20 @@ model PrLink {
   issue Issue @relation(fields: [issueId], references: [id], onDelete: Cascade)
 
   @@index([issueId])
+}
+
+/// Explicit "watch this issue". Implicit participants (creator, assignee,
+/// commenters) are notified regardless — see lib/api/issue-events.server.ts.
+model IssueSubscriber {
+  issueId   String
+  userId    String
+  createdAt DateTime @default(now())
+
+  issue Issue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([issueId, userId])
+  @@index([userId])
 }
 
 /// File attached to an issue. Bytes live under `UPLOAD_DIR` (see lib/api/storage.ts);

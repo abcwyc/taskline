@@ -61,6 +61,7 @@ export interface IssueDetail {
    blockedByIds?: string[];
    prLinks?: PrLink[];
    milestone?: string;
+   subscribed?: boolean;
 }
 
 /* -------------------------------------------------------------------------- */
