@@ -2,6 +2,7 @@ import 'server-only';
 import { Prisma } from '@prisma/client';
 
 import { db } from '@/lib/db';
+import { PublicError } from './http';
 import {
    MemberDTO,
    MemberUpdateBody,
@@ -71,6 +72,16 @@ export async function updateMember(
    if (body.role !== undefined) {
       const role = ROLE_KEY_TO_ENUM[body.role];
       if (role) {
+         const current = await db.membership.findUnique({
+            where: { id: membership.id },
+            select: { role: true },
+         });
+         if (current?.role === 'ADMIN' && role !== 'ADMIN') {
+            const admins = await db.membership.count({ where: { orgId, role: 'ADMIN' } });
+            if (admins <= 1) {
+               throw new PublicError('the workspace must keep at least one admin', 409);
+            }
+         }
          await db.membership.update({
             where: { id: membership.id },
             data: { role: role as never },

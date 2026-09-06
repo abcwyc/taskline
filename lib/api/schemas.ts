@@ -65,32 +65,40 @@ export const projectUpdate = projectCreate.partial().strict();
 
 export const projectUpdatePost = z.object({ health: zText(40), text: zText(20_000) }).strict();
 
+const zEmoji = z.string().max(24).optional();
+
 export const cycleCreate = z
    .object({
       name: zText(160),
       teamId: zId,
+      status: zOptText(40),
       startDate: z.string().max(40).optional(),
       endDate: z.string().max(40).optional(),
-      status: zOptText(40),
       capacity: z.number().int().min(0).max(100_000).optional(),
    })
    .strict();
 
 export const cycleUpdate = cycleCreate.partial().strict();
 
-export const labelCreate = z.object({ name: zText(80), color: zText(40) }).strict();
-export const labelUpdate = labelCreate.partial().strict();
+export const labelCreate = z
+   .object({ id: zId.optional(), name: zText(80), color: zText(40) })
+   .strict();
+export const labelUpdate = z
+   .object({ name: zText(80).optional(), color: zText(40).optional() })
+   .strict();
 
 export const initiativeCreate = z
    .object({
       name: zText(200),
-      icon: zOptText(64),
+      icon: zEmoji,
       description: RICH.nullable().optional(),
       status: zOptText(40),
       priorityId: zId.optional(),
       healthId: zId.optional(),
       ownerId: zId.nullable().optional(),
       leadTeamId: zId.nullable().optional(),
+      target: zOptText(200).nullable(),
+      projectIds: idList.optional(),
    })
    .strict();
 
@@ -100,6 +108,7 @@ export const viewCreate = z
    .object({
       name: zText(160),
       description: zOptText(2_000),
+      icon: zEmoji,
       type: z.enum(['issue', 'project']).optional(),
       filter: z.record(z.string(), z.unknown()).optional(),
       teamId: zId.nullable().optional(),
@@ -109,25 +118,26 @@ export const viewCreate = z
 export const viewUpdate = viewCreate.partial().strict();
 
 export const documentCreate = z
-   .object({ title: zText(200), name: zText(200).optional(), teamId: zId, icon: zOptText(16) })
-   .strict();
-
-export const documentUpdate = z
    .object({
-      title: zText(200).optional(),
       name: zText(200).optional(),
+      icon: zEmoji,
       pinned: z.boolean().optional(),
+      folderId: zId.optional(),
    })
    .strict();
 
+export const documentUpdate = z
+   .object({ name: zText(200).optional(), icon: zEmoji, pinned: z.boolean().optional() })
+   .strict();
+
 export const teamCreate = z
-   .object({ name: zText(80), id: zId.optional(), icon: zOptText(16), color: zOptText(40) })
+   .object({ name: zText(80), id: zId.optional(), icon: zEmoji, color: zOptText(40) })
    .strict();
 
 export const teamUpdate = z
    .object({
       name: zText(80).optional(),
-      icon: zOptText(16),
+      icon: zEmoji,
       color: zOptText(40),
       joined: z.boolean().optional(),
    })
@@ -146,6 +156,14 @@ export const meUpdate = z
       jobTitle: zOptText(120).nullable(),
       timezone: z.string().max(64).optional(),
       preferences: z.record(z.string(), z.unknown()).optional(),
+   })
+   .strict();
+
+export const memberUpdate = z
+   .object({
+      role: z.enum(['Admin', 'Member', 'Guest']).optional(),
+      name: zText(120).optional(),
+      timezone: z.string().max(64).optional(),
    })
    .strict();
 

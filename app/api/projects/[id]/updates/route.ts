@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { isContext, requireWrite } from '@/lib/api/context';
-import { errorResponse } from '@/lib/api/http';
+import { errorResponse, parseBody } from '@/lib/api/http';
+import { projectUpdatePost } from '@/lib/api/schemas';
 import { addProjectUpdate } from '@/lib/api/project-details.server';
 import { PostProjectUpdateBody } from '@/lib/api/types';
 
@@ -14,14 +15,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
    const { orgId, userId } = ctx;
    const { id } = await params;
 
-   let body: unknown;
+   let body;
    try {
-      body = await req.json();
-   } catch {
-      return NextResponse.json({ error: 'invalid json' }, { status: 400 });
-   }
-   if (typeof body !== 'object' || body === null) {
-      return NextResponse.json({ error: 'expected an object' }, { status: 400 });
+      body = await parseBody(req, projectUpdatePost);
+   } catch (err) {
+      return errorResponse(err);
    }
 
    try {

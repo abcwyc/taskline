@@ -38,14 +38,15 @@ The `web` container runs `prisma migrate deploy` on every start (see
 `docker-entrypoint.sh`). Postgres is **not** published to the host; the `web`
 service has a `/api/health` healthcheck.
 
-**Create the first admin.** Registration is invite-only by default, but the
-first-ever account bootstraps the workspace as ADMIN:
+**Create the first admin.** Registration is invite-only by default, and the
+first account can only be created two ways — never "whoever registers first":
 
-- If `BOOTSTRAP_SECRET` is unset: open <http://localhost:3000/sign-up> and
-  register. Do this immediately after first boot, before the app is reachable
-  from untrusted networks.
-- If `BOOTSTRAP_SECRET` is set: open
-  `http://localhost:3000/sign-up?bootstrap=<secret>`.
+- **CLI (recommended):**
+   ```bash
+   docker compose exec web pnpm create-admin you@example.com 'a-strong-password' 'Your Name'
+   ```
+- **Web:** set `BOOTSTRAP_SECRET` in `.env`, then open
+  <http://localhost:3000/sign-up> and enter that secret in the form.
 
 After that, admins invite everyone else from the **Members** page. Set
 `SIGNUP_MODE=open` if you actually want anyone to be able to register.
@@ -79,11 +80,14 @@ docker run -p 3000:3000 \
 
 ```bash
 pnpm install
-pnpm prisma migrate deploy   # apply committed migrations
+pnpm prisma migrate deploy            # apply committed migrations
 pnpm build
-pnpm start                   # next start, on PORT (default 3000)
-# then register at /sign-up  (or `pnpm db:seed` first for demo data)
+pnpm create-admin you@example.com 'a-strong-password'
+node .next/standalone/server.js       # the standalone server (PORT, default 3000)
 ```
+
+(`.next/standalone` needs `.next/static` and `public/` copied next to it — the
+Dockerfile does this; for a bare run, `cp -r .next/static public .next/standalone/`.)
 
 ## Migrations
 
@@ -130,6 +134,10 @@ The schema is org-scoped but the UI serves one workspace; every account joins it
 
 ## Operational gaps to close before production
 
-No CI, automated tests, metrics/tracing, structured logs, or DB backup/PITR
-automation ship with this repo. Add them for your environment. `/api/health`
-returns 200 only when the DB responds — wire it to your load balancer.
+- **CI** — `.github/workflows/ci.yml` runs typecheck / lint / tests / build /
+  audit. Adapt for your host.
+- **Tests** — `pnpm test` (vitest): unit tests always run; the RBAC / invite /
+  admin-safety integration tests run when `TEST_DATABASE_URL` is set.
+- **Not included** — metrics/tracing, structured log shipping, DB backup/PITR,
+  rate limiting, error tracking. `/api/health` returns 200 only when the DB
+  responds — wire it to your load balancer.

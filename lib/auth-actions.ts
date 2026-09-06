@@ -38,23 +38,23 @@ export async function signUpAction(formData: FormData) {
    const token = String(formData.get('invite') ?? '').trim();
    const bootstrapArg = String(formData.get('bootstrap') ?? '').trim();
    // invite-only unless explicitly opened
-   const inviteOnly = process.env.SIGNUP_MODE !== 'open';
+   const openSignup = process.env.SIGNUP_MODE === 'open';
    const bootstrapSecret = process.env.BOOTSTRAP_SECRET?.trim();
 
    const invite = token ? await getInviteByToken(token) : null;
    const qs = token ? `&invite=${encodeURIComponent(token)}` : '';
 
-   // The first-ever account bootstraps the workspace as ADMIN. If BOOTSTRAP_SECRET
-   // is set it must be supplied (`/sign-up?bootstrap=<secret>`); otherwise any
-   // first sign-up works (fine for a trusted / non-public first boot).
+   // The first-ever account bootstraps the workspace as ADMIN. This is only
+   // possible through a valid invite or a correct BOOTSTRAP_SECRET — never
+   // "whoever registers first". With no users and no secret, the web sign-up is
+   // closed; use `pnpm create-admin` (scripts/create-admin.ts).
    const noUsersYet = (await db.user.count()) === 0;
-   const isBootstrap = noUsersYet && (!bootstrapSecret || bootstrapArg === bootstrapSecret);
+   const isBootstrap =
+      noUsersYet && !invite && !!bootstrapSecret && bootstrapArg === bootstrapSecret;
 
    if (token && !invite) redirect('/sign-up?error=badinvite');
-   if (noUsersYet && bootstrapSecret && bootstrapArg !== bootstrapSecret) {
-      redirect('/sign-up?error=bootstrap');
-   }
-   if (inviteOnly && !invite && !isBootstrap) redirect('/sign-up?error=inviteonly');
+   if (noUsersYet && !invite && !isBootstrap) redirect('/sign-up?error=bootstrap');
+   if (!noUsersYet && !openSignup && !invite) redirect('/sign-up?error=inviteonly');
    if (invite?.email && invite.email !== email) redirect(`/sign-up?error=inviteemail${qs}`);
 
    if (!email.includes('@') || password.length < 8) {

@@ -10,8 +10,9 @@
 - **Input** — request bodies are Zod-validated on the main write routes;
   foreign-key ids are checked to belong to the caller's workspace before use
   (`lib/api/ownership.server.ts`). DB errors are never returned to clients.
-- **Registration** — invite-only by default (`SIGNUP_MODE`). The first account
-  bootstraps as ADMIN; gate it with `BOOTSTRAP_SECRET` on a public deploy.
+- **Registration** — invite-only by default (`SIGNUP_MODE`). The first admin is
+  created only via `pnpm create-admin` or a `BOOTSTRAP_SECRET` typed into the
+  form — never "whoever registers first".
 - **Uploads** — per-file and per-workspace size caps; `Content-Length` checked
   before buffering; downloads served `Content-Disposition: attachment` +
   `nosniff`.
@@ -26,14 +27,16 @@
 - **No email verification, password reset, MFA, or session revocation UI.**
   Accounts are only as trustworthy as whoever holds the invite link.
 - **No account-lockout** on repeated failed logins.
-- **Zod coverage is partial** — issues, projects, comments, invites and
-  `/api/me` are validated; the smaller CRUD routes (cycles, labels, views,
-  documents, initiatives, team edits) still rely on server-layer checks +
-  error sanitization. Finish porting them to `lib/api/schemas.ts`.
-- **Dependency audit** — `pnpm audit --prod` still reports build-time-only
-  advisories (postcss/nanoid via Next, deepmerge-ts via the Prisma CLI, lodash
-  via recharts). None are reachable at runtime; clear them by tracking Next
-  releases and moving recharts to v3.
+- **Zod coverage** — all create/update routes now validate their body via
+  `lib/api/schemas.ts`. Foreign-key ids are workspace-scoped for issues,
+  projects, documents and initiatives; the rest resolve by org-scoped lookup.
+- **Dependency audit** — `pnpm audit --prod` reports advisories in postcss +
+  nanoid (Next's bundled CSS pipeline), deepmerge-ts (`@prisma/config`, CLI
+  only) and lodash (recharts). postcss/nanoid _are_ bundled into
+  `.next/standalone`, but the vulnerable code paths (source-map auto-loading,
+  custom-alphabet generators) are not exercised at runtime; lodash's `_.template`
+  is never called. Clear them by tracking Next releases and moving recharts to
+  v3 (drops lodash). Do not ship without re-checking.
 - **Attachments** are not virus-scanned.
 - **Single workspace** — cross-tenant isolation is not exercised; the FK
   ownership checks are the groundwork for when it is.

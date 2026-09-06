@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { isContext, requireContext, requireWrite, requireAdmin } from '@/lib/api/context';
-import { errorResponse } from '@/lib/api/http';
+import { isContext, requireContext, requireAdmin } from '@/lib/api/context';
+import { errorResponse, parseBody, PublicError } from '@/lib/api/http';
+import { teamUpdate } from '@/lib/api/schemas';
 import { deleteTeam, getTeam, updateTeam } from '@/lib/api/teams.server';
 import { TeamUpdateBody } from '@/lib/api/types';
 
@@ -20,18 +21,26 @@ export async function GET(_req: NextRequest, { params }: Params) {
 }
 
 export async function PATCH(req: NextRequest, { params }: Params) {
-   const ctx = await requireWrite();
+   // members may only toggle their own membership; renaming / restyling a team
+   // (name / icon / color) is an admin action.
+   const ctx = await requireContext();
    if (!isContext(ctx)) return ctx;
    const { id } = await params;
 
-   let body: unknown;
+   let body;
    try {
-      body = await req.json();
-   } catch {
-      return NextResponse.json({ error: 'invalid json' }, { status: 400 });
+      body = await parseBody(req, teamUpdate);
+   } catch (err) {
+      return errorResponse(err);
    }
-   if (typeof body !== 'object' || body === null) {
-      return NextResponse.json({ error: 'expected an object' }, { status: 400 });
+
+   const wantsProfileEdit =
+      body.name !== undefined || body.icon !== undefined || body.color !== undefined;
+   if (wantsProfileEdit && ctx.role !== 'ADMIN') {
+      return errorResponse(new PublicError('only an admin can edit team details', 403));
+   }
+   if (!wantsProfileEdit && ctx.role !== 'ADMIN' && ctx.role !== 'MEMBER') {
+      return errorResponse(new PublicError('your role is read-only', 403));
    }
 
    try {

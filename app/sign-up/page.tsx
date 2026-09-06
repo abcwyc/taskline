@@ -17,7 +17,7 @@ const ERRORS: Record<string, string> = {
    badinvite: 'That invite link is invalid or has already been used.',
    inviteonly: 'This workspace is invite-only. Ask an admin for an invite link.',
    inviteemail: 'This invite was issued for a different email address.',
-   bootstrap: 'A valid bootstrap secret is required to create the first account.',
+   bootstrap: 'The bootstrap secret was missing or incorrect.',
 };
 
 export default async function SignUpPage({
@@ -31,11 +31,15 @@ export default async function SignUpPage({
 
    const invite = token ? await getInviteByToken(token) : null;
    const noUsersYet = (await db.user.count()) === 0;
-   const bootstrapSecret = process.env.BOOTSTRAP_SECRET?.trim();
-   const canBootstrap = noUsersYet && (!bootstrapSecret || bootstrap === bootstrapSecret);
-   // invite-only unless explicitly opened
-   const inviteOnly = process.env.SIGNUP_MODE !== 'open' && !canBootstrap;
-   const blocked = (inviteOnly && !invite) || (!!token && !invite);
+   const hasBootstrapSecret = Boolean(process.env.BOOTSTRAP_SECRET?.trim());
+   const openSignup = process.env.SIGNUP_MODE === 'open';
+
+   // First-run: only a valid invite or the bootstrap secret gets you in.
+   const firstRun = noUsersYet && !invite;
+   const bootstrapClosed = firstRun && !hasBootstrapSecret;
+   const askBootstrap = firstRun && hasBootstrapSecret;
+   const inviteWall = !noUsersYet && !openSignup && !invite;
+   const blocked = bootstrapClosed || inviteWall || (!!token && !invite);
 
    return (
       <div className="min-h-svh flex items-center justify-center bg-background px-4">
@@ -51,9 +55,9 @@ export default async function SignUpPage({
             <p className="mt-1 text-sm text-muted-foreground">
                {invite
                   ? `You've been invited to join ${invite.orgName}.`
-                  : canBootstrap
-                    ? 'The first account becomes the workspace admin.'
-                    : inviteOnly
+                  : askBootstrap
+                    ? 'Enter the bootstrap secret to create the first admin.'
+                    : inviteWall
                       ? 'This workspace is invite-only.'
                       : 'The first account becomes the workspace admin.'}
             </p>
@@ -67,13 +71,26 @@ export default async function SignUpPage({
             {blocked ? (
                <p className="mt-6 rounded-md border bg-muted/40 px-3 py-3 text-sm text-muted-foreground">
                   {token
-                     ? 'That invite link is invalid or has expired.'
-                     : 'You need an invitation to join this workspace.'}
+                     ? 'That invite link is invalid or has already been used.'
+                     : bootstrapClosed
+                       ? 'Web sign-up is closed. Create the first admin with `pnpm create-admin` (or set BOOTSTRAP_SECRET).'
+                       : 'You need an invitation to join this workspace.'}
                </p>
             ) : (
                <form action={signUpAction} className="mt-6 flex flex-col gap-4">
                   {token && <input type="hidden" name="invite" value={token} />}
-                  {bootstrap && <input type="hidden" name="bootstrap" value={bootstrap} />}
+                  {askBootstrap && (
+                     <div className="flex flex-col gap-1.5">
+                        <Label htmlFor="bootstrap">Bootstrap secret</Label>
+                        <Input
+                           id="bootstrap"
+                           name="bootstrap"
+                           type="password"
+                           required
+                           defaultValue={bootstrap ?? undefined}
+                        />
+                     </div>
+                  )}
                   <div className="flex flex-col gap-1.5">
                      <Label htmlFor="name">Name</Label>
                      <Input id="name" name="name" autoComplete="name" placeholder="Ada Lovelace" />

@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { isContext, requireContext, requireAdmin } from '@/lib/api/context';
+import { errorResponse, parseBody } from '@/lib/api/http';
 import { getMember, updateMember } from '@/lib/api/members.server';
+import { memberUpdate } from '@/lib/api/schemas';
 import { MemberUpdateBody } from '@/lib/api/types';
 
 export const dynamic = 'force-dynamic';
@@ -23,17 +25,12 @@ export async function PATCH(req: NextRequest, { params }: Params) {
    if (!isContext(ctx)) return ctx;
    const { id } = await params;
 
-   let body: unknown;
    try {
-      body = await req.json();
-   } catch {
-      return NextResponse.json({ error: 'invalid json' }, { status: 400 });
+      const body = await parseBody(req, memberUpdate);
+      const updated = await updateMember(ctx.orgId, id, body as MemberUpdateBody);
+      if (!updated) return NextResponse.json({ error: 'not found' }, { status: 404 });
+      return NextResponse.json(updated);
+   } catch (err) {
+      return errorResponse(err);
    }
-   if (typeof body !== 'object' || body === null) {
-      return NextResponse.json({ error: 'expected an object' }, { status: 400 });
-   }
-
-   const updated = await updateMember(ctx.orgId, id, body as MemberUpdateBody);
-   if (!updated) return NextResponse.json({ error: 'not found' }, { status: 404 });
-   return NextResponse.json(updated);
 }

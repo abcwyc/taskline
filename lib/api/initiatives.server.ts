@@ -2,6 +2,8 @@ import 'server-only';
 import { Prisma } from '@prisma/client';
 
 import { db } from '@/lib/db';
+import { PublicError } from './http';
+import { assertOrgScope } from './ownership.server';
 import {
    HEALTH_ENUM_TO_KEY,
    INITIATIVE_STATUS_ENUM_TO_KEY,
@@ -78,6 +80,14 @@ export async function createInitiative(
    orgId: string,
    body: InitiativeCreateBody
 ): Promise<InitiativeDTO> {
+   await assertOrgScope(db, orgId, {
+      ownerId: body.ownerId ?? undefined,
+      labelIds: undefined,
+   });
+   if (body.projectIds?.length) {
+      const n = await db.project.count({ where: { id: { in: body.projectIds }, orgId } });
+      if (n !== new Set(body.projectIds).size) throw new PublicError('unknown project', 400);
+   }
    const leadTeamId = await teamIdForKey(orgId, body.leadTeamId);
    const row = await db.initiative.create({
       data: {

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { isContext, requireContext, requireWrite } from '@/lib/api/context';
+import { errorResponse, parseBody } from '@/lib/api/http';
+import { labelCreate } from '@/lib/api/schemas';
 import { createLabel, listLabels } from '@/lib/api/labels.server';
 import { LabelCreateBody } from '@/lib/api/types';
 
@@ -16,16 +18,11 @@ export async function POST(req: NextRequest) {
    const ctx = await requireWrite();
    if (!isContext(ctx)) return ctx;
 
-   let body: unknown;
    try {
-      body = await req.json();
-   } catch {
-      return NextResponse.json({ error: 'invalid json' }, { status: 400 });
+      const body = await parseBody(req, labelCreate);
+      const created = await createLabel(ctx.orgId, body as LabelCreateBody);
+      return NextResponse.json(created, { status: 201 });
+   } catch (err) {
+      return errorResponse(err);
    }
-   if (typeof body !== 'object' || body === null) {
-      return NextResponse.json({ error: 'expected an object' }, { status: 400 });
-   }
-
-   const created = await createLabel(ctx.orgId, body as LabelCreateBody);
-   return NextResponse.json(created, { status: 201 });
 }

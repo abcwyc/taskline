@@ -1,6 +1,7 @@
 import 'server-only';
 
 import { db } from '@/lib/db';
+import { PublicError } from './http';
 import { DocumentCreateBody, DocumentFolderDTO, DocumentUpdateBody } from './types';
 
 export async function listFolders(orgId: string): Promise<DocumentFolderDTO[]> {
@@ -26,6 +27,13 @@ export async function listFolders(orgId: string): Promise<DocumentFolderDTO[]> {
 }
 
 export async function createDocument(orgId: string, body: DocumentCreateBody, creatorId: string) {
+   if (body.folderId) {
+      const owned = await db.documentFolder.findFirst({
+         where: { id: body.folderId, orgId },
+         select: { id: true },
+      });
+      if (!owned) throw new PublicError('unknown folder', 400);
+   }
    let folderId = body.folderId;
    if (!folderId) {
       const first = await db.documentFolder.findFirst({
