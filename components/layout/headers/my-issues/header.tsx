@@ -3,6 +3,7 @@
 import {
    MY_ISSUES_TAB_ITEMS,
    scopeMyIssues,
+   useMe,
    useMyIssuesTab,
 } from '@/components/common/my-issues/use-my-issues';
 import { IssueFilterTrigger } from '@/components/common/issues/issue-filter-trigger';
@@ -91,10 +92,11 @@ function HeaderNav() {
 
 function HeaderOptions() {
    const [tab, setTab] = useMyIssuesTab();
+   const meId = useMe()?.id;
    const { issues } = useIssuesStore();
    const { openPanel, togglePanel } = useRightPanelStore();
 
-   const count = scopeMyIssues(issues, tab).length;
+   const count = scopeMyIssues(issues, tab, meId).length;
 
    return (
       <div className="w-full flex justify-between items-center border-b py-1.5 px-6 h-10">

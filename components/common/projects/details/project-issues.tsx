@@ -19,19 +19,23 @@ interface ProjectIssuesProps {
 /** Project "Issues" tab: the project's issues grouped by status. */
 export default function ProjectIssues({ projectId }: ProjectIssuesProps) {
    const project =
-      useProjectsStore((s) => s.getProjectById(projectId)) ?? mockGetProjectById(projectId)!;
+      useProjectsStore((s) => s.getProjectById(projectId)) ?? mockGetProjectById(projectId);
    const detail = useProjectDetail(projectId);
    const { issues: allIssues } = useIssuesStore();
    const { filters } = useFilterStore();
 
    const issues = useMemo(
-      () => allIssues.filter((issue) => issue.project?.id === project.id),
-      [allIssues, project.id]
+      () => allIssues.filter((issue) => issue.project?.id === projectId),
+      [allIssues, projectId]
    );
 
    // Filters (filter bar + click-to-filter from the insights panel) apply
    // on top of the project scope.
    const displayedIssues = useMemo(() => applyIssueFilters(issues, filters), [issues, filters]);
+
+   if (!project) {
+      return <div className="p-10 text-sm text-muted-foreground">Loading project…</div>;
+   }
 
    return (
       <div className="w-full h-full flex flex-col overflow-hidden">

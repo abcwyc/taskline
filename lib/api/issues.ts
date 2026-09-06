@@ -58,6 +58,7 @@ export function dtoToIssue(dto: IssueDTO): Issue {
       status: statusRegistry.find((s) => s.id === dto.statusId) ?? fallbackStatus,
       priority: priorities.find((p) => p.id === dto.priorityId) ?? fallbackPriority,
       assignee: dto.assigneeId ? (userRegistry.find((u) => u.id === dto.assigneeId) ?? null) : null,
+      creatorId: dto.createdById ?? undefined,
       labels: dto.labelIds
          .map((id) => labelRegistry.find((l) => l.id === id))
          .filter((l): l is LabelInterface => Boolean(l)),

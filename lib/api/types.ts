@@ -16,6 +16,7 @@ export interface IssueDTO {
    statusId: string; // WorkflowState key, e.g. "in-progress"
    priorityId: string; // "no-priority" | "urgent" | "high" | "medium" | "low"
    assigneeId: string | null;
+   createdById: string | null;
    labelIds: string[];
    projectId: string | null;
    cycleId: string; // "" = not planned in any cycle (mock convention)

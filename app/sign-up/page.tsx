@@ -5,19 +5,23 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { auth } from '@/lib/auth';
-import { signInAction } from '@/lib/auth-actions';
+import { signUpAction } from '@/lib/auth-actions';
 
-export const metadata = { title: 'Sign in' };
+export const metadata = { title: 'Create account' };
 
-interface SignInPageProps {
-   searchParams: Promise<{ callbackUrl?: string; error?: string }>;
-}
+const ERRORS: Record<string, string> = {
+   invalid: 'Enter a valid email and a password of at least 8 characters.',
+   exists: 'An account with that email already exists.',
+};
 
-export default async function SignInPage({ searchParams }: SignInPageProps) {
+export default async function SignUpPage({
+   searchParams,
+}: {
+   searchParams: Promise<{ error?: string }>;
+}) {
    const session = await auth();
    if (session?.user) redirect('/');
-
-   const { callbackUrl = '/', error } = await searchParams;
+   const { error } = await searchParams;
 
    return (
       <div className="min-h-svh flex items-center justify-center bg-background px-4">
@@ -29,17 +33,22 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
                <span className="text-lg font-semibold">Circle</span>
             </div>
 
-            <h1 className="text-xl font-semibold tracking-tight">Sign in to your workspace</h1>
-            <p className="mt-1 text-sm text-muted-foreground">Use your email and password.</p>
+            <h1 className="text-xl font-semibold tracking-tight">Create your account</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+               The first account becomes the workspace admin.
+            </p>
 
             {error && (
                <p className="mt-4 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                  Incorrect email or password.
+                  {ERRORS[error] ?? 'Could not create the account.'}
                </p>
             )}
 
-            <form action={signInAction} className="mt-6 flex flex-col gap-4">
-               <input type="hidden" name="callbackUrl" value={callbackUrl} />
+            <form action={signUpAction} className="mt-6 flex flex-col gap-4">
+               <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="name">Name</Label>
+                  <Input id="name" name="name" autoComplete="name" placeholder="Ada Lovelace" />
+               </div>
                <div className="flex flex-col gap-1.5">
                   <Label htmlFor="email">Email</Label>
                   <Input
@@ -48,7 +57,6 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
                      type="email"
                      autoComplete="email"
                      required
-                     autoFocus
                      placeholder="you@example.com"
                   />
                </div>
@@ -58,19 +66,20 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
                      id="password"
                      name="password"
                      type="password"
-                     autoComplete="current-password"
+                     autoComplete="new-password"
                      required
+                     minLength={8}
                   />
                </div>
                <Button type="submit" className="mt-2 w-full">
-                  Sign in
+                  Create account
                </Button>
             </form>
 
             <p className="mt-4 text-sm text-muted-foreground">
-               Need an account?{' '}
-               <Link href="/sign-up" className="text-foreground underline">
-                  Create one
+               Already have an account?{' '}
+               <Link href="/sign-in" className="text-foreground underline">
+                  Sign in
                </Link>
             </p>
          </div>

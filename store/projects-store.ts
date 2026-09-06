@@ -32,6 +32,8 @@ interface ProjectsState {
    getProjectsByTeam: (teamId: string) => Project[];
 
    addProject: (project: Project) => void;
+   /** Create via the API and return the saved project (for "create then navigate"). */
+   createProject: (project: Project) => Promise<Project | null>;
    updateProject: (id: string, patch: Partial<Project>) => void;
    deleteProject: (id: string) => void;
 }
@@ -69,6 +71,18 @@ export const useProjectsStore = create<ProjectsState>((set, get) => ({
             toast.error('Failed to create project');
             console.error(err);
          });
+   },
+
+   createProject: async (project) => {
+      try {
+         const saved = await apiCreateProject(projectToCreateBody(project));
+         set({ projects: [...get().projects, saved] });
+         return saved;
+      } catch (err) {
+         toast.error('Failed to create project');
+         console.error(err);
+         return null;
+      }
    },
 
    updateProject: (id, patch) => {

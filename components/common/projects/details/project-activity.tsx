@@ -67,12 +67,12 @@ function UpdateCard({ update }: { update: ProjectUpdate }) {
 /** Project "Activity" tab: update composer + monthly timeline. */
 export default function ProjectActivity({ projectId }: ProjectActivityProps) {
    const project =
-      useProjectsStore((s) => s.getProjectById(projectId)) ?? mockGetProjectById(projectId)!;
+      useProjectsStore((s) => s.getProjectById(projectId)) ?? mockGetProjectById(projectId);
    const detail = useProjectDetail(projectId);
    const { issues: allIssues } = useIssuesStore();
    const issues = useMemo(
-      () => allIssues.filter((issue) => issue.project?.id === project.id),
-      [allIssues, project.id]
+      () => allIssues.filter((issue) => issue.project?.id === projectId),
+      [allIssues, projectId]
    );
    const postUpdate = useProjectDetailsStore((s) => s.postUpdate);
    const [mode, setMode] = useState<'comment' | 'update'>('update');
@@ -100,10 +100,14 @@ export default function ProjectActivity({ projectId }: ProjectActivityProps) {
          : 0;
 
    const handlePost = () => {
-      if (text.trim() === '') return;
+      if (text.trim() === '' || !project) return;
       postUpdate(project.id, health, text);
       setText('');
    };
+
+   if (!project) {
+      return <div className="p-10 text-sm text-muted-foreground">Loading project…</div>;
+   }
 
    return (
       <div className="w-full h-full flex overflow-hidden">
