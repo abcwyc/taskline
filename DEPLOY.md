@@ -31,16 +31,22 @@ docker compose up -d --build  # starts postgres + web, runs migrations on boot
 The `web` container runs `prisma migrate deploy` on every start (see
 `docker-entrypoint.sh`), so schema changes ship with the image.
 
-**Bootstrap the workspace** (one time — there's no self-serve sign-up yet). From
-a checkout on the host, against the compose Postgres (published on `:5432`):
+**Bootstrap the workspace.** Two options:
 
-```bash
-pnpm install
-DATABASE_URL="postgresql://circle:circle@localhost:5432/circle" pnpm db:seed
-```
+- **Self-serve** — just open <http://localhost:3000/sign-up> and register. The
+  first account becomes the workspace ADMIN; the sign-up flow creates the org,
+  the workflow states, the default labels and a starter team (see
+  `lib/api/bootstrap.ts`). Nothing else to run.
+- **Demo data** — to start from the full sample dataset instead, run the seed
+  once against the compose Postgres (published on `:5432`):
 
-This creates the demo workspace + 22 users. Log in as
-`leonelngoya@gmail.com` / `password` (override with `SEED_PASSWORD`).
+   ```bash
+   pnpm install
+   DATABASE_URL="postgresql://circle:circle@localhost:5432/circle" pnpm db:seed
+   ```
+
+   This creates the demo workspace + 22 users. Log in as
+   `leonelngoya@gmail.com` / `password` (override with `SEED_PASSWORD`).
 
 App: <http://localhost:3000>
 
@@ -60,10 +66,10 @@ docker run -p 3000:3000 \
 
 ```bash
 pnpm install
-pnpm db:migrate        # or: pnpm prisma migrate deploy  (prod)
-pnpm db:seed           # one-time workspace bootstrap
+pnpm prisma migrate deploy   # apply committed migrations
 pnpm build
-pnpm start             # next start, on PORT (default 3000)
+pnpm start                   # next start, on PORT (default 3000)
+# then register at /sign-up  (or `pnpm db:seed` first for demo data)
 ```
 
 ## Migrations
@@ -75,10 +81,13 @@ pnpm start             # next start, on PORT (default 3000)
 
 ## Notes / current limitations
 
-- **Sign-up**: no self-serve registration yet — users are created by the seed.
-  Add an invite flow or a `create-user` script for real onboarding.
+- **Sign-up**: self-serve registration is enabled (`/sign-up`). The first
+  account is ADMIN; later accounts join as MEMBER. There is no email
+  verification and no invite-only gate — put the app behind one if the
+  deployment is not meant to be open registration.
 - **Single workspace**: the schema is org-scoped but the UI has one workspace
-  (the `[orgId]` segment resolves to the signed-in user's membership).
+  (the `[orgId]` segment resolves to the signed-in user's membership). Every
+  sign-up joins that same workspace.
 - **Agent** page: still a client-side canned-reply mock — wiring a real LLM is
   out of scope of the backend migration.
 - **Reviews**: read-only (no VCS integration).

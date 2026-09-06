@@ -59,8 +59,10 @@ export async function ensureWorkspace() {
       })),
    });
 
+   // PK == key, matching the seed convention: the whole projects/team code path
+   // resolves teams by the `[teamId]` URL segment, which is the key.
    await db.team.create({
-      data: { orgId: org.id, key: 'GEN', name: 'General', icon: '📋', color: '#95a2b3' },
+      data: { id: 'GEN', orgId: org.id, key: 'GEN', name: 'General', icon: '📋', color: '#95a2b3' },
    });
 
    return org;

@@ -24,6 +24,8 @@ RUN AUTH_SECRET=build-placeholder pnpm build
 
 # ---- runner ---------------------------------------------------------------
 FROM node:22-alpine AS runner
+# openssl + libc6-compat: the Prisma query engine (linux-musl) needs them at runtime.
+RUN apk add --no-cache openssl libc6-compat
 RUN corepack enable
 WORKDIR /app
 ENV NODE_ENV=production

@@ -55,14 +55,21 @@ export async function createTeam(
    body: TeamCreateBody,
    userId: string
 ): Promise<TeamDTO> {
-   const key =
+   const base =
       (body.id || body.name || 'TEAM')
          .toUpperCase()
          .replace(/[^A-Z0-9]/g, '')
          .slice(0, 8) || 'TEAM';
+   // `key` doubles as the primary key (seed convention — see schema `Team.key`),
+   // so it has to be unique within the org. Suffix on collision.
+   let key = base;
+   for (let n = 2; await db.team.findFirst({ where: { orgId, key }, select: { id: true } }); n++) {
+      key = `${base.slice(0, 7)}${n}`;
+   }
 
    const row = await db.team.create({
       data: {
+         id: key,
          org: { connect: { id: orgId } },
          key,
          name: body.name?.trim() || key,
