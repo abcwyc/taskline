@@ -20,14 +20,18 @@
 - **Headers** — HSTS, `X-Frame-Options: DENY`, `nosniff`, baseline CSP,
   `Referrer-Policy`, `Permissions-Policy` (`next.config.ts`).
 - **Concurrency** — issue-number allocation is serialized per workspace.
+- **Abuse throttling** — in-process sliding-window limits on sign-in, sign-up
+  and invite creation (see gaps below for the caveat).
 
 ## Known gaps — review before going public
 
-- **No rate limiting** on sign-in / sign-up / API. Put the app behind a proxy or
-  WAF that does (fail2ban, nginx `limit_req`, Cloudflare, …).
+- **Rate limiting is in-process only** (`lib/api/rate-limit.ts`): sign-in,
+  sign-up and invite creation are capped per instance. It does not coordinate
+  across instances or survive a restart — put a real limiter (nginx `limit_req`,
+  Cloudflare, a Redis token bucket) in front for anything multi-node.
 - **No email verification, password reset, MFA, or session revocation UI.**
   Accounts are only as trustworthy as whoever holds the invite link.
-- **No account-lockout** on repeated failed logins.
+- **No hard account-lockout** — repeated failed logins are throttled, not locked.
 - **Zod coverage** — all create/update routes now validate their body via
   `lib/api/schemas.ts`. Foreign-key ids are workspace-scoped for issues,
   projects, documents and initiatives; the rest resolve by org-scoped lookup.

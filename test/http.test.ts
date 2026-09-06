@@ -57,3 +57,24 @@ describe('normalizePreferences', () => {
       expect(out.autoAssignSelf).toBe(false);
    });
 });
+
+describe('rateLimit', () => {
+   it('allows up to max within the window, then blocks', async () => {
+      const { rateLimit } = await import('@/lib/api/rate-limit');
+      const key = `test-${Math.random()}`;
+      const opts = { windowMs: 1000, max: 3 };
+      expect(rateLimit(key, opts)).toBe(true);
+      expect(rateLimit(key, opts)).toBe(true);
+      expect(rateLimit(key, opts)).toBe(true);
+      expect(rateLimit(key, opts)).toBe(false);
+      expect(rateLimit(key, opts)).toBe(false);
+   });
+
+   it('keys are independent', async () => {
+      const { rateLimit } = await import('@/lib/api/rate-limit');
+      const opts = { windowMs: 1000, max: 1 };
+      expect(rateLimit('a', opts)).toBe(true);
+      expect(rateLimit('b', opts)).toBe(true);
+      expect(rateLimit('a', opts)).toBe(false);
+   });
+});

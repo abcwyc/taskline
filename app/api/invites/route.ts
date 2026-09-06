@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { isContext, requireAdmin } from '@/lib/api/context';
 import { errorResponse, parseBody } from '@/lib/api/http';
 import { createInvite, listInvites } from '@/lib/api/invites.server';
+import { rateLimit } from '@/lib/api/rate-limit';
 import { inviteCreate } from '@/lib/api/schemas';
 import { InviteCreateBody } from '@/lib/api/types';
 
@@ -24,6 +25,10 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
    const ctx = await requireAdmin();
    if (!isContext(ctx)) return ctx;
+
+   if (!rateLimit(`invite:${ctx.userId}`, { windowMs: 60 * 60_000, max: 50 })) {
+      return NextResponse.json({ error: 'too many invites, slow down' }, { status: 429 });
+   }
 
    try {
       const body = await parseBody(req, inviteCreate);

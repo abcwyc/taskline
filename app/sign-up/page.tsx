@@ -18,6 +18,7 @@ const ERRORS: Record<string, string> = {
    inviteonly: 'This workspace is invite-only. Ask an admin for an invite link.',
    inviteemail: 'This invite was issued for a different email address.',
    bootstrap: 'The bootstrap secret was missing or incorrect.',
+   ratelimited: 'Too many sign-up attempts. Wait a few minutes and try again.',
 };
 
 export default async function SignUpPage({

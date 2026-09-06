@@ -2,9 +2,11 @@
 
 import bcrypt from 'bcryptjs';
 import { AuthError } from 'next-auth';
+import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 import { ensureWorkspace } from '@/lib/api/bootstrap';
+import { rateLimit } from '@/lib/api/rate-limit';
 import {
    claimInvite,
    finalizeInvite,
@@ -14,8 +16,23 @@ import {
 import { signIn, signOut } from '@/lib/auth';
 import { db } from '@/lib/db';
 
+async function clientIp(): Promise<string> {
+   const h = await headers();
+   return (h.get('x-forwarded-for')?.split(',')[0] ?? h.get('x-real-ip') ?? 'local').trim();
+}
+
 export async function signInAction(formData: FormData) {
    const callbackUrl = String(formData.get('callbackUrl') || '/');
+   const ip = await clientIp();
+   const email = String(formData.get('email') ?? '')
+      .trim()
+      .toLowerCase();
+   if (
+      !rateLimit(`signin:ip:${ip}`, { windowMs: 5 * 60_000, max: 20 }) ||
+      !rateLimit(`signin:email:${email}`, { windowMs: 15 * 60_000, max: 10 })
+   ) {
+      redirect('/sign-in?error=RateLimited');
+   }
    try {
       await signIn('credentials', {
          email: formData.get('email'),
@@ -30,6 +47,10 @@ export async function signInAction(formData: FormData) {
 }
 
 export async function signUpAction(formData: FormData) {
+   const ip = await clientIp();
+   if (!rateLimit(`signup:ip:${ip}`, { windowMs: 10 * 60_000, max: 8 })) {
+      redirect('/sign-up?error=ratelimited');
+   }
    const email = String(formData.get('email') ?? '')
       .trim()
       .toLowerCase();

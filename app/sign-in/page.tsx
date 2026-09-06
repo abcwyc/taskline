@@ -34,7 +34,9 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
 
             {error && (
                <p className="mt-4 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                  Incorrect email or password.
+                  {error === 'RateLimited'
+                     ? 'Too many attempts. Wait a few minutes and try again.'
+                     : 'Incorrect email or password.'}
                </p>
             )}
 
