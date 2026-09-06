@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { isContext, requireContext } from '@/lib/api/context';
+import { isContext, requireWrite } from '@/lib/api/context';
 import { setTriageStatus } from '@/lib/api/triage.server';
 
 export const dynamic = 'force-dynamic';
 
 // PATCH /api/triage/:id   { status: "declined" | "snoozed" }
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-   const ctx = await requireContext();
+   const ctx = await requireWrite();
    if (!isContext(ctx)) return ctx;
    const { id } = await params;
 

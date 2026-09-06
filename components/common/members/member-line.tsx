@@ -8,6 +8,7 @@ import {
    SelectTrigger,
    SelectValue,
 } from '@/components/ui/select';
+import { useIsAdmin } from '@/lib/hooks/use-current-user';
 import { cn } from '@/lib/utils';
 import { User } from '@/mock-data/users';
 import { useMembersStore } from '@/store/members-store';
@@ -44,6 +45,7 @@ const hashString = (value: string): number => {
 export default function MemberLine({ user }: MemberLineProps) {
    const { orgId } = useParams<{ orgId: string }>();
    const updateMember = useMembersStore((s) => s.updateMember);
+   const isAdmin = useIsAdmin();
    const isApplication = user.role === 'Application';
    // Like Linear, some accounts show their e-mail as the primary line.
    const showEmailAsName = !isApplication && hashString(user.id) % 4 === 0;
@@ -69,8 +71,8 @@ export default function MemberLine({ user }: MemberLineProps) {
 
          {/* Status (role) */}
          <div className="w-[110px] shrink-0" onClick={(e) => e.preventDefault()}>
-            {isApplication ? (
-               <span className="text-xs text-muted-foreground">Application</span>
+            {isApplication || !isAdmin ? (
+               <span className="text-xs text-muted-foreground">{user.role}</span>
             ) : (
                <Select
                   value={user.role}

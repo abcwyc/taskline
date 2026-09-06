@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { signOutAction } from '@/lib/auth-actions';
-import { useCurrentUser } from '@/lib/hooks/use-current-user';
+import { useCanWrite, useCurrentUser } from '@/lib/hooks/use-current-user';
 import { CreateNewIssue } from './create-new-issue';
 import { ThemeToggle } from '../theme-toggle';
 import Link from 'next/link';
@@ -28,6 +28,7 @@ import { useParams } from 'next/navigation';
 export function OrgSwitcher() {
    const { orgId } = useParams<{ orgId: string }>();
    const me = useCurrentUser();
+   const canWrite = useCanWrite();
    const initials = (me?.name ?? orgId ?? 'W').slice(0, 2).toUpperCase();
    return (
       <SidebarMenu>
@@ -51,7 +52,7 @@ export function OrgSwitcher() {
 
                   <ThemeToggle />
 
-                  <CreateNewIssue />
+                  {canWrite && <CreateNewIssue />}
                </div>
                <DropdownMenuContent
                   className="w-[--radix-dropdown-menu-trigger-width] min-w-60 rounded-lg"

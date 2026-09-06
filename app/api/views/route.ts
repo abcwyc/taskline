@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { isContext, requireContext } from '@/lib/api/context';
+import { isContext, requireContext, requireWrite } from '@/lib/api/context';
 import { createView, listViews } from '@/lib/api/views.server';
 import { ViewCreateBody } from '@/lib/api/types';
 
@@ -13,7 +13,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-   const ctx = await requireContext();
+   const ctx = await requireWrite();
    if (!isContext(ctx)) return ctx;
 
    let body: unknown;

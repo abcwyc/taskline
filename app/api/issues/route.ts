@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { isContext, requireContext } from '@/lib/api/context';
+import { isContext, requireContext, requireWrite } from '@/lib/api/context';
 import { createIssue, listIssues } from '@/lib/api/issues.server';
 import { IssueCreateBody, ListIssuesQuery } from '@/lib/api/types';
 
@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
 
 // POST /api/issues
 export async function POST(req: NextRequest) {
-   const ctx = await requireContext();
+   const ctx = await requireWrite();
    if (!isContext(ctx)) return ctx;
    const { orgId, userId } = ctx;
 

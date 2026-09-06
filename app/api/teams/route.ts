@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { isContext, requireContext } from '@/lib/api/context';
+import { isContext, requireContext, requireAdmin } from '@/lib/api/context';
 import { createTeam, listTeams } from '@/lib/api/teams.server';
 import { TeamCreateBody } from '@/lib/api/types';
 
@@ -13,7 +13,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-   const ctx = await requireContext();
+   const ctx = await requireAdmin();
    if (!isContext(ctx)) return ctx;
 
    let body: unknown;

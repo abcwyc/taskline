@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { isContext, requireContext } from '@/lib/api/context';
+import { isContext, requireContext, requireWrite } from '@/lib/api/context';
 import { deleteIssue, getIssue, updateIssue } from '@/lib/api/issues.server';
 import { IssueUpdateBody } from '@/lib/api/types';
 
@@ -22,7 +22,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
 
 // PATCH /api/issues/:id
 export async function PATCH(req: NextRequest, { params }: Params) {
-   const ctx = await requireContext();
+   const ctx = await requireWrite();
    if (!isContext(ctx)) return ctx;
    const { orgId } = ctx;
    const { id } = await params;
@@ -48,7 +48,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
 // DELETE /api/issues/:id
 export async function DELETE(_req: NextRequest, { params }: Params) {
-   const ctx = await requireContext();
+   const ctx = await requireWrite();
    if (!isContext(ctx)) return ctx;
    const { orgId } = ctx;
    const { id } = await params;

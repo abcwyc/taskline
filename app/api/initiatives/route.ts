@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { isContext, requireContext } from '@/lib/api/context';
+import { isContext, requireContext, requireWrite } from '@/lib/api/context';
 import { createInitiative, listInitiatives } from '@/lib/api/initiatives.server';
 import { InitiativeCreateBody } from '@/lib/api/types';
 
@@ -13,7 +13,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-   const ctx = await requireContext();
+   const ctx = await requireWrite();
    if (!isContext(ctx)) return ctx;
 
    let body: unknown;

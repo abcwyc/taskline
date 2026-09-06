@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { deleteAttachment, getAttachmentBlob } from '@/lib/api/attachments.server';
-import { isContext, requireContext } from '@/lib/api/context';
+import { isContext, requireContext, requireWrite } from '@/lib/api/context';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,7 +31,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 
 // DELETE /api/attachments/:id — uploader or an admin
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
-   const ctx = await requireContext();
+   const ctx = await requireWrite();
    if (!isContext(ctx)) return ctx;
    const { id } = await params;
 

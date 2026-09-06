@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { isContext, requireContext } from '@/lib/api/context';
+import { isContext, requireContext, requireWrite, requireAdmin } from '@/lib/api/context';
 import { deleteTeam, getTeam, updateTeam } from '@/lib/api/teams.server';
 import { TeamUpdateBody } from '@/lib/api/types';
 
@@ -19,7 +19,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
 }
 
 export async function PATCH(req: NextRequest, { params }: Params) {
-   const ctx = await requireContext();
+   const ctx = await requireWrite();
    if (!isContext(ctx)) return ctx;
    const { id } = await params;
 
@@ -43,7 +43,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 }
 
 export async function DELETE(_req: NextRequest, { params }: Params) {
-   const ctx = await requireContext();
+   const ctx = await requireAdmin();
    if (!isContext(ctx)) return ctx;
    const { id } = await params;
 

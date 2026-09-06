@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { addAttachment, listAttachments } from '@/lib/api/attachments.server';
-import { isContext, requireContext } from '@/lib/api/context';
+import { isContext, requireContext, requireWrite } from '@/lib/api/context';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,7 +18,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
 // POST /api/issues/:id/attachments  (multipart/form-data, field "file")
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-   const ctx = await requireContext();
+   const ctx = await requireWrite();
    if (!isContext(ctx)) return ctx;
    const { id } = await params;
 

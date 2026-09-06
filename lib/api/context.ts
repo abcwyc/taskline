@@ -51,13 +51,27 @@ export async function requireContext(): Promise<RequestContext | NextResponse> {
 
 /**
  * Like `requireContext`, but also 403s non-admins. Use in routes that manage the
- * workspace itself (invites, member roles, …).
+ * workspace itself (invites, member roles, teams, …).
  */
 export async function requireAdmin(): Promise<RequestContext | NextResponse> {
    const ctx = await requireContext();
    if (!isContext(ctx)) return ctx;
    if (ctx.role !== 'ADMIN') {
       return NextResponse.json({ error: 'admin only' }, { status: 403 });
+   }
+   return ctx;
+}
+
+/**
+ * Content mutation guard: ADMIN or MEMBER may write, GUEST / APPLICATION are
+ * read-only. Personal actions (own profile, own inbox, own issue subscription,
+ * commenting) use plain `requireContext` instead.
+ */
+export async function requireWrite(): Promise<RequestContext | NextResponse> {
+   const ctx = await requireContext();
+   if (!isContext(ctx)) return ctx;
+   if (ctx.role !== 'ADMIN' && ctx.role !== 'MEMBER') {
+      return NextResponse.json({ error: 'your role is read-only' }, { status: 403 });
    }
    return ctx;
 }
