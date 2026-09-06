@@ -4,24 +4,34 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { getInviteByToken } from '@/lib/api/invites.server';
 import { auth } from '@/lib/auth';
 import { signUpAction } from '@/lib/auth-actions';
+import { db } from '@/lib/db';
 
 export const metadata = { title: 'Create account' };
 
 const ERRORS: Record<string, string> = {
    invalid: 'Enter a valid email and a password of at least 8 characters.',
    exists: 'An account with that email already exists.',
+   badinvite: 'That invite link is invalid or has expired.',
+   inviteonly: 'This workspace is invite-only. Ask an admin for an invite link.',
+   inviteemail: 'This invite was issued for a different email address.',
 };
 
 export default async function SignUpPage({
    searchParams,
 }: {
-   searchParams: Promise<{ error?: string }>;
+   searchParams: Promise<{ error?: string; invite?: string }>;
 }) {
    const session = await auth();
    if (session?.user) redirect('/');
-   const { error } = await searchParams;
+   const { error, invite: token } = await searchParams;
+
+   const invite = token ? await getInviteByToken(token) : null;
+   const isBootstrap = (await db.user.count()) === 0;
+   const inviteOnly = process.env.SIGNUP_MODE === 'invite' && !isBootstrap;
+   const blocked = (inviteOnly && !invite) || (!!token && !invite);
 
    return (
       <div className="min-h-svh flex items-center justify-center bg-background px-4">
@@ -35,7 +45,11 @@ export default async function SignUpPage({
 
             <h1 className="text-xl font-semibold tracking-tight">Create your account</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-               The first account becomes the workspace admin.
+               {invite
+                  ? `You've been invited to join ${invite.orgName}.`
+                  : inviteOnly
+                    ? 'This workspace is invite-only.'
+                    : 'The first account becomes the workspace admin.'}
             </p>
 
             {error && (
@@ -44,37 +58,48 @@ export default async function SignUpPage({
                </p>
             )}
 
-            <form action={signUpAction} className="mt-6 flex flex-col gap-4">
-               <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="name">Name</Label>
-                  <Input id="name" name="name" autoComplete="name" placeholder="Ada Lovelace" />
-               </div>
-               <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                     id="email"
-                     name="email"
-                     type="email"
-                     autoComplete="email"
-                     required
-                     placeholder="you@example.com"
-                  />
-               </div>
-               <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="password">Password</Label>
-                  <Input
-                     id="password"
-                     name="password"
-                     type="password"
-                     autoComplete="new-password"
-                     required
-                     minLength={8}
-                  />
-               </div>
-               <Button type="submit" className="mt-2 w-full">
-                  Create account
-               </Button>
-            </form>
+            {blocked ? (
+               <p className="mt-6 rounded-md border bg-muted/40 px-3 py-3 text-sm text-muted-foreground">
+                  {token
+                     ? 'That invite link is invalid or has expired.'
+                     : 'You need an invitation to join this workspace.'}
+               </p>
+            ) : (
+               <form action={signUpAction} className="mt-6 flex flex-col gap-4">
+                  {token && <input type="hidden" name="invite" value={token} />}
+                  <div className="flex flex-col gap-1.5">
+                     <Label htmlFor="name">Name</Label>
+                     <Input id="name" name="name" autoComplete="name" placeholder="Ada Lovelace" />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                     <Label htmlFor="email">Email</Label>
+                     <Input
+                        id="email"
+                        name="email"
+                        type="email"
+                        autoComplete="email"
+                        required
+                        placeholder="you@example.com"
+                        defaultValue={invite?.email ?? undefined}
+                        readOnly={!!invite?.email}
+                     />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                     <Label htmlFor="password">Password</Label>
+                     <Input
+                        id="password"
+                        name="password"
+                        type="password"
+                        autoComplete="new-password"
+                        required
+                        minLength={8}
+                     />
+                  </div>
+                  <Button type="submit" className="mt-2 w-full">
+                     Create account
+                  </Button>
+               </form>
+            )}
 
             <p className="mt-4 text-sm text-muted-foreground">
                Already have an account?{' '}

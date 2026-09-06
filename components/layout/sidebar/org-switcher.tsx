@@ -66,7 +66,9 @@ export function OrgSwitcher() {
                            <DropdownMenuShortcut>G then S</DropdownMenuShortcut>
                         </Link>
                      </DropdownMenuItem>
-                     <DropdownMenuItem>Invite and manage members</DropdownMenuItem>
+                     <DropdownMenuItem asChild>
+                        <Link href={`/${orgId}/members`}>Invite and manage members</Link>
+                     </DropdownMenuItem>
                   </DropdownMenuGroup>
                   <DropdownMenuSeparator />
                   <DropdownMenuGroup>

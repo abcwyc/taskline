@@ -146,6 +146,7 @@ model Organization {
   views       SavedView[]
   triageItems TriageItem[]
   reviews     Review[]
+  invites     Invite[]
 }
 
 model User {
@@ -173,6 +174,8 @@ model User {
   notifications      Notification[]   @relation("NotificationRecipient")
   actedNotifications Notification[]   @relation("NotificationActor")
   triageReports      TriageItem[]     @relation("TriageReporter")
+  createdInvites     Invite[]         @relation("InviteCreator")
+  acceptedInvites    Invite[]         @relation("InviteAcceptor")
 
   // Auth.js
   accounts Account[]
@@ -190,6 +193,27 @@ model Membership {
   org  Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
 
   @@unique([userId, orgId])
+  @@index([orgId])
+}
+
+/// Workspace invitation. `email == null` => an open link anyone can redeem once.
+/// Redeemed at /sign-up?invite=<token>; see lib/api/invites.server.ts.
+model Invite {
+  id           String    @id @default(cuid())
+  orgId        String
+  email        String? // optional — null means "open link"
+  role         Role      @default(MEMBER)
+  token        String    @unique @default(cuid())
+  invitedById  String?
+  acceptedById String?
+  acceptedAt   DateTime?
+  expiresAt    DateTime
+  createdAt    DateTime  @default(now())
+
+  org        Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  invitedBy  User?        @relation("InviteCreator", fields: [invitedById], references: [id])
+  acceptedBy User?        @relation("InviteAcceptor", fields: [acceptedById], references: [id])
+
   @@index([orgId])
 }
 

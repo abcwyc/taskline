@@ -16,9 +16,11 @@ import { db } from '@/lib/db';
 export interface RequestContext {
    orgId: string;
    userId: string;
+   role: 'ADMIN' | 'MEMBER' | 'GUEST' | 'APPLICATION';
 }
 
 export class UnauthorizedError extends Error {}
+export class ForbiddenError extends Error {}
 
 export async function getRequestContext(): Promise<RequestContext> {
    const session = await auth();
@@ -28,11 +30,11 @@ export async function getRequestContext(): Promise<RequestContext> {
    const membership = await db.membership.findFirst({
       where: { userId },
       orderBy: { joinedAt: 'asc' },
-      select: { orgId: true },
+      select: { orgId: true, role: true },
    });
    if (!membership) throw new UnauthorizedError('no workspace membership');
 
-   return { orgId: membership.orgId, userId };
+   return { orgId: membership.orgId, userId, role: membership.role };
 }
 
 /** Route-handler helper: returns the context, or a 401 `NextResponse` to return. */
@@ -45,6 +47,19 @@ export async function requireContext(): Promise<RequestContext | NextResponse> {
       }
       throw err;
    }
+}
+
+/**
+ * Like `requireContext`, but also 403s non-admins. Use in routes that manage the
+ * workspace itself (invites, member roles, …).
+ */
+export async function requireAdmin(): Promise<RequestContext | NextResponse> {
+   const ctx = await requireContext();
+   if (!isContext(ctx)) return ctx;
+   if (ctx.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'admin only' }, { status: 403 });
+   }
+   return ctx;
 }
 
 export function isContext(v: RequestContext | NextResponse): v is RequestContext {

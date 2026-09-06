@@ -152,6 +152,22 @@ export interface MemberDTO {
 
 export type MemberUpdateBody = Partial<Pick<MemberDTO, 'role' | 'timezone' | 'name'>>;
 
+export interface InviteDTO {
+   id: string;
+   email: string | null;
+   role: string; // "Member" | "Admin" | "Guest"
+   token: string;
+   url: string; // absolute /sign-up?invite=<token>
+   invitedByName: string | null;
+   expiresAt: string; // ISO
+   createdAt: string; // ISO
+}
+
+export interface InviteCreateBody {
+   email?: string | null;
+   role?: string; // role key; defaults to "Member"
+}
+
 export const PRESENCE_ENUM_TO_KEY: Record<string, string> = {
    ONLINE: 'online',
    OFFLINE: 'offline',
