@@ -316,6 +316,13 @@ export interface PostCommentBody {
    text: string;
 }
 
+export interface SearchResults {
+   issues: { identifier: string; title: string; statusId: string }[];
+   projects: { id: string; name: string; iconKey: string }[];
+   initiatives: { id: string; name: string }[];
+   documents: { id: string; title: string }[];
+}
+
 export interface AttachmentDTO {
    id: string;
    filename: string;

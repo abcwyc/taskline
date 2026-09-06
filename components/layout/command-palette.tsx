@@ -21,6 +21,8 @@ import { useMembersStore } from '@/store/members-store';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useCreateIssueStore } from '@/store/create-issue-store';
 import { useIssuesStore } from '@/store/issues-store';
+import { search as searchApi } from '@/lib/api/search';
+import type { SearchResults } from '@/lib/api/types';
 import {
    Box,
    CalendarPlus,
@@ -86,6 +88,26 @@ export function CommandPalette() {
    const [query, setQuery] = useState('');
    /** When true, the issue context chip was dismissed with ⌫. */
    const [contextCleared, setContextCleared] = useState(false);
+   const [results, setResults] = useState<SearchResults | null>(null);
+
+   // debounced workspace search while typing at the root
+   useEffect(() => {
+      const q = query.trim();
+      if (route !== 'root' || q.length < 2) {
+         setResults(null);
+         return;
+      }
+      const ctrl = new AbortController();
+      const t = setTimeout(() => {
+         searchApi(q, ctrl.signal)
+            .then(setResults)
+            .catch(() => {});
+      }, 150);
+      return () => {
+         clearTimeout(t);
+         ctrl.abort();
+      };
+   }, [query, route]);
 
    const pathname = usePathname();
    const router = useRouter();
@@ -236,6 +258,51 @@ export function CommandPalette() {
                {input}
                <CommandList className="max-h-96">
                   <CommandEmpty>No results found.</CommandEmpty>
+
+                  {route === 'root' && results && (
+                     <CommandGroup heading="Search results">
+                        {results.issues.map((r) => (
+                           <CommandItem
+                              key={`i-${r.identifier}`}
+                              forceMount
+                              value={`search ${r.identifier} ${r.title}`}
+                              onSelect={() => go(`/issue/${r.identifier}`)}
+                           >
+                              <CircleDot className="text-muted-foreground" />
+                              <span className="text-muted-foreground shrink-0 text-xs">
+                                 {r.identifier}
+                              </span>
+                              <span className="truncate">{r.title}</span>
+                           </CommandItem>
+                        ))}
+                        {results.projects.map((r) => (
+                           <CommandItem
+                              key={`p-${r.id}`}
+                              forceMount
+                              value={`search project ${r.name}`}
+                              onSelect={() => go(`/project/${r.id}/overview`)}
+                           >
+                              <Box className="text-muted-foreground" />
+                              <span className="truncate">{r.name}</span>
+                              <span className="ml-auto text-xs text-muted-foreground">Project</span>
+                           </CommandItem>
+                        ))}
+                        {results.initiatives.map((r) => (
+                           <CommandItem
+                              key={`n-${r.id}`}
+                              forceMount
+                              value={`search initiative ${r.name}`}
+                              onSelect={() => go(`/initiatives`)}
+                           >
+                              <Compass className="text-muted-foreground" />
+                              <span className="truncate">{r.name}</span>
+                              <span className="ml-auto text-xs text-muted-foreground">
+                                 Initiative
+                              </span>
+                           </CommandItem>
+                        ))}
+                     </CommandGroup>
+                  )}
 
                   {route === 'root' && issue && (
                      <>
