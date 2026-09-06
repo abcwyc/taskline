@@ -45,6 +45,10 @@ COPY --from=build --chown=nextjs:nodejs /app/prisma ./prisma
 COPY --chown=nextjs:nodejs docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x ./docker-entrypoint.sh
 
+# Attachment storage — mount a volume here in production (see docker-compose.yml).
+RUN mkdir -p /app/uploads && chown nextjs:nodejs /app/uploads
+ENV UPLOAD_DIR=/app/uploads
+
 USER nextjs
 EXPOSE 3000
 ENV PORT=3000 HOSTNAME=0.0.0.0

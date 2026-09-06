@@ -314,6 +314,16 @@ export interface PostCommentBody {
    text: string;
 }
 
+export interface AttachmentDTO {
+   id: string;
+   filename: string;
+   contentType: string;
+   size: number;
+   url: string; // GET /api/attachments/:id
+   uploadedById: string | null;
+   createdAt: string;
+}
+
 export const PR_STATUS_ENUM_TO_KEY: Record<string, string> = {
    OPEN: 'open',
    MERGED: 'merged',

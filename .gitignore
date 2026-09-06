@@ -49,3 +49,6 @@ next-env.d.ts
 
 # editors
 .idea/
+
+# local attachment storage (dev)
+/uploads

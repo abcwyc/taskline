@@ -2,12 +2,13 @@
 
 import { useIssuesStore } from '@/store/issues-store';
 import { useIssueDetail } from '@/store/issue-details-store';
-import { Paperclip, Plus, SmilePlus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useMemo } from 'react';
 import { AssigneeUser } from '../assignee-user';
 import { ActivityFeed } from './activity-feed';
+import { AttachmentsSection } from './attachments-section';
 import { ContentBlocks } from './content-blocks';
 import { IssuePropertiesPanel } from './issue-properties-panel';
 
@@ -52,15 +53,7 @@ export default function IssueDetails() {
                   <ContentBlocks blocks={detail.description} />
                </div>
 
-               {/* Quick actions */}
-               <div className="flex items-center gap-3 mt-6 text-muted-foreground">
-                  <button className="hover:text-foreground" aria-label="Add reaction">
-                     <SmilePlus className="size-4" />
-                  </button>
-                  <button className="hover:text-foreground" aria-label="Attach file">
-                     <Paperclip className="size-4" />
-                  </button>
-               </div>
+               <AttachmentsSection issueIdentifier={issue.identifier} />
 
                {/* Sub-issues */}
                <div className="mt-8">

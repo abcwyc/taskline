@@ -1,35 +1,39 @@
 services:
-  db:
-    image: postgres:16-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: circle
-      POSTGRES_PASSWORD: circle
-      POSTGRES_DB: circle
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U circle -d circle']
-      interval: 5s
-      timeout: 5s
-      retries: 10
-    # expose to the host so you can run `pnpm db:seed` against it once
-    ports:
-      - '5432:5432'
+   db:
+      image: postgres:16-alpine
+      restart: unless-stopped
+      environment:
+         POSTGRES_USER: circle
+         POSTGRES_PASSWORD: circle
+         POSTGRES_DB: circle
+      volumes:
+         - pgdata:/var/lib/postgresql/data
+      healthcheck:
+         test: ['CMD-SHELL', 'pg_isready -U circle -d circle']
+         interval: 5s
+         timeout: 5s
+         retries: 10
+      # expose to the host so you can run `pnpm db:seed` against it once
+      ports:
+         - '5432:5432'
 
-  web:
-    build: .
-    restart: unless-stopped
-    depends_on:
-      db:
-        condition: service_healthy
-    environment:
-      DATABASE_URL: postgresql://circle:circle@db:5432/circle?schema=public
-      AUTH_SECRET: ${AUTH_SECRET:?set AUTH_SECRET in .env (npx auth secret)}
-      AUTH_URL: ${AUTH_URL:-http://localhost:3000}
-      AUTH_TRUST_HOST: 'true'
-    ports:
-      - '3000:3000'
+   web:
+      build: .
+      restart: unless-stopped
+      depends_on:
+         db:
+            condition: service_healthy
+      environment:
+         DATABASE_URL: postgresql://circle:circle@db:5432/circle?schema=public
+         AUTH_SECRET: ${AUTH_SECRET:?set AUTH_SECRET in .env (npx auth secret)}
+         AUTH_URL: ${AUTH_URL:-http://localhost:3000}
+         AUTH_TRUST_HOST: 'true'
+         UPLOAD_DIR: /app/uploads
+      volumes:
+         - uploads:/app/uploads
+      ports:
+         - '3000:3000'
 
 volumes:
-  pgdata:
+   pgdata:
+   uploads:

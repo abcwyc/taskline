@@ -9,6 +9,7 @@ Dockerfile
 docker-compose*.yml
 .dockerignore
 coverage
+uploads
 .vscode
 .idea
 *.md

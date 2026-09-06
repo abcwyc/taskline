@@ -147,6 +147,7 @@ model Organization {
   triageItems TriageItem[]
   reviews     Review[]
   invites     Invite[]
+  attachments Attachment[]
 }
 
 model User {
@@ -175,9 +176,10 @@ model User {
   views              SavedView[]
   notifications      Notification[]   @relation("NotificationRecipient")
   actedNotifications Notification[]   @relation("NotificationActor")
-  triageReports      TriageItem[]     @relation("TriageReporter")
-  createdInvites     Invite[]         @relation("InviteCreator")
-  acceptedInvites    Invite[]         @relation("InviteAcceptor")
+  triageReports       TriageItem[]     @relation("TriageReporter")
+  createdInvites      Invite[]         @relation("InviteCreator")
+  acceptedInvites     Invite[]         @relation("InviteAcceptor")
+  uploadedAttachments Attachment[]
 
   // Auth.js
   accounts Account[]
@@ -490,6 +492,7 @@ model Issue {
   labels             IssueLabel[]
   comments           IssueComment[]
   activity           IssueActivity[]
+  attachments        Attachment[]
   prLinks            PrLink[]
   relations          IssueRelation[] @relation("RelationFrom")
   relatedRelations   IssueRelation[] @relation("RelationTo")
@@ -573,6 +576,26 @@ model PrLink {
   createdAt DateTime @default(now())
 
   issue Issue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+
+  @@index([issueId])
+}
+
+/// File attached to an issue. Bytes live under `UPLOAD_DIR` (see lib/api/storage.ts);
+/// `storageKey` is the path relative to it. Served via GET /api/attachments/:id.
+model Attachment {
+  id           String   @id @default(cuid())
+  orgId        String
+  issueId      String
+  uploadedById String?
+  filename     String
+  contentType  String
+  size         Int
+  storageKey   String
+  createdAt    DateTime @default(now())
+
+  org        Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  issue      Issue        @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  uploadedBy User?        @relation(fields: [uploadedById], references: [id])
 
   @@index([issueId])
 }

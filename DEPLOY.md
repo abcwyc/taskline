@@ -82,13 +82,18 @@ pnpm start                   # next start, on PORT (default 3000)
 ## Notes / current limitations
 
 - **Sign-up**: self-serve registration is enabled (`/sign-up`). The first
-  account is ADMIN; later accounts join as MEMBER. There is no email
-  verification and no invite-only gate — put the app behind one if the
-  deployment is not meant to be open registration.
+  account is ADMIN; later accounts join as MEMBER. Admins can send invite
+  links from the Members page. Set `SIGNUP_MODE=invite` to require an invite
+  for every account except the first. There is no email verification — invite
+  links are delivered however you choose to share them.
+- **Attachments**: stored on local disk under `UPLOAD_DIR` (`/app/uploads` in
+  the container — the compose file mounts a named volume; back it up or point
+  `UPLOAD_DIR` at shared storage). Max size `MAX_ATTACHMENT_BYTES` (10 MB
+  default). Swap `lib/api/storage.ts` for S3/R2 if you'd rather not keep a
+  volume.
 - **Single workspace**: the schema is org-scoped but the UI has one workspace
   (the `[orgId]` segment resolves to the signed-in user's membership). Every
   sign-up joins that same workspace.
 - **Agent** page: still a client-side canned-reply mock — wiring a real LLM is
   out of scope of the backend migration.
 - **Reviews**: read-only (no VCS integration).
-- File uploads / attachments are not implemented (schema has the columns).
