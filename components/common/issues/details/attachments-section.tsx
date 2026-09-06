@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 
-import { useCurrentUserId } from '@/lib/hooks/use-current-user';
+import { useCurrentUser, useCurrentUserId } from '@/lib/hooks/use-current-user';
 import { useAttachmentsStore } from '@/store/attachments-store';
 import { Download, Loader2, Paperclip, X } from 'lucide-react';
 
@@ -16,6 +16,7 @@ function humanSize(bytes: number): string {
 export function AttachmentsSection({ issueIdentifier }: { issueIdentifier: string }) {
    const inputRef = useRef<HTMLInputElement>(null);
    const meId = useCurrentUserId();
+   const isAdmin = useCurrentUser()?.role === 'Admin';
    const files = useAttachmentsStore((s) => s.byIssue[issueIdentifier]);
    const uploading = useAttachmentsStore((s) => s.uploading[issueIdentifier]);
    const ensure = useAttachmentsStore((s) => s.ensure);
@@ -81,7 +82,7 @@ export function AttachmentsSection({ issueIdentifier }: { issueIdentifier: strin
                      >
                         <Download className="size-4" />
                      </a>
-                     {(file.uploadedById === meId || !file.uploadedById) && (
+                     {(isAdmin || file.uploadedById === meId || !file.uploadedById) && (
                         <button
                            type="button"
                            onClick={() => remove(issueIdentifier, file.id)}

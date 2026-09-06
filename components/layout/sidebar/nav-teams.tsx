@@ -14,6 +14,7 @@ import {
    Settings,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
@@ -40,6 +41,7 @@ import { useTriageStore } from '@/store/triage-store';
 import { RiDonutChartFill } from '@remixicon/react';
 
 export function NavTeams() {
+   const { orgId = 'lndev-ui' } = useParams<{ orgId: string }>();
    const teams = useTeamsStore((s) => s.teams);
    const joinedTeams = teams.filter((t) => t.joined);
    const { items: triageQueue } = useTriageStore();
@@ -78,9 +80,11 @@ export function NavTeams() {
                                  side="right"
                                  align="start"
                               >
-                                 <DropdownMenuItem>
-                                    <Settings className="size-4" />
-                                    <span>Team settings</span>
+                                 <DropdownMenuItem asChild>
+                                    <Link href={`/${orgId}/settings/teams/${item.id}`}>
+                                       <Settings className="size-4" />
+                                       <span>Team settings</span>
+                                    </Link>
                                  </DropdownMenuItem>
                                  <DropdownMenuItem>
                                     <LinkIcon className="size-4" />
@@ -107,7 +111,7 @@ export function NavTeams() {
                         <SidebarMenuSub>
                            <SidebarMenuSubItem>
                               <SidebarMenuSubButton asChild>
-                                 <Link href={`/lndev-ui/team/${item.id}/overview`}>
+                                 <Link href={`/${orgId}/team/${item.id}/overview`}>
                                     <Home size={14} />
                                     <span>Home</span>
                                  </Link>
@@ -116,7 +120,7 @@ export function NavTeams() {
                            {triageQueue.some((entry) => entry.teamId === item.id) && (
                               <SidebarMenuSubItem>
                                  <SidebarMenuSubButton asChild>
-                                    <Link href={`/lndev-ui/team/${item.id}/triage`}>
+                                    <Link href={`/${orgId}/team/${item.id}/triage`}>
                                        <StatusTriageIcon color="#f2790f" />
                                        <span>Triage</span>
                                        <span className="ml-auto text-xs text-muted-foreground">
@@ -131,7 +135,7 @@ export function NavTeams() {
                            )}
                            <SidebarMenuSubItem>
                               <SidebarMenuSubButton asChild>
-                                 <Link href={`/lndev-ui/team/${item.id}/all`}>
+                                 <Link href={`/${orgId}/team/${item.id}/all`}>
                                     <CopyMinus size={14} />
                                     <span>Issues</span>
                                  </Link>
@@ -139,7 +143,7 @@ export function NavTeams() {
                            </SidebarMenuSubItem>
                            <SidebarMenuSubItem>
                               <SidebarMenuSubButton asChild>
-                                 <Link href={`/lndev-ui/team/${item.id}/cycles`}>
+                                 <Link href={`/${orgId}/team/${item.id}/cycles`}>
                                     <RiDonutChartFill size={14} />
                                     <span>Cycles</span>
                                  </Link>
@@ -147,14 +151,14 @@ export function NavTeams() {
                               <SidebarMenuSub className="mr-0 pr-0">
                                  <SidebarMenuSubItem>
                                     <SidebarMenuSubButton asChild>
-                                       <Link href={`/lndev-ui/team/${item.id}/cycle/active`}>
+                                       <Link href={`/${orgId}/team/${item.id}/cycle/active`}>
                                           <span>Current</span>
                                        </Link>
                                     </SidebarMenuSubButton>
                                  </SidebarMenuSubItem>
                                  <SidebarMenuSubItem>
                                     <SidebarMenuSubButton asChild>
-                                       <Link href={`/lndev-ui/team/${item.id}/cycle/upcoming`}>
+                                       <Link href={`/${orgId}/team/${item.id}/cycle/upcoming`}>
                                           <span>Upcoming</span>
                                        </Link>
                                     </SidebarMenuSubButton>
@@ -163,7 +167,7 @@ export function NavTeams() {
                            </SidebarMenuSubItem>
                            <SidebarMenuSubItem>
                               <SidebarMenuSubButton asChild>
-                                 <Link href={`/lndev-ui/team/${item.id}/initiatives`}>
+                                 <Link href={`/${orgId}/team/${item.id}/initiatives`}>
                                     <Compass size={14} />
                                     <span>Initiatives</span>
                                  </Link>
@@ -171,7 +175,7 @@ export function NavTeams() {
                            </SidebarMenuSubItem>
                            <SidebarMenuSubItem>
                               <SidebarMenuSubButton asChild>
-                                 <Link href={`/lndev-ui/team/${item.id}/projects`}>
+                                 <Link href={`/${orgId}/team/${item.id}/projects`}>
                                     <Box size={14} />
                                     <span>Projects</span>
                                  </Link>
@@ -179,7 +183,7 @@ export function NavTeams() {
                            </SidebarMenuSubItem>
                            <SidebarMenuSubItem>
                               <SidebarMenuSubButton asChild>
-                                 <Link href={`/lndev-ui/team/${item.id}/views`}>
+                                 <Link href={`/${orgId}/team/${item.id}/views`}>
                                     <Layers size={14} />
                                     <span>Views</span>
                                  </Link>

@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { fetchMe, updateMe as apiUpdateMe } from '@/lib/api/me';
 import { DEFAULT_PREFERENCES, Preferences } from '@/lib/api/preferences';
 import type { MeDTO } from '@/lib/api/types';
+import { useMembersStore } from '@/store/members-store';
 
 /**
  * The signed-in user's own profile + preferences. Hydrated once (in the
@@ -12,6 +13,7 @@ import type { MeDTO } from '@/lib/api/types';
 interface MeState {
    me: MeDTO | null;
    hydrated: boolean;
+   loading: boolean;
    preferences: Preferences;
    hydrate: () => Promise<void>;
    saveProfile: (patch: Partial<Pick<MeDTO, 'name' | 'jobTitle' | 'timezone'>>) => Promise<void>;
@@ -21,15 +23,17 @@ interface MeState {
 export const useMeStore = create<MeState>((set, get) => ({
    me: null,
    hydrated: false,
+   loading: false,
    preferences: { ...DEFAULT_PREFERENCES },
 
    hydrate: async () => {
-      if (get().hydrated) return;
+      if (get().hydrated || get().loading) return;
+      set({ loading: true });
       try {
          const me = await fetchMe();
-         set({ me, preferences: me.preferences, hydrated: true });
+         set({ me, preferences: me.preferences, hydrated: true, loading: false });
       } catch {
-         set({ hydrated: true }); // fall back to defaults; not fatal
+         set({ hydrated: true, loading: false }); // fall back to defaults; not fatal
       }
    },
 
@@ -39,6 +43,10 @@ export const useMeStore = create<MeState>((set, get) => ({
       try {
          const me = await apiUpdateMe(patch);
          set({ me, preferences: me.preferences });
+         // keep the shared members cache (sidebar, avatars, pickers) in sync
+         if (patch.name !== undefined) {
+            useMembersStore.getState().updateMemberLocal(me.id, { name: me.name });
+         }
       } catch (err) {
          if (snapshot) set({ me: snapshot });
          toast.error('Failed to save profile');

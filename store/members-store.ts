@@ -24,6 +24,8 @@ interface MembersState {
    getMembersByTeam: (teamId: string) => User[];
 
    updateMember: (id: string, patch: Partial<User>) => void;
+   /** Patch the cache only (no API call) — e.g. after the user edits their own profile. */
+   updateMemberLocal: (id: string, patch: Partial<User>) => void;
 }
 
 export const useMembersStore = create<MembersState>((set, get) => ({
@@ -48,6 +50,10 @@ export const useMembersStore = create<MembersState>((set, get) => ({
    getAllMembers: () => get().members,
    getMemberById: (id) => get().members.find((m) => m.id === id),
    getMembersByTeam: (teamId) => get().members.filter((m) => m.teamIds.includes(teamId)),
+
+   updateMemberLocal: (id, patch) => {
+      set({ members: get().members.map((m) => (m.id === id ? { ...m, ...patch } : m)) });
+   },
 
    updateMember: (id, patch) => {
       const snapshot = get().members.find((m) => m.id === id);

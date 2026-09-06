@@ -86,6 +86,19 @@ export async function getAttachmentBlob(orgId: string, id: string) {
    }
 }
 
+/**
+ * Remove the on-disk blobs for a set of issues. Call this *before* deleting the
+ * issues (the DB rows cascade, but the files don't). Best-effort.
+ */
+export async function purgeAttachmentBlobs(issueIds: string[]): Promise<void> {
+   if (issueIds.length === 0) return;
+   const rows = await db.attachment.findMany({
+      where: { issueId: { in: issueIds } },
+      select: { storageKey: true },
+   });
+   await Promise.all(rows.map((r) => deleteBlob(r.storageKey).catch(() => {})));
+}
+
 export async function deleteAttachment(
    orgId: string,
    id: string,

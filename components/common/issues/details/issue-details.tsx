@@ -31,7 +31,7 @@ export default function IssueDetails() {
       return (
          <div className="flex flex-col items-center justify-center h-full gap-2 text-sm text-muted-foreground">
             <p>Issue {issueId} not found.</p>
-            <Link href={`/${orgId ?? 'lndev-ui'}/team/CORE/all`} className="underline">
+            <Link href={`/${orgId ?? 'lndev-ui'}/my-issues`} className="underline">
                Back to issues
             </Link>
          </div>

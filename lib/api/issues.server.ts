@@ -3,6 +3,7 @@ import { Prisma, Priority } from '@prisma/client';
 
 import { db } from '@/lib/db';
 import { LexoRank } from '@/lib/utils';
+import { purgeAttachmentBlobs } from './attachments.server';
 import { blocksToText, readBlocks, storeBlocks, textToBlocks } from './rich-text';
 import {
    IssueDTO,
@@ -226,6 +227,7 @@ export async function deleteIssue(orgId: string, id: string): Promise<boolean> {
       select: { id: true },
    });
    if (!existing) return false;
+   await purgeAttachmentBlobs([existing.id]);
    await db.issue.delete({ where: { id: existing.id } });
    return true;
 }
