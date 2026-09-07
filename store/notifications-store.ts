@@ -13,7 +13,7 @@ interface NotificationsState {
    hydrated: boolean;
    isLoading: boolean;
    error: string | null;
-   hydrate: () => Promise<void>;
+   hydrate: (force?: boolean) => Promise<void>;
 
    setSelectedNotification: (notification: InboxItem | undefined) => void;
    markAsRead: (id: string) => void;
@@ -38,14 +38,15 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
    isLoading: false,
    error: null,
 
-   hydrate: async () => {
-      if (get().hydrated || get().isLoading) return;
+   hydrate: async (force = false) => {
+      const firstLoad = !get().hydrated;
+      if ((!force && !firstLoad) || get().isLoading) return;
       set({ isLoading: true, error: null });
       try {
          set({ notifications: await fetchNotifications(), hydrated: true, isLoading: false });
       } catch (err) {
          set({ isLoading: false, error: (err as Error).message });
-         throw err;
+         if (firstLoad) throw err;
       }
    },
 

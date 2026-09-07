@@ -18,14 +18,16 @@ surfaces are not yet functional (see **Not implemented** below).
 
 Copy `.env.example` → `.env` and fill in:
 
-| var                 | notes                                                    |
-| ------------------- | -------------------------------------------------------- |
-| `AUTH_SECRET`       | **required**, `npx auth secret`                          |
-| `AUTH_URL`          | public URL of the app, e.g. `https://circle.example.com` |
-| `AUTH_TRUST_HOST`   | `true` behind a proxy / in Docker                        |
-| `POSTGRES_PASSWORD` | **required** for compose; `DATABASE_URL` for bare Node   |
-| `SIGNUP_MODE`       | `invite` (default) or `open`                             |
-| `BOOTSTRAP_SECRET`  | optional — gate the first-admin sign-up                  |
+| var                             | notes                                                    |
+| ------------------------------- | -------------------------------------------------------- |
+| `AUTH_SECRET`                   | **required**, `npx auth secret`                          |
+| `AUTH_URL`                      | public URL of the app, e.g. `https://circle.example.com` |
+| `AUTH_TRUST_HOST`               | `true` behind a proxy / in Docker                        |
+| `POSTGRES_PASSWORD`             | **required** for compose; `DATABASE_URL` for bare Node   |
+| `SIGNUP_MODE`                   | `invite` (default) or `open`                             |
+| `BOOTSTRAP_SECRET`              | optional — gate the first-admin sign-up                  |
+| `CRON_SECRET`                   | strong secret for scheduled internal job endpoints       |
+| `WORKSPACE_REFRESH_INTERVAL_MS` | Issues/Inbox polling; `30000` default, `0` disables      |
 
 ## Option A — Docker Compose (simplest)
 
@@ -106,8 +108,54 @@ Terminate TLS at the proxy and forward `Host` / `X-Forwarded-*`. A request body
 limit near `MAX_ATTACHMENT_BYTES` (nginx `client_max_body_size 12m;`) is still
 good defence in depth, though the app now streams uploads and aborts oversized
 ones itself. The app sends HSTS, `X-Frame-Options: DENY`, `nosniff`, a baseline
-CSP and `Referrer-Policy` (see `next.config.ts`). Add rate limiting here —
-there is none in the app.
+CSP and `Referrer-Policy` (see `next.config.ts`). The app's limiter is local to
+one Node process, so add edge limiting here as well. A hardened starting point
+is provided in `deploy/nginx.conf.example`; copy both files from `deploy/` into
+your nginx configuration and adapt the hostname/TLS settings.
+
+Never forward an untrusted client-provided `X-Forwarded-For` value unchanged.
+The example deliberately replaces it with nginx's `$remote_addr` because the app
+uses the first forwarded address for rate-limit keys.
+
+## Backup and restore
+
+The supported Compose deployment includes executable backup and restore helpers.
+Back up both PostgreSQL and attachments:
+
+```bash
+CIRCLE_BACKUP_DIR=/srv/backups/circle pnpm backup
+```
+
+The result is a timestamped directory containing `database.dump`,
+`uploads.tar.gz`, and a checksum manifest. Copy it off the app host; a local
+Docker volume is not a disaster-recovery backup. Schedule the command daily
+with cron/systemd and apply retention in the destination backup system.
+
+Test restores into a disposable deployment first. Restoring replaces the target
+database and attachment volume and therefore requires explicit confirmation:
+
+```bash
+CONFIRM_RESTORE=restore-circle sh scripts/restore.sh /srv/backups/circle/20260907T120000Z
+```
+
+After every restore, verify `/api/health`, sign-in, an issue, and an attachment
+download. A backup is not production-ready until this drill has succeeded.
+
+## Cycle burn-up snapshots
+
+Set a separate `CRON_SECRET`, then call the protected job once per day after
+midnight UTC. It upserts that day's scope/started/completed point for cycles
+whose date range includes the current day:
+
+```bash
+curl -fsS -X POST \
+  -H "Authorization: Bearer $CRON_SECRET" \
+  "$AUTH_URL/api/jobs/cycle-burnup"
+```
+
+Run this from cron, systemd, or the hosting platform's scheduler. Repeated calls
+on the same day are safe. The endpoint returns `503` when `CRON_SECRET` is not
+configured and never falls back to an authenticated browser session.
 
 ## Roles
 
@@ -143,6 +191,8 @@ The schema is org-scoped but the UI serves one workspace; every account joins it
   audit. Adapt for your host.
 - **Tests** — `pnpm test` (vitest): unit tests always run; the RBAC / invite /
   admin-safety integration tests run when `TEST_DATABASE_URL` is set.
-- **Not included** — metrics/tracing, structured log shipping, DB backup/PITR,
-  rate limiting, error tracking. `/api/health` returns 200 only when the DB
-  responds — wire it to your load balancer.
+- **Included baseline** — on-demand DB + attachment backup/restore scripts,
+  in-process abuse throttling, an nginx edge-limit example, structured JSON
+  errors, and `/api/health` (200 only when the DB responds).
+- **Still operator-owned** — scheduling and off-host retention, PITR, metrics,
+  tracing, log shipping, and error tracking. Wire health to your load balancer.

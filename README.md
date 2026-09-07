@@ -1,49 +1,85 @@
 # Circle
 
-<br />
-<a href="https://vercel.com/oss">
-  <img alt="Vercel OSS Program" src="https://vercel.com/oss/program-badge.svg" />
-</a>
+Circle is a self-hosted, Linear-inspired project-management application built
+with Next.js, PostgreSQL, Prisma, Auth.js, and React. Issues, projects, teams,
+cycles, initiatives, triage, saved views, members, invitations, notifications,
+comments, and attachments are persisted in PostgreSQL/local storage.
 
-<br />
-<br />
+The supported production shape is a **small, single-workspace, single-instance
+deployment**. Circle is not yet a multi-tenant SaaS or a horizontally scalable
+service. See [DEPLOY.md](./DEPLOY.md) and [SECURITY.md](./SECURITY.md) before
+putting it on a network.
 
-Project management interface inspired by Linear. Built with Next.js and shadcn/ui, this application allows tracking of issues, projects and teams with a modern, responsive UI.
+## What works
 
-> The BaseUI code is available on [Square UI Pro](https://pro.lndevui.com/templates/circle-baseui).
+- Credentials authentication, invite-only registration, and ADMIN/MEMBER/GUEST
+  authorization
+- Issue, project, initiative, cycle, team, member, label, view, and triage flows
+- Comments, activity, subscriptions, in-app notifications, and attachments
+- Docker/Compose deployment, health checks, migrations, CI, security headers,
+  backup/restore helpers, cycle snapshots, and basic abuse throttling
 
-## 🛠️ Technologies
+Agent, Reviews/VCS integration, email/push delivery, API keys, passkeys, and most
+third-party integrations are intentionally unavailable in this build.
 
-- **Framework**: [Next.js](https://nextjs.org/)
-- **Langage**: [TypeScript](https://www.typescriptlang.org/)
-- **UI Components**: [shadcn/ui](https://ui.shadcn.com/)
-- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+## Local development
 
-### 📦 Installation
+Requirements: Node 22, pnpm 10, and PostgreSQL 14+.
 
-```shell
-git clone https://github.com/ln-dev7/circle.git
-cd circle
-```
-
-### Install dependencies
-
-```shell
+```bash
+cp .env.example .env
 pnpm install
-```
-
-### Start the development server
-
-```shell
+pnpm exec prisma migrate deploy
+pnpm create-admin you@example.com 'a-strong-password'
 pnpm dev
 ```
 
-## Star History
+Open <http://localhost:3000>. Do not run `pnpm db:seed` against a production
+database; it creates demonstration accounts and content.
 
-<a href="https://www.star-history.com/#ln-dev7/circle&Date">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=ln-dev7/circle&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=ln-dev7/circle&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=ln-dev7/circle&type=Date" />
- </picture>
-</a>
+## Docker Compose
+
+Set `POSTGRES_PASSWORD`, `AUTH_SECRET`, and `AUTH_URL` in `.env`, then run:
+
+```bash
+docker compose up -d --build
+```
+
+Set a strong `BOOTSTRAP_SECRET` to create the first admin through `/sign-up` or
+`POST /api/bootstrap`. Keep `SIGNUP_MODE=invite` and invite everyone else from
+the Members page.
+
+Back up the Compose database and attachment volume with:
+
+```bash
+pnpm backup
+```
+
+Detailed proxy, restore, and operational instructions live in
+[DEPLOY.md](./DEPLOY.md).
+
+## Quality checks
+
+```bash
+pnpm exec tsc --noEmit
+pnpm lint
+pnpm exec prettier --check .
+pnpm test
+pnpm build
+pnpm audit --prod
+```
+
+Database integration tests require `TEST_DATABASE_URL` pointing to a disposable,
+migrated PostgreSQL database. CI provisions one automatically.
+
+## Architecture
+
+- `app/` — pages, route handlers, and auth-protected workspace layout
+- `lib/api/*.server.ts` — server-side domain and persistence logic
+- `lib/api/*.ts` — client DTO adapters and HTTP calls
+- `store/` — hydrated Zustand caches and optimistic mutations
+- `prisma/` — schema, migrations, and optional demonstration seed
+- `components/` — product UI; legacy `mock-data/` modules still provide display
+  types, icon registries, and seed fixtures
+
+Read [AI_GUIDE.md](./AI_GUIDE.md) before making structural changes.

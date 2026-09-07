@@ -39,7 +39,7 @@ interface IssuesState {
    hydrated: boolean;
    isLoading: boolean;
    error: string | null;
-   hydrate: () => Promise<void>;
+   hydrate: (force?: boolean) => Promise<void>;
 
    //
    getAllIssues: () => Issue[];
@@ -90,16 +90,19 @@ export const useIssuesStore = create<IssuesState>((set, get) => {
       isLoading: false,
       error: null,
 
-      hydrate: async () => {
-         if (get().hydrated || get().isLoading) return;
+      hydrate: async (force = false) => {
+         const firstLoad = !get().hydrated;
+         if ((!force && !firstLoad) || get().isLoading || (force && mutations.hasActive())) return;
          set({ isLoading: true, error: null });
          try {
             const issues = await apiFetchIssues();
             set({ ...withDerived(issues), hydrated: true, isLoading: false });
          } catch (err) {
             set({ isLoading: false, error: (err as Error).message });
-            toast.error('Failed to load issues');
-            throw err;
+            if (firstLoad) {
+               toast.error('Failed to load issues');
+               throw err;
+            }
          }
       },
 
@@ -114,12 +117,14 @@ export const useIssuesStore = create<IssuesState>((set, get) => {
                if (!mutations.isCurrent(issue.id, version)) return;
                set(withDerived(get().issues.map((i) => (i.id === issue.id ? saved : i))));
                if (parentId) useIssueDetailsStore.getState().invalidate(parentId);
+               mutations.finish(issue.id, version);
             })
             .catch((err) => {
                if (!mutations.isCurrent(issue.id, version)) return;
                set(withDerived(get().issues.filter((i) => i.id !== issue.id)));
                toast.error('Failed to create issue');
                console.error(err);
+               mutations.finish(issue.id, version);
             });
       },
 
@@ -138,12 +143,14 @@ export const useIssuesStore = create<IssuesState>((set, get) => {
             .then((saved) => {
                if (!mutations.isCurrent(id, version)) return;
                set(withDerived(get().issues.map((i) => (i.id === id ? saved : i))));
+               mutations.finish(id, version);
             })
             .catch((err) => {
                if (!mutations.isCurrent(id, version)) return;
                set(withDerived(get().issues.map((i) => (i.id === id ? snapshot : i))));
                toast.error('Failed to save changes');
                console.error(err);
+               mutations.finish(id, version);
             });
       },
 
@@ -151,12 +158,15 @@ export const useIssuesStore = create<IssuesState>((set, get) => {
          const snapshot = get().issues;
          set(withDerived(snapshot.filter((i) => i.id !== id)));
          const version = mutations.begin(id);
-         apiDeleteIssue(id).catch((err) => {
-            if (!mutations.isCurrent(id, version)) return;
-            set(withDerived(snapshot));
-            toast.error('Failed to delete issue');
-            console.error(err);
-         });
+         apiDeleteIssue(id)
+            .then(() => mutations.finish(id, version))
+            .catch((err) => {
+               if (!mutations.isCurrent(id, version)) return;
+               set(withDerived(snapshot));
+               toast.error('Failed to delete issue');
+               console.error(err);
+               mutations.finish(id, version);
+            });
       },
 
       /* ------------------------------ filters ------------------------------- */

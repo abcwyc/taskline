@@ -12,6 +12,7 @@ d('workspace authorization', () => {
    let db: import('@prisma/client').PrismaClient;
    let assertOrgScope: typeof import('@/lib/api/ownership.server').assertOrgScope;
    let claimInvite: typeof import('@/lib/api/invites.server').claimInvite;
+   let createOpaqueToken: typeof import('@/lib/api/secrets').createOpaqueToken;
    let removeMember: typeof import('@/lib/api/members.server').removeMember;
    let updateMember: typeof import('@/lib/api/members.server').updateMember;
    const tag = `t${Date.now()}${Math.floor(Math.random() * 1000)}`;
@@ -24,6 +25,7 @@ d('workspace authorization', () => {
       ({ db } = await import('@/lib/db'));
       ({ assertOrgScope } = await import('@/lib/api/ownership.server'));
       ({ claimInvite } = await import('@/lib/api/invites.server'));
+      ({ createOpaqueToken } = await import('@/lib/api/secrets'));
       ({ removeMember } = await import('@/lib/api/members.server'));
       ({ updateMember } = await import('@/lib/api/members.server'));
 
@@ -136,7 +138,12 @@ d('workspace authorization', () => {
 
    it('claimInvite is single-use under concurrency', async () => {
       const inv = await db.invite.create({
-         data: { orgId, role: 'MEMBER', expiresAt: new Date(Date.now() + 1e6) },
+         data: {
+            orgId,
+            role: 'MEMBER',
+            token: createOpaqueToken(),
+            expiresAt: new Date(Date.now() + 1e6),
+         },
       });
       const results = await Promise.all([claimInvite(inv.token), claimInvite(inv.token)]);
       expect(results.filter(Boolean)).toHaveLength(1);

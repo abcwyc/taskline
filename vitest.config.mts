@@ -4,9 +4,9 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
    resolve: {
       alias: {
-         '@': resolve(__dirname, '.'),
+         '@': resolve(import.meta.dirname, '.'),
          // let node tests import server-only modules
-         'server-only': resolve(__dirname, 'test/stubs/empty.ts'),
+         'server-only': resolve(import.meta.dirname, 'test/stubs/empty.ts'),
       },
    },
    test: {

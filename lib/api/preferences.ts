@@ -20,7 +20,7 @@ export interface Preferences {
 }
 
 export const DEFAULT_PREFERENCES: Preferences = {
-   defaultHomeView: 'agent',
+   defaultHomeView: 'my-issues',
    displayNames: 'full-name',
    firstDayOfWeek: 'monday',
    emoticonsToEmoji: true,

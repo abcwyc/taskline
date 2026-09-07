@@ -8,8 +8,7 @@
  */
 import bcrypt from 'bcryptjs';
 
-import { ensureWorkspace } from '../lib/api/bootstrap';
-import { db } from '../lib/db';
+import { createFirstAdmin, WorkspaceAlreadyInitializedError } from '../lib/api/bootstrap';
 
 async function main() {
    const [email, password, name] = process.argv.slice(2);
@@ -22,20 +21,10 @@ async function main() {
       process.exit(1);
    }
 
-   const org = await ensureWorkspace();
-   const existing = await db.membership.count({ where: { orgId: org.id } });
-   if (existing > 0) {
-      console.error('workspace already has members — invite people from the app instead');
-      process.exit(1);
-   }
-
-   const user = await db.user.create({
-      data: {
-         email: email.trim().toLowerCase(),
-         name: name?.trim() || email.split('@')[0],
-         passwordHash: bcrypt.hashSync(password, 10),
-         memberships: { create: { orgId: org.id, role: 'ADMIN' } },
-      },
+   const { user, org } = await createFirstAdmin({
+      email: email.trim().toLowerCase(),
+      name: name?.trim() || email.split('@')[0],
+      passwordHash: bcrypt.hashSync(password, 10),
    });
    console.log(`created admin ${user.email} in workspace "${org.slug}"`);
 }
@@ -43,6 +32,10 @@ async function main() {
 main()
    .then(() => process.exit(0))
    .catch((err) => {
-      console.error(err);
+      console.error(
+         err instanceof WorkspaceAlreadyInitializedError
+            ? 'workspace already has members — invite people from the app instead'
+            : err
+      );
       process.exit(1);
    });

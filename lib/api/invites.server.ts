@@ -3,6 +3,7 @@ import 'server-only';
 import { db } from '@/lib/db';
 import { InviteCreateBody, InviteDTO, ROLE_ENUM_TO_KEY, ROLE_KEY_TO_ENUM } from './types';
 import { PublicError } from './http';
+import { createOpaqueToken } from './secrets';
 
 /**
  * Workspace invitations. An invite is a single-use token redeemed at
@@ -94,6 +95,7 @@ export async function createInvite(
          orgId,
          email,
          role: safeRole,
+         token: createOpaqueToken(),
          invitedById,
          expiresAt: new Date(Date.now() + INVITE_TTL_DAYS * 86_400_000),
       },

@@ -27,7 +27,11 @@ async function statsByCycle(orgId: string, cycleIds: string[]) {
       }),
       db.issue.groupBy({
          by: ['cycleId'],
-         where: { orgId, cycleId: { in: cycleIds }, state: { category: 'STARTED' } },
+         where: {
+            orgId,
+            cycleId: { in: cycleIds },
+            state: { category: { in: ['STARTED', 'COMPLETED'] } },
+         },
          _count: { _all: true },
       }),
       db.issue.groupBy({

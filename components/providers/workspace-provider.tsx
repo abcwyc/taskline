@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 
 import { useCyclesStore } from '@/store/cycles-store';
@@ -14,7 +14,13 @@ import { useProjectsStore } from '@/store/projects-store';
 import { useTeamsStore } from '@/store/teams-store';
 import { useViewsStore } from '@/store/views-store';
 
-export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
+export function WorkspaceProvider({
+   children,
+   refreshIntervalMs = 30_000,
+}: {
+   children: React.ReactNode;
+   refreshIntervalMs?: number;
+}) {
    const hydrateMe = useMeStore((state) => state.hydrate);
    const hydrateMembers = useMembersStore((state) => state.hydrate);
    const hydrateLabels = useLabelsStore((state) => state.hydrate);
@@ -29,27 +35,33 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
    const [attempt, setAttempt] = useState(0);
    const [ready, setReady] = useState(false);
    const [error, setError] = useState<string | null>(null);
+   const readyRef = useRef(false);
 
    useEffect(() => {
       let active = true;
       const needsCycles = pathname.includes('/cycle');
       const needsViews = pathname.includes('/view');
       const needsInitiatives = pathname.includes('initiative');
-      setReady(false);
-      setError(null);
+      const firstLoad = !readyRef.current;
+      if (firstLoad) setError(null);
 
       async function hydrateWorkspace() {
          try {
-            await Promise.all([hydrateMe(), hydrateMembers(), hydrateLabels()]);
-            await hydrateProjects();
-            await Promise.all([hydrateTeams(), hydrateIssues()]);
+            if (firstLoad) {
+               await Promise.all([hydrateMe(), hydrateMembers(), hydrateLabels()]);
+               await hydrateProjects();
+               await Promise.all([hydrateTeams(), hydrateIssues()]);
+            }
             if (needsCycles) await hydrateCycles();
             if (needsViews) await hydrateViews();
             if (needsInitiatives) await hydrateInitiatives();
-            await hydrateNotifications();
-            if (active) setReady(true);
+            if (firstLoad) await hydrateNotifications();
+            if (active && firstLoad) {
+               readyRef.current = true;
+               setReady(true);
+            }
          } catch {
-            if (active) setError('Workspace data could not be loaded.');
+            if (active && firstLoad) setError('Workspace data could not be loaded.');
          }
       }
 
@@ -71,6 +83,31 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       hydrateInitiatives,
       hydrateNotifications,
    ]);
+
+   useEffect(() => {
+      const intervalMs = Number.isFinite(refreshIntervalMs)
+         ? Math.max(0, refreshIntervalMs)
+         : 30_000;
+
+      const refresh = async () => {
+         if (!readyRef.current || document.visibilityState !== 'visible') return;
+         await hydrateIssues(true);
+         // Notifications refer to issues, so refresh them after the issue cache.
+         await hydrateNotifications(true);
+      };
+      const onVisible = () => {
+         if (document.visibilityState === 'visible') void refresh();
+      };
+
+      window.addEventListener('focus', refresh);
+      document.addEventListener('visibilitychange', onVisible);
+      const timer = intervalMs > 0 ? window.setInterval(refresh, intervalMs) : undefined;
+      return () => {
+         window.removeEventListener('focus', refresh);
+         document.removeEventListener('visibilitychange', onVisible);
+         if (timer !== undefined) window.clearInterval(timer);
+      };
+   }, [hydrateIssues, hydrateNotifications, refreshIntervalMs]);
 
    if (error) {
       return (

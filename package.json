@@ -15,6 +15,7 @@
       "db:seed": "prisma db seed",
       "db:studio": "prisma studio",
       "create-admin": "tsx scripts/create-admin.ts",
+      "backup": "sh scripts/backup.sh",
       "test": "vitest run"
    },
    "prisma": {

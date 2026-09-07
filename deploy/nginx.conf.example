@@ -1,0 +1,35 @@
+# Put this server behind your TLS terminator, or add your certificate settings.
+# If another trusted proxy sits in front, replace $remote_addr with that proxy's
+# trusted real-IP configuration. Do not pass an arbitrary client-supplied
+# X-Forwarded-For header: the app uses its first address for throttling.
+
+limit_req_zone $binary_remote_addr zone=circle_auth:10m rate=10r/m;
+limit_req_zone $binary_remote_addr zone=circle_write:10m rate=30r/m;
+
+upstream circle_web {
+   server web:3000;
+   keepalive 16;
+}
+
+server {
+   listen 80;
+   server_name circle.example.com;
+   client_max_body_size 12m;
+
+   location ~ ^/(?:api/bootstrap|api/jobs/|api/auth/|sign-in|sign-up) {
+      limit_req zone=circle_auth burst=10 nodelay;
+      proxy_pass http://circle_web;
+      include /etc/nginx/circle-proxy-headers.conf;
+   }
+
+   location ~ ^/api/(?:invites|issues/[^/]+/attachments) {
+      limit_req zone=circle_write burst=20 nodelay;
+      proxy_pass http://circle_web;
+      include /etc/nginx/circle-proxy-headers.conf;
+   }
+
+   location / {
+      proxy_pass http://circle_web;
+      include /etc/nginx/circle-proxy-headers.conf;
+   }
+}

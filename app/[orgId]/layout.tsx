@@ -28,9 +28,14 @@ export default async function OrgLayout({
    });
    if (!member) redirect('/');
 
+   const configuredRefresh = Number(process.env.WORKSPACE_REFRESH_INTERVAL_MS ?? 30_000);
+   const refreshIntervalMs = Number.isFinite(configuredRefresh)
+      ? Math.max(0, configuredRefresh)
+      : 30_000;
+
    return (
       <AuthSessionProvider session={session}>
-         <WorkspaceProvider>{children}</WorkspaceProvider>
+         <WorkspaceProvider refreshIntervalMs={refreshIntervalMs}>{children}</WorkspaceProvider>
       </AuthSessionProvider>
    );
 }

@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 
-import { ensureWorkspace } from '@/lib/api/bootstrap';
+import { createFirstAdmin, WorkspaceAlreadyInitializedError } from '@/lib/api/bootstrap';
 import { errorResponse, parseBody } from '@/lib/api/http';
 import { rateLimit } from '@/lib/api/rate-limit';
-import { db } from '@/lib/db';
+import { secretsEqual } from '@/lib/api/secrets';
 
 export const dynamic = 'force-dynamic';
 
@@ -44,24 +44,22 @@ export async function POST(req: NextRequest) {
    } catch (err) {
       return errorResponse(err);
    }
-   if (input.secret !== secret) {
+   if (!secretsEqual(input.secret, secret)) {
       return NextResponse.json({ error: 'bad secret' }, { status: 403 });
    }
 
-   if ((await db.user.count()) > 0) {
-      return NextResponse.json({ error: 'workspace already has members' }, { status: 409 });
-   }
-
-   const org = await ensureWorkspace();
    const email = input.email.trim().toLowerCase();
-   const user = await db.user.create({
-      data: {
+   try {
+      const { user, org } = await createFirstAdmin({
          email,
          name: input.name?.trim() || email.split('@')[0],
          passwordHash: bcrypt.hashSync(input.password, 10),
-         memberships: { create: { orgId: org.id, role: 'ADMIN' } },
-      },
-      select: { id: true },
-   });
-   return NextResponse.json({ ok: true, userId: user.id, workspace: org.slug }, { status: 201 });
+      });
+      return NextResponse.json({ ok: true, userId: user.id, workspace: org.slug }, { status: 201 });
+   } catch (err) {
+      if (err instanceof WorkspaceAlreadyInitializedError) {
+         return NextResponse.json({ error: err.message }, { status: 409 });
+      }
+      return errorResponse(err);
+   }
 }

@@ -20,8 +20,13 @@
 - **Headers** — HSTS, `X-Frame-Options: DENY`, `nosniff`, baseline CSP,
   `Referrer-Policy`, `Permissions-Policy` (`next.config.ts`).
 - **Concurrency** — issue-number allocation is serialized per workspace.
+- **Bootstrap safety** — CLI, web, and API first-admin creation share a
+  PostgreSQL advisory transaction lock; operator secrets use constant-time
+  comparison and new invite links use 256-bit random tokens.
 - **Abuse throttling** — in-process sliding-window limits on sign-in, sign-up
   and invite creation (see gaps below for the caveat).
+- **Scheduled jobs** — cycle snapshots require a dedicated `CRON_SECRET` bearer
+  token and fail closed when it is unset.
 
 ## Known gaps — review before going public
 
@@ -45,7 +50,9 @@
 - **Attachments** are not virus-scanned.
 - **Single workspace** — cross-tenant isolation is not exercised; the FK
   ownership checks are the groundwork for when it is.
-- **No audit log export, backups, or monitoring** ship with the repo.
+- **No audit log export or monitoring stack** ships with the repo. Compose
+  backup/restore helpers are included, but scheduling, off-host retention,
+  PITR, and restore drills remain the operator's responsibility.
 
 ## Reporting
 
