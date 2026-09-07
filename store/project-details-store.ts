@@ -2,13 +2,14 @@ import { useEffect } from 'react';
 import { create } from 'zustand';
 import { toast } from 'sonner';
 
-import {
-   getProjectDetail as mockGetProjectDetail,
+import type {
    ProjectDetail,
    ProjectUpdate,
    ProjectUpdateHealth,
 } from '@/mock-data/project-details';
-import { users } from '@/mock-data/users';
+import type { User } from '@/mock-data/users';
+import { useMeStore } from '@/store/me-store';
+import { useMembersStore } from '@/store/members-store';
 import {
    fetchProjectDetail,
    postProjectUpdate as apiPostUpdate,
@@ -17,12 +18,19 @@ import {
 
 /**
  * Per-project detail cache (Overview / Activity tabs). Lazy: `ensureDetail`
- * fetches on first view; `getDetail` always returns something (the stored copy,
- * else the deterministic mock) so components never see `undefined`.
- *
- * Replaces the old `project-updates-store` — posting an update now goes through
- * the API and prepends to `detailsById[id].updates`.
+ * fetches on first view and exposes an empty persisted-data shape while loading.
  */
+function emptyProjectDetail(projectId: string): ProjectDetail {
+   return {
+      projectId,
+      summary: '',
+      description: [],
+      resources: [],
+      milestones: [],
+      updates: [],
+      activity: [],
+   };
+}
 interface ProjectDetailsState {
    detailsById: Record<string, ProjectDetail>;
    loading: Record<string, boolean>;
@@ -54,13 +62,27 @@ export const useProjectDetailsStore = create<ProjectDetailsState>((set, get) => 
          });
    },
 
-   getDetail: (projectId) => get().detailsById[projectId] ?? mockGetProjectDetail(projectId),
+   getDetail: (projectId) => get().detailsById[projectId] ?? emptyProjectDetail(projectId),
 
    postUpdate: (projectId, health, text) => {
       const current = get().getDetail(projectId);
+      const me = useMeStore.getState().me;
+      const author =
+         (me && useMembersStore.getState().getMemberById(me.id)) ??
+         ({
+            id: me?.id ?? 'current-user',
+            name: me?.name ?? 'Current user',
+            avatarUrl: me?.avatarUrl ?? '',
+            email: me?.email ?? '',
+            status: 'offline',
+            role: (me?.role ?? 'Member') as User['role'],
+            joinedDate: '',
+            teamIds: [],
+            timezone: me?.timezone ?? 'UTC',
+         } satisfies User);
       const optimistic: ProjectUpdate = {
          id: `pending-${Date.now()}`,
-         author: users[0],
+         author,
          date: new Date().toISOString().slice(0, 10),
          health,
          blocks: text
@@ -136,5 +158,5 @@ export function useProjectDetail(projectId: string): ProjectDetail {
       ensureDetail(projectId);
    }, [ensureDetail, projectId]);
 
-   return detail ?? mockGetProjectDetail(projectId);
+   return detail ?? emptyProjectDetail(projectId);
 }

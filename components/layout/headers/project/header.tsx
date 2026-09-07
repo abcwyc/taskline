@@ -10,7 +10,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
-import { getProjectById as mockGetProjectById } from '@/mock-data/projects';
 import { useProjectsStore } from '@/store/projects-store';
 import { useRightPanelStore } from '@/store/right-panel-store';
 import { BarChart3, ChevronRight, Link2, MoreHorizontal, PanelRight, Star } from 'lucide-react';
@@ -84,7 +83,7 @@ export default function Header({ projectId }: { projectId: string }) {
    const storeProject = useProjectsStore((s) => s.getProjectById(projectId));
    const deleteProject = useProjectsStore((s) => s.deleteProject);
    const [editOpen, setEditOpen] = useState(false);
-   const project = storeProject ?? mockGetProjectById(projectId);
+   const project = storeProject;
    if (!project) return null;
 
    return (

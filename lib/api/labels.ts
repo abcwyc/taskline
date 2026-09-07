@@ -1,4 +1,4 @@
-import { LabelInterface, labels as mockLabels } from '@/mock-data/labels';
+import type { LabelInterface } from '@/mock-data/labels';
 
 import { LabelCreateBody, LabelDTO, LabelUpdateBody } from './types';
 
@@ -25,8 +25,7 @@ export const labelPatchToBody = (patch: Partial<LabelInterface>): LabelUpdateBod
 });
 
 export async function fetchLabels(): Promise<LabelInterface[]> {
-   const dtos = await http<LabelDTO[]>(BASE).catch(() => null);
-   return dtos ? dtos.map(dtoToLabel) : mockLabels;
+   return (await http<LabelDTO[]>(BASE)).map(dtoToLabel);
 }
 
 export async function createLabel(input: LabelCreateBody): Promise<LabelInterface> {

@@ -16,7 +16,6 @@ import {
    projectUpdateHealthColor,
    projectUpdateHealthLabel,
 } from '@/mock-data/project-details';
-import { getProjectById as mockGetProjectById } from '@/mock-data/projects';
 import { useIssuesStore } from '@/store/issues-store';
 import { useProjectsStore } from '@/store/projects-store';
 import { useProjectDetail, useProjectDetailsStore } from '@/store/project-details-store';
@@ -66,8 +65,7 @@ function UpdateCard({ update }: { update: ProjectUpdate }) {
 
 /** Project "Activity" tab: update composer + monthly timeline. */
 export default function ProjectActivity({ projectId }: ProjectActivityProps) {
-   const project =
-      useProjectsStore((s) => s.getProjectById(projectId)) ?? mockGetProjectById(projectId);
+   const project = useProjectsStore((s) => s.getProjectById(projectId));
    const detail = useProjectDetail(projectId);
    const { issues: allIssues } = useIssuesStore();
    const issues = useMemo(

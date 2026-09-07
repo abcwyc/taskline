@@ -119,25 +119,29 @@ export async function addProjectUpdate(
 
    const authorId = actorId ?? (await fallbackAuthorId(orgId));
 
-   const row = await db.projectUpdate.create({
-      data: {
-         project: { connect: { id: projectId } },
-         author: { connect: { id: authorId } },
-         health: toPuHealth(body.health),
-         blocks: textToBlocks(body.text) as unknown as Prisma.InputJsonValue,
-      },
-   });
-
-   // reflect the latest update's health on the project itself
-   const projectHealth = { 'on-track': 'ON_TRACK', 'at-risk': 'AT_RISK', 'off-track': 'OFF_TRACK' }[
-      body.health
-   ];
-   if (projectHealth) {
-      await db.project.update({
-         where: { id: projectId },
-         data: { health: projectHealth as never, healthUpdatedAt: new Date() },
+   const row = await db.$transaction(async (tx) => {
+      const created = await tx.projectUpdate.create({
+         data: {
+            project: { connect: { id: projectId } },
+            author: { connect: { id: authorId } },
+            health: toPuHealth(body.health),
+            blocks: textToBlocks(body.text) as unknown as Prisma.InputJsonValue,
+         },
       });
-   }
+
+      const projectHealth = {
+         'on-track': 'ON_TRACK',
+         'at-risk': 'AT_RISK',
+         'off-track': 'OFF_TRACK',
+      }[body.health];
+      if (projectHealth) {
+         await tx.project.update({
+            where: { id: projectId },
+            data: { health: projectHealth as never, healthUpdatedAt: new Date() },
+         });
+      }
+      return created;
+   });
 
    return serializeUpdate(row);
 }

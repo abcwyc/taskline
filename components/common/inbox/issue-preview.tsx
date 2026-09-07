@@ -11,6 +11,7 @@ import { useIssueDetail } from '@/store/issue-details-store';
 import { InboxItem } from '@/mock-data/inbox';
 import { useIssuesStore } from '@/store/issues-store';
 import { useNotificationsStore } from '@/store/notifications-store';
+import { formatDistanceToNowStrict } from 'date-fns';
 import { ArrowUpRight, Check, Paperclip, Send } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -108,8 +109,12 @@ export default function IssuePreview({ notification, onMarkAsRead }: IssuePrevie
                      </div>
                      <div className="min-w-0 text-sm">
                         <span className="font-medium">{notification.user.name}</span>{' '}
-                        <span className="text-muted-foreground">· {notification.timestamp}</span>
-                        <p className="text-foreground/90 mt-0.5">{notification.content}</p>
+                        <span className="text-muted-foreground">
+                           ·{' '}
+                           {formatDistanceToNowStrict(new Date(notification.timestamp), {
+                              addSuffix: true,
+                           })}
+                        </span>
                      </div>
                   </div>
 

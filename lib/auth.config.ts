@@ -17,10 +17,16 @@ export const authConfig = {
       },
       jwt({ token, user }) {
          if (user?.id) token.uid = user.id;
+         if (user && 'sessionVersion' in user) {
+            token.sessionVersion = Number(user.sessionVersion);
+         }
          return token;
       },
       session({ session, token }) {
-         if (token.uid && session.user) session.user.id = String(token.uid);
+         if (token.uid && session.user) {
+            session.user.id = String(token.uid);
+            session.user.sessionVersion = Number(token.sessionVersion ?? 0);
+         }
          return session;
       },
    },

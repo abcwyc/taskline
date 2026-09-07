@@ -156,8 +156,9 @@ model User {
   name         String
   avatarUrl    String?
   jobTitle     String? // shown on the profile / member card
-  passwordHash String? // bcrypt; null for OAuth-only / not-yet-invited users
-  timezone     String         @default("UTC") // IANA — powers "Local time" on profiles
+  passwordHash  String? // bcrypt; null for OAuth-only / not-yet-invited users
+  sessionVersion Int      @default(0)
+  timezone      String    @default("UTC") // IANA — powers "Local time" on profiles
   presence     PresenceStatus @default(OFFLINE)
   preferences  Json? // personal settings blob (see lib/api/preferences.ts)
   createdAt    DateTime       @default(now())

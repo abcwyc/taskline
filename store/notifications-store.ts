@@ -1,4 +1,4 @@
-import { InboxItem, inboxItems as mockNotifications, NotificationType } from '@/mock-data/inbox';
+import type { InboxItem, NotificationType } from '@/mock-data/inbox';
 import { create } from 'zustand';
 
 import {
@@ -11,6 +11,8 @@ interface NotificationsState {
    notifications: InboxItem[];
    selectedNotification: InboxItem | undefined;
    hydrated: boolean;
+   isLoading: boolean;
+   error: string | null;
    hydrate: () => Promise<void>;
 
    setSelectedNotification: (notification: InboxItem | undefined) => void;
@@ -30,16 +32,20 @@ const setRead = (list: InboxItem[], id: string, read: boolean) =>
    list.map((n) => (n.id === id ? { ...n, read } : n));
 
 export const useNotificationsStore = create<NotificationsState>((set, get) => ({
-   notifications: mockNotifications,
+   notifications: [],
    selectedNotification: undefined,
    hydrated: false,
+   isLoading: false,
+   error: null,
 
    hydrate: async () => {
-      if (get().hydrated) return;
+      if (get().hydrated || get().isLoading) return;
+      set({ isLoading: true, error: null });
       try {
-         set({ notifications: await fetchNotifications(), hydrated: true });
+         set({ notifications: await fetchNotifications(), hydrated: true, isLoading: false });
       } catch (err) {
-         console.error(err);
+         set({ isLoading: false, error: (err as Error).message });
+         throw err;
       }
    },
 

@@ -1,4 +1,4 @@
-import { Review, reviews as mockReviews } from '@/mock-data/reviews';
+import type { Review } from '@/mock-data/reviews';
 import { create } from 'zustand';
 
 const BASE = '/api/reviews';
@@ -14,7 +14,7 @@ interface ReviewsState {
 }
 
 export const useReviewsStore = create<ReviewsState>((set, get) => ({
-   reviews: mockReviews,
+   reviews: [],
    hydrated: false,
 
    hydrate: async () => {

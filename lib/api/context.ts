@@ -34,6 +34,14 @@ export async function getRequestContext(): Promise<RequestContext> {
    });
    if (!membership) throw new UnauthorizedError('no workspace membership');
 
+   const user = await db.user.findUnique({
+      where: { id: userId },
+      select: { sessionVersion: true },
+   });
+   if (!user || user.sessionVersion !== session.user.sessionVersion) {
+      throw new UnauthorizedError('session expired');
+   }
+
    return { orgId: membership.orgId, userId, role: membership.role };
 }
 

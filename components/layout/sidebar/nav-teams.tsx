@@ -1,15 +1,12 @@
 'use client';
 
 import {
-   Archive,
-   Bell,
    Box,
    ChevronRight,
    Compass,
    CopyMinus,
    Home,
    Layers,
-   Link as LinkIcon,
    MoreHorizontal,
    Settings,
 } from 'lucide-react';
@@ -21,7 +18,6 @@ import {
    DropdownMenu,
    DropdownMenuContent,
    DropdownMenuItem,
-   DropdownMenuSeparator,
    DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
@@ -35,16 +31,13 @@ import {
    SidebarMenuSubButton,
    SidebarMenuSubItem,
 } from '@/components/ui/sidebar';
-import { StatusTriageIcon } from '@/mock-data/status';
 import { useTeamsStore } from '@/store/teams-store';
-import { useTriageStore } from '@/store/triage-store';
 import { RiDonutChartFill } from '@remixicon/react';
 
 export function NavTeams() {
    const { orgId = 'lndev-ui' } = useParams<{ orgId: string }>();
    const teams = useTeamsStore((s) => s.teams);
    const joinedTeams = teams.filter((t) => t.joined);
-   const { items: triageQueue } = useTriageStore();
    return (
       <SidebarGroup>
          <SidebarGroupLabel>Your teams</SidebarGroupLabel>
@@ -86,23 +79,6 @@ export function NavTeams() {
                                        <span>Team settings</span>
                                     </Link>
                                  </DropdownMenuItem>
-                                 <DropdownMenuItem>
-                                    <LinkIcon className="size-4" />
-                                    <span>Copy link</span>
-                                 </DropdownMenuItem>
-                                 <DropdownMenuItem>
-                                    <Archive className="size-4" />
-                                    <span>Open archive</span>
-                                 </DropdownMenuItem>
-                                 <DropdownMenuSeparator />
-                                 <DropdownMenuItem>
-                                    <Bell className="size-4" />
-                                    <span>Subscribe</span>
-                                 </DropdownMenuItem>
-                                 <DropdownMenuSeparator />
-                                 <DropdownMenuItem>
-                                    <span>Leave team...</span>
-                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                            </DropdownMenu>
                         </SidebarMenuButton>
@@ -117,22 +93,6 @@ export function NavTeams() {
                                  </Link>
                               </SidebarMenuSubButton>
                            </SidebarMenuSubItem>
-                           {triageQueue.some((entry) => entry.teamId === item.id) && (
-                              <SidebarMenuSubItem>
-                                 <SidebarMenuSubButton asChild>
-                                    <Link href={`/${orgId}/team/${item.id}/triage`}>
-                                       <StatusTriageIcon color="#f2790f" />
-                                       <span>Triage</span>
-                                       <span className="ml-auto text-xs text-muted-foreground">
-                                          {
-                                             triageQueue.filter((entry) => entry.teamId === item.id)
-                                                .length
-                                          }
-                                       </span>
-                                    </Link>
-                                 </SidebarMenuSubButton>
-                              </SidebarMenuSubItem>
-                           )}
                            <SidebarMenuSubItem>
                               <SidebarMenuSubButton asChild>
                                  <Link href={`/${orgId}/team/${item.id}/all`}>

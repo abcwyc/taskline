@@ -1,4 +1,4 @@
-import { LabelInterface, labels as mockLabels } from '@/mock-data/labels';
+import type { LabelInterface } from '@/mock-data/labels';
 import { create } from 'zustand';
 import { toast } from 'sonner';
 
@@ -14,6 +14,8 @@ import type { LabelCreateBody } from '@/lib/api/types';
 interface LabelsState {
    labels: LabelInterface[];
    hydrated: boolean;
+   isLoading: boolean;
+   error: string | null;
    hydrate: () => Promise<void>;
 
    getAllLabels: () => LabelInterface[];
@@ -25,15 +27,20 @@ interface LabelsState {
 }
 
 export const useLabelsStore = create<LabelsState>((set, get) => ({
-   labels: mockLabels,
+   labels: [],
    hydrated: false,
+   isLoading: false,
+   error: null,
 
    hydrate: async () => {
-      if (get().hydrated) return;
+      if (get().hydrated || get().isLoading) return;
+      set({ isLoading: true, error: null });
       try {
-         set({ labels: await apiFetchLabels(), hydrated: true });
+         set({ labels: await apiFetchLabels(), hydrated: true, isLoading: false });
       } catch (err) {
-         console.error(err);
+         set({ isLoading: false, error: (err as Error).message });
+         toast.error('Failed to load labels');
+         throw err;
       }
    },
 

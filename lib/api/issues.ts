@@ -1,24 +1,16 @@
-import { Issue } from '@/mock-data/issues';
-import { LabelInterface, labels as labelRegistry } from '@/mock-data/labels';
+import type { Issue } from '@/mock-data/issues';
+import type { LabelInterface } from '@/mock-data/labels';
 import { priorities } from '@/mock-data/priorities';
-import { projects as projectFallback } from '@/mock-data/projects';
 import { status as statusRegistry } from '@/mock-data/status';
-import { users as userRegistry } from '@/mock-data/users';
+import { useLabelsStore } from '@/store/labels-store';
+import { useMembersStore } from '@/store/members-store';
 import { useProjectsStore } from '@/store/projects-store';
 
 import { IssueCreateBody, IssueDTO, IssueUpdateBody, ListIssuesQuery } from './types';
 
 /**
- * Client-side issues API.
- *
- *  - `fetch*` hit the route handlers under `/api/issues`.
- *  - `dtoToIssue` re-hydrates the rich `Issue` the components expect by looking
- *    up ids in the mock-data registries. Those registries are now just static
- *    lookup tables (statuses, priorities + their icons). When the projects /
- *    members / labels slices land, swap the corresponding registry for that
- *    slice's fetched cache — the mapper shape does not change.
- *
- * This module is the template every other entity's `lib/api/<entity>.ts` copies.
+ * Client-side issues API. Status and priority registries supply icon metadata;
+ * workspace-owned projects, members and labels come only from hydrated stores.
  */
 
 const BASE = '/api/issues';
@@ -40,16 +32,10 @@ async function http<T>(url: string, init?: RequestInit): Promise<T> {
 const fallbackStatus = statusRegistry.find((s) => s.id === 'to-do') ?? statusRegistry[0];
 const fallbackPriority = priorities.find((p) => p.id === 'no-priority') ?? priorities[0];
 
-/** Prefer the live projects cache; fall back to the static mock list before hydrate. */
-function resolveProject(projectId: string | null) {
-   if (!projectId) return undefined;
-   return (
-      useProjectsStore.getState().projects.find((p) => p.id === projectId) ??
-      projectFallback.find((p) => p.id === projectId)
-   );
-}
-
 export function dtoToIssue(dto: IssueDTO): Issue {
+   const members = useMembersStore.getState().members;
+   const labels = useLabelsStore.getState().labels;
+   const projects = useProjectsStore.getState().projects;
    return {
       id: dto.id,
       identifier: dto.identifier,
@@ -57,12 +43,14 @@ export function dtoToIssue(dto: IssueDTO): Issue {
       description: dto.description,
       status: statusRegistry.find((s) => s.id === dto.statusId) ?? fallbackStatus,
       priority: priorities.find((p) => p.id === dto.priorityId) ?? fallbackPriority,
-      assignee: dto.assigneeId ? (userRegistry.find((u) => u.id === dto.assigneeId) ?? null) : null,
+      assignee: dto.assigneeId
+         ? (members.find((member) => member.id === dto.assigneeId) ?? null)
+         : null,
       creatorId: dto.createdById ?? undefined,
       labels: dto.labelIds
-         .map((id) => labelRegistry.find((l) => l.id === id))
-         .filter((l): l is LabelInterface => Boolean(l)),
-      project: resolveProject(dto.projectId),
+         .map((id) => labels.find((label) => label.id === id))
+         .filter((label): label is LabelInterface => Boolean(label)),
+      project: dto.projectId ? projects.find((project) => project.id === dto.projectId) : undefined,
       cycleId: dto.cycleId,
       subissues: [],
       rank: dto.rank,

@@ -2,7 +2,6 @@
 
 import { ContentBlocks } from '@/components/common/issues/details/content-blocks';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { getProjectById as mockGetProjectById } from '@/mock-data/projects';
 import { useIssuesStore } from '@/store/issues-store';
 import { useProjectsStore } from '@/store/projects-store';
 import { useProjectDetail } from '@/store/project-details-store';
@@ -24,8 +23,7 @@ const formatDay = (iso?: string) => (iso ? format(parseISO(iso), 'MMM do') : 'â€
 /** Project "Overview" tab: description column + properties side panel. */
 export default function ProjectOverview({ projectId }: ProjectOverviewProps) {
    const teams = useTeamsStore((s) => s.teams);
-   const project =
-      useProjectsStore((s) => s.getProjectById(projectId)) ?? mockGetProjectById(projectId);
+   const project = useProjectsStore((s) => s.getProjectById(projectId));
    const detail = useProjectDetail(projectId);
    const { issues: allIssues } = useIssuesStore();
    const issues = useMemo(

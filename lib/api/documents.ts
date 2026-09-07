@@ -1,9 +1,5 @@
-import {
-   DocumentFolder,
-   documentFolders as mockFolders,
-   TeamDocument,
-} from '@/mock-data/documents';
-import { users as mockUsers } from '@/mock-data/users';
+import type { DocumentFolder, TeamDocument } from '@/mock-data/documents';
+import type { User } from '@/mock-data/users';
 import { useMembersStore } from '@/store/members-store';
 
 import { DocumentCreateBody, DocumentDTO, DocumentFolderDTO, DocumentUpdateBody } from './types';
@@ -19,10 +15,18 @@ async function http<T>(url: string, init?: RequestInit): Promise<T> {
    return res.status === 204 ? (undefined as T) : ((await res.json()) as T);
 }
 
-const creator = (id: string) =>
-   useMembersStore.getState().members.find((u) => u.id === id) ??
-   mockUsers.find((u) => u.id === id) ??
-   mockUsers[0];
+const creator = (id: string): User =>
+   useMembersStore.getState().members.find((u) => u.id === id) ?? {
+      id,
+      name: 'Unknown member',
+      avatarUrl: '',
+      email: '',
+      status: 'offline',
+      role: 'Member',
+      joinedDate: '',
+      teamIds: [],
+      timezone: 'UTC',
+   };
 
 const dtoToDoc = (d: DocumentDTO): TeamDocument => ({
    id: d.id,
@@ -42,8 +46,7 @@ export const dtoToFolder = (f: DocumentFolderDTO): DocumentFolder => ({
 });
 
 export async function fetchDocumentFolders(): Promise<DocumentFolder[]> {
-   const dtos = await http<DocumentFolderDTO[]>(BASE).catch(() => null);
-   return dtos ? dtos.map(dtoToFolder) : mockFolders;
+   return (await http<DocumentFolderDTO[]>(BASE)).map(dtoToFolder);
 }
 
 export async function createDocument(input: DocumentCreateBody): Promise<TeamDocument> {

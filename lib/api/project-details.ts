@@ -1,23 +1,32 @@
 import type { ContentBlock } from '@/mock-data/issue-details';
-import {
-   getProjectDetail as mockGetProjectDetail,
+import type {
    ProjectDetail,
    ProjectUpdate,
    ProjectUpdateHealth,
 } from '@/mock-data/project-details';
-import { users as userRegistry } from '@/mock-data/users';
+import type { User } from '@/mock-data/users';
+import { useMembersStore } from '@/store/members-store';
 
 import { PostProjectUpdateBody, ProjectDetailDTO, ProjectUpdateDTO } from './types';
 
 /**
- * Client-side project-details API. `dtoToProjectDetail` re-hydrates the rich
- * `ProjectDetail` the components expect (User objects on updates/activity).
- * Falls back to the deterministic mock detail until the real fetch resolves or
- * when the project has no detail row yet.
+ * Client-side project-details API. DTO adapters rehydrate the User objects
+ * expected by the existing components without substituting demo content.
  */
 
 const BASE = '/api/projects';
-const user = (id: string) => userRegistry.find((u) => u.id === id) ?? userRegistry[0];
+const user = (id: string): User =>
+   useMembersStore.getState().members.find((candidate) => candidate.id === id) ?? {
+      id,
+      name: 'Unknown member',
+      avatarUrl: '',
+      email: '',
+      status: 'offline',
+      role: 'Member',
+      joinedDate: '',
+      teamIds: [],
+      timezone: 'UTC',
+   };
 
 async function http<T>(url: string, init?: RequestInit): Promise<T> {
    const res = await fetch(url, { headers: { 'content-type': 'application/json' }, ...init });
@@ -41,14 +50,11 @@ function dtoToUpdate(dto: ProjectUpdateDTO): ProjectUpdate {
 }
 
 export function dtoToProjectDetail(dto: ProjectDetailDTO): ProjectDetail {
-   const mock = mockGetProjectDetail(dto.projectId);
-   const hasContent = dto.summary !== '' || dto.description.length > 0;
-
    return {
       projectId: dto.projectId,
-      summary: hasContent ? dto.summary : mock.summary,
-      description: hasContent ? (dto.description as ContentBlock[]) : mock.description,
-      resources: dto.resources.length > 0 ? dto.resources : mock.resources,
+      summary: dto.summary,
+      description: dto.description as ContentBlock[],
+      resources: dto.resources,
       milestones: dto.milestones.map((m) => ({
          id: m.id,
          name: m.name,
@@ -68,12 +74,8 @@ export function dtoToProjectDetail(dto: ProjectDetailDTO): ProjectDetail {
 /* -------------------------------- calls --------------------------------- */
 
 export async function fetchProjectDetail(projectId: string): Promise<ProjectDetail> {
-   try {
-      const dto = await http<ProjectDetailDTO>(`${BASE}/${encodeURIComponent(projectId)}/detail`);
-      return dtoToProjectDetail(dto);
-   } catch {
-      return mockGetProjectDetail(projectId);
-   }
+   const dto = await http<ProjectDetailDTO>(`${BASE}/${encodeURIComponent(projectId)}/detail`);
+   return dtoToProjectDetail(dto);
 }
 
 export async function postProjectUpdate(

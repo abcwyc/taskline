@@ -1,4 +1,4 @@
-import { Cycle, cycles as mockCycles } from '@/mock-data/cycles';
+import type { Cycle } from '@/mock-data/cycles';
 import { create } from 'zustand';
 import { toast } from 'sonner';
 
@@ -14,6 +14,8 @@ import type { CycleCreateBody } from '@/lib/api/types';
 interface CyclesState {
    cycles: Cycle[];
    hydrated: boolean;
+   isLoading: boolean;
+   error: string | null;
    hydrate: () => Promise<void>;
 
    getAllCycles: () => Cycle[];
@@ -33,15 +35,20 @@ const pick = (list: Cycle[], status: Cycle['status'], teamId?: string) => {
 };
 
 export const useCyclesStore = create<CyclesState>((set, get) => ({
-   cycles: mockCycles,
+   cycles: [],
    hydrated: false,
+   isLoading: false,
+   error: null,
 
    hydrate: async () => {
-      if (get().hydrated) return;
+      if (get().hydrated || get().isLoading) return;
+      set({ isLoading: true, error: null });
       try {
-         set({ cycles: await apiFetchCycles(), hydrated: true });
+         set({ cycles: await apiFetchCycles(), hydrated: true, isLoading: false });
       } catch (err) {
-         console.error(err);
+         set({ isLoading: false, error: (err as Error).message });
+         toast.error('Failed to load cycles');
+         throw err;
       }
    },
 

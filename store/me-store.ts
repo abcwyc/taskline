@@ -14,6 +14,7 @@ interface MeState {
    me: MeDTO | null;
    hydrated: boolean;
    loading: boolean;
+   error: string | null;
    preferences: Preferences;
    hydrate: () => Promise<void>;
    saveProfile: (patch: Partial<Pick<MeDTO, 'name' | 'jobTitle' | 'timezone'>>) => Promise<void>;
@@ -24,16 +25,18 @@ export const useMeStore = create<MeState>((set, get) => ({
    me: null,
    hydrated: false,
    loading: false,
+   error: null,
    preferences: { ...DEFAULT_PREFERENCES },
 
    hydrate: async () => {
       if (get().hydrated || get().loading) return;
-      set({ loading: true });
+      set({ loading: true, error: null });
       try {
          const me = await fetchMe();
          set({ me, preferences: me.preferences, hydrated: true, loading: false });
-      } catch {
-         set({ hydrated: true, loading: false }); // fall back to defaults; not fatal
+      } catch (err) {
+         set({ hydrated: false, loading: false, error: (err as Error).message });
+         throw err;
       }
    },
 

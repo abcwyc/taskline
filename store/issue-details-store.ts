@@ -2,13 +2,8 @@ import { useEffect } from 'react';
 import { create } from 'zustand';
 import { toast } from 'sonner';
 
-import { Issue } from '@/mock-data/issues';
-import {
-   ActivityItem,
-   getIssueDetail as mockGetIssueDetail,
-   IssueDetail,
-} from '@/mock-data/issue-details';
-
+import type { Issue } from '@/mock-data/issues';
+import type { ActivityItem, IssueDetail } from '@/mock-data/issue-details';
 import { fetchIssueDetail, postIssueComment, setIssueSubscription } from '@/lib/api/issue-details';
 import { useMeStore } from '@/store/me-store';
 import { useMembersStore } from '@/store/members-store';
@@ -37,7 +32,7 @@ export const useIssueDetailsStore = create<IssueDetailsState>((set, get) => ({
       const key = issue.identifier;
       if (get().byIdentifier[key] || get().loading[key]) return;
       set((s) => ({ loading: { ...s.loading, [key]: true } }));
-      fetchIssueDetail(key, issue)
+      fetchIssueDetail(key)
          .then((detail) =>
             set((s) => ({
                byIdentifier: { ...s.byIdentifier, [key]: detail },
@@ -137,7 +132,7 @@ export const useIssueDetailsStore = create<IssueDetailsState>((set, get) => ({
    },
 }));
 
-/** Ensures the fetch and returns the detail (mock fallback until it lands). */
+/** Ensures the fetch and returns only persisted detail data. */
 export function useIssueDetail(issue: Issue | undefined): IssueDetail | null {
    const ensureDetail = useIssueDetailsStore((s) => s.ensureDetail);
    const detail = useIssueDetailsStore((s) =>
@@ -149,5 +144,5 @@ export function useIssueDetail(issue: Issue | undefined): IssueDetail | null {
    }, [ensureDetail, issue]);
 
    if (!issue) return null;
-   return detail ?? mockGetIssueDetail(issue);
+   return detail ?? null;
 }

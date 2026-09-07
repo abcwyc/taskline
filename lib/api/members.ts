@@ -1,4 +1,4 @@
-import { User, users as userFallback } from '@/mock-data/users';
+import type { User } from '@/mock-data/users';
 
 import { MemberDTO, MemberUpdateBody } from './types';
 
@@ -41,8 +41,7 @@ export function memberPatchToBody(patch: Partial<User>): MemberUpdateBody {
 }
 
 export async function fetchMembers(): Promise<User[]> {
-   const dtos = await http<MemberDTO[]>(BASE).catch(() => null);
-   return dtos ? dtos.map(dtoToMember) : userFallback;
+   return (await http<MemberDTO[]>(BASE)).map(dtoToMember);
 }
 
 export async function fetchMember(id: string): Promise<User> {
@@ -56,4 +55,8 @@ export async function updateMember(id: string, patch: MemberUpdateBody): Promise
          body: JSON.stringify(patch),
       })
    );
+}
+
+export async function deleteMember(id: string): Promise<void> {
+   await http<void>(`${BASE}/${encodeURIComponent(id)}`, { method: 'DELETE' });
 }

@@ -4,15 +4,15 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { createColumnConfigHelper } from '@/components/data-table-filter/core/filters';
 import type { ColumnOption, FiltersState } from '@/components/data-table-filter/core/types';
 import { multiOptionFilterFn, optionFilterFn } from '@/components/data-table-filter/lib/filter-fns';
-import { Cycle, cycles as mockCycles, cycleStatusLabel } from '@/mock-data/cycles';
+import { Cycle, cycleStatusLabel } from '@/mock-data/cycles';
 import { useCyclesStore } from '@/store/cycles-store';
 import { Issue } from '@/mock-data/issues';
-import { LabelInterface, labels as mockLabels } from '@/mock-data/labels';
+import { LabelInterface } from '@/mock-data/labels';
 import { useLabelsStore } from '@/store/labels-store';
 import { priorities } from '@/mock-data/priorities';
 import { status, StatusCategory } from '@/mock-data/status';
-import { Project, projects as mockProjects } from '@/mock-data/projects';
-import { User, users as mockUsers } from '@/mock-data/users';
+import { Project } from '@/mock-data/projects';
+import { User } from '@/mock-data/users';
 import { useMembersStore } from '@/store/members-store';
 import { useProjectsStore } from '@/store/projects-store';
 import { useMemo } from 'react';
@@ -183,16 +183,10 @@ function buildIssueFilterColumns(
 }
 
 /**
- * Static column set — used by `applyIssueFilters` (accessors + operators only,
- * no options needed) and as the SSR/pre-hydrate fallback. The filter UI uses
- * `useIssueFilterColumns()` instead so the Project list stays live.
+ * Static accessors/operators used by `applyIssueFilters`. Options are supplied
+ * by `useIssueFilterColumns` from the persisted workspace stores.
  */
-export const issueFilterColumns = buildIssueFilterColumns(
-   buildProjectOptions(mockProjects),
-   buildAssigneeOptions(mockUsers),
-   buildLabelOptions(mockLabels),
-   buildCycleOptions(mockCycles)
-);
+export const issueFilterColumns = buildIssueFilterColumns([], [], [], []);
 
 /** Filter-UI columns with the live (DB-backed) project / member / label / cycle lists. */
 export function useIssueFilterColumns() {
@@ -203,10 +197,10 @@ export function useIssueFilterColumns() {
    return useMemo(
       () =>
          buildIssueFilterColumns(
-            buildProjectOptions(projectList.length ? projectList : mockProjects),
-            buildAssigneeOptions(memberList.length ? memberList : mockUsers),
-            buildLabelOptions(labelList.length ? labelList : mockLabels),
-            buildCycleOptions(cycleList.length ? cycleList : mockCycles)
+            buildProjectOptions(projectList),
+            buildAssigneeOptions(memberList),
+            buildLabelOptions(labelList),
+            buildCycleOptions(cycleList)
          ),
       [projectList, memberList, labelList, cycleList]
    );

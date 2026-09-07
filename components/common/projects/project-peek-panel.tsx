@@ -1,7 +1,6 @@
 'use client';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { getProjectById as mockGetProjectById } from '@/mock-data/projects';
 import { useTeamsStore } from '@/store/teams-store';
 import { useIssuesStore } from '@/store/issues-store';
 import { useProjectsStore } from '@/store/projects-store';
@@ -59,8 +58,7 @@ export function ProjectPeekPanel({ projectId, onClose }: ProjectPeekPanelProps) 
    const { orgId } = useParams<{ orgId: string }>();
    const { issues: allIssues } = useIssuesStore();
 
-   const project =
-      useProjectsStore((s) => s.getProjectById(projectId)) ?? mockGetProjectById(projectId);
+   const project = useProjectsStore((s) => s.getProjectById(projectId));
    const detail = useProjectDetail(projectId);
 
    const issues = useMemo(

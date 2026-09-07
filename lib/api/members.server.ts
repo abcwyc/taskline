@@ -105,3 +105,25 @@ export async function updateMember(
 
    return getMember(orgId, id);
 }
+
+export async function removeMember(orgId: string, userId: string): Promise<boolean> {
+   return db.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${'members:' + orgId}, 0))`;
+      const membership = await tx.membership.findUnique({
+         where: { userId_orgId: { userId, orgId } },
+         select: { id: true, role: true },
+      });
+      if (!membership) return false;
+
+      if (membership.role === 'ADMIN') {
+         const admins = await tx.membership.count({ where: { orgId, role: 'ADMIN' } });
+         if (admins <= 1) {
+            throw new PublicError('the workspace must keep at least one admin', 409);
+         }
+      }
+
+      await tx.teamMembership.deleteMany({ where: { userId, team: { orgId } } });
+      await tx.membership.delete({ where: { id: membership.id } });
+      return true;
+   });
+}

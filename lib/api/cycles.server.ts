@@ -121,25 +121,32 @@ async function resolveTeam(orgId: string, teamKey: string | undefined) {
 }
 
 export async function createCycle(orgId: string, body: CycleCreateBody): Promise<CycleDTO> {
-   const team = await resolveTeam(orgId, body.teamId);
-   const last = await db.cycle.findFirst({
-      where: { teamId: team.id },
-      orderBy: { number: 'desc' },
-      select: { number: true },
-   });
-   const number = (last?.number ?? 0) + 1;
+   const row = await db.$transaction(async (tx) => {
+      const team = body.teamId
+         ? await tx.team.findFirst({ where: { orgId, key: body.teamId } })
+         : await tx.team.findFirst({ where: { orgId }, orderBy: { key: 'asc' } });
+      if (!team) throw new PublicError('team not found');
 
-   const row = await db.cycle.create({
-      data: {
-         team: { connect: { id: team.id } },
-         number,
-         name: body.name?.trim() || `Cycle ${number}`,
-         status: (CYCLE_STATUS_KEY_TO_ENUM[body.status ?? 'planned'] ?? 'PLANNED') as never,
-         startDate: body.startDate ? new Date(body.startDate) : new Date(),
-         endDate: body.endDate ? new Date(body.endDate) : new Date(Date.now() + 12096e5),
-         capacity: body.capacity ?? 0,
-      },
-      include: { burnup: true, team: { select: { key: true } } },
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${'cycles:' + team.id}, 0))`;
+      const last = await tx.cycle.findFirst({
+         where: { teamId: team.id },
+         orderBy: { number: 'desc' },
+         select: { number: true },
+      });
+      const number = (last?.number ?? 0) + 1;
+
+      return tx.cycle.create({
+         data: {
+            team: { connect: { id: team.id } },
+            number,
+            name: body.name?.trim() || `Cycle ${number}`,
+            status: (CYCLE_STATUS_KEY_TO_ENUM[body.status ?? 'planned'] ?? 'PLANNED') as never,
+            startDate: body.startDate ? new Date(body.startDate) : new Date(),
+            endDate: body.endDate ? new Date(body.endDate) : new Date(Date.now() + 12096e5),
+            capacity: body.capacity ?? 0,
+         },
+         include: { burnup: true, team: { select: { key: true } } },
+      });
    });
    return serialize(row, row.team.key, undefined);
 }

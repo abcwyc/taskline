@@ -1,17 +1,17 @@
-import { LabelInterface, labels as labelRegistry } from '@/mock-data/labels';
+import type { LabelInterface } from '@/mock-data/labels';
 import { priorities } from '@/mock-data/priorities';
-import { health as healthRegistry, Project } from '@/mock-data/projects';
+import { health as healthRegistry, type Project } from '@/mock-data/projects';
 import { status as statusRegistry } from '@/mock-data/status';
-import { users as userRegistry } from '@/mock-data/users';
+import type { User } from '@/mock-data/users';
+import { useLabelsStore } from '@/store/labels-store';
+import { useMembersStore } from '@/store/members-store';
 
 import { resolveProjectIcon } from './project-icons';
 import { ListProjectsQuery, ProjectCreateBody, ProjectDTO, ProjectUpdateBody } from './types';
 
 /**
- * Client-side projects API — mirrors `lib/api/issues.ts`.
- *
- * `dtoToProject` re-hydrates the rich `Project` (icon component, nested status /
- * lead / priority / health / labels objects) from the mock-data registries.
+ * Client-side projects API. Static registries provide icon metadata; all
+ * workspace-owned members and labels come from hydrated stores.
  */
 
 const BASE = '/api/projects';
@@ -30,9 +30,23 @@ async function http<T>(url: string, init?: RequestInit): Promise<T> {
 const fallbackStatus = statusRegistry.find((s) => s.id === 'to-do') ?? statusRegistry[0];
 const fallbackPriority = priorities.find((p) => p.id === 'no-priority') ?? priorities[0];
 const fallbackHealth = healthRegistry.find((h) => h.id === 'no-update') ?? healthRegistry[0];
-const fallbackLead = userRegistry[0];
 
 export function dtoToProject(dto: ProjectDTO): Project {
+   const lead =
+      (dto.leadId &&
+         useMembersStore.getState().members.find((member) => member.id === dto.leadId)) ||
+      ({
+         id: dto.leadId ?? 'unassigned',
+         name: dto.leadId ? 'Unknown member' : 'No lead',
+         avatarUrl: '',
+         email: '',
+         status: 'offline',
+         role: 'Member',
+         joinedDate: '',
+         teamIds: [],
+         timezone: 'UTC',
+      } satisfies User);
+   const labels = useLabelsStore.getState().labels;
    return {
       id: dto.id,
       name: dto.name,
@@ -40,13 +54,13 @@ export function dtoToProject(dto: ProjectDTO): Project {
       icon: resolveProjectIcon(dto.iconKey),
       percentComplete: dto.percentComplete,
       startDate: dto.startDate,
-      lead: (dto.leadId && userRegistry.find((u) => u.id === dto.leadId)) || fallbackLead,
+      lead,
       priority: priorities.find((p) => p.id === dto.priorityId) ?? fallbackPriority,
       health: healthRegistry.find((h) => h.id === dto.healthId) ?? fallbackHealth,
       teamId: dto.teamId,
       labels: dto.labelIds
-         .map((id) => labelRegistry.find((l) => l.id === id))
-         .filter((l): l is LabelInterface => Boolean(l)),
+         .map((id) => labels.find((label) => label.id === id))
+         .filter((label): label is LabelInterface => Boolean(label)),
       ...(dto.targetDate ? { targetDate: dto.targetDate } : {}),
       ...(dto.initiativeId ? { initiative: dto.initiativeId } : {}),
       ...(dto.healthUpdatedAgoDays != null

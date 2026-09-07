@@ -1,102 +1,93 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { KeyRound, Laptop, Smartphone } from 'lucide-react';
-import { SettingsCard, SettingsRow, SettingsSection, SettingsShell } from './shared';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { toast } from 'sonner';
+import { useState } from 'react';
+import { SettingsSection, SettingsShell } from './shared';
 
-/** Personal "Security & access" settings (sessions, passkeys, API keys). */
 export default function AccountSecurity() {
+   const [currentPassword, setCurrentPassword] = useState('');
+   const [newPassword, setNewPassword] = useState('');
+   const [confirmPassword, setConfirmPassword] = useState('');
+   const [busy, setBusy] = useState(false);
+
+   async function submit(event: React.FormEvent<HTMLFormElement>) {
+      event.preventDefault();
+      if (newPassword !== confirmPassword) {
+         toast.error('New passwords do not match');
+         return;
+      }
+      setBusy(true);
+      try {
+         const response = await fetch('/api/me/password', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ currentPassword, newPassword }),
+         });
+         if (!response.ok) {
+            const payload = (await response.json().catch(() => ({}))) as { error?: string };
+            throw new Error(payload.error ?? 'Could not change password');
+         }
+         toast.success('Password changed. Sign in again on this device.');
+         window.location.assign('/sign-in?error=PasswordChanged');
+      } catch (error) {
+         toast.error(error instanceof Error ? error.message : 'Could not change password');
+      } finally {
+         setBusy(false);
+      }
+   }
+
    return (
-      <SettingsShell title="Security & access">
-         <SettingsSection title="Sessions" description="Devices logged into your account">
-            <SettingsCard>
-               <SettingsRow
-                  icon={<Laptop className="size-4" />}
-                  title="Chrome on macOS"
-                  description={
-                     <span className="inline-flex items-center gap-1.5">
-                        <span className="size-1.5 rounded-full bg-[#00cc66]" />
-                        <span className="text-[#00a05a]">Current session</span> · Paris, FR · (EN,
-                        FR)
-                     </span>
-                  }
-               />
-            </SettingsCard>
-            <SettingsCard>
-               <SettingsRow
-                  title="1 other session"
-                  trailing={
-                     <Button size="xs" variant="ghost">
-                        Revoke all
-                     </Button>
-                  }
-               />
-               <SettingsRow
-                  icon={<Smartphone className="size-4" />}
-                  title="LNDev UI iOS"
-                  description="Paris, FR · Last seen about 3 hours ago"
-               />
-            </SettingsCard>
-         </SettingsSection>
-
+      <SettingsShell title="Security & access" description="Manage the password for your account.">
          <SettingsSection
-            title="Passkeys"
-            description="Passkeys are a secure way to sign in to your account"
+            title="Password"
+            description="Changing your password signs out all sessions."
          >
-            <SettingsCard>
-               <SettingsRow
-                  title="No passkeys registered"
-                  trailing={
-                     <Button size="xs" variant="ghost">
-                        New passkey
-                     </Button>
-                  }
-               />
-            </SettingsCard>
-         </SettingsSection>
-
-         <SettingsSection
-            title="Personal API keys"
-            description="Use the GraphQL API to build your own integrations"
-         >
-            <SettingsCard>
-               <SettingsRow
-                  title="1 API key"
-                  trailing={
-                     <Button size="xs" variant="ghost">
-                        New API key
-                     </Button>
-                  }
-               />
-               <SettingsRow
-                  icon={<KeyRound className="size-4" />}
-                  title={
-                     <>
-                        LNDEV_PERSONAL_API_KEY
-                        <span className="text-xs text-muted-foreground font-normal">
-                           · full access · public & private teams
-                        </span>
-                     </>
-                  }
-                  description="Created 2 months ago · last used on Jul 16, 2026"
-               />
-            </SettingsCard>
-         </SettingsSection>
-
-         <SettingsSection
-            title="Commit signing key"
-            description="Coding sessions use this key to sign your commits"
-         >
-            <SettingsCard>
-               <SettingsRow
-                  title="No signing key added"
-                  trailing={
-                     <Button size="xs" variant="ghost">
-                        Add key
-                     </Button>
-                  }
-               />
-            </SettingsCard>
+            <form
+               onSubmit={submit}
+               className="max-w-md space-y-4 rounded-lg border bg-container p-4"
+            >
+               <div className="space-y-1.5">
+                  <Label htmlFor="current-password">Current password</Label>
+                  <Input
+                     id="current-password"
+                     type="password"
+                     autoComplete="current-password"
+                     value={currentPassword}
+                     onChange={(event) => setCurrentPassword(event.target.value)}
+                     required
+                  />
+               </div>
+               <div className="space-y-1.5">
+                  <Label htmlFor="new-password">New password</Label>
+                  <Input
+                     id="new-password"
+                     type="password"
+                     autoComplete="new-password"
+                     minLength={8}
+                     value={newPassword}
+                     onChange={(event) => setNewPassword(event.target.value)}
+                     required
+                  />
+               </div>
+               <div className="space-y-1.5">
+                  <Label htmlFor="confirm-password">Confirm new password</Label>
+                  <Input
+                     id="confirm-password"
+                     type="password"
+                     autoComplete="new-password"
+                     minLength={8}
+                     value={confirmPassword}
+                     onChange={(event) => setConfirmPassword(event.target.value)}
+                     required
+                  />
+               </div>
+               <Button type="submit" disabled={busy}>
+                  {busy ? 'Changing…' : 'Change password'}
+               </Button>
+            </form>
          </SettingsSection>
       </SettingsShell>
    );

@@ -1,7 +1,6 @@
-import { Initiative, initiatives as mockInitiatives } from '@/mock-data/initiatives';
+import type { Initiative } from '@/mock-data/initiatives';
 import { health as healthRegistry } from '@/mock-data/projects';
 import { priorities } from '@/mock-data/priorities';
-import { users as mockUsers } from '@/mock-data/users';
 import { useMembersStore } from '@/store/members-store';
 
 import { InitiativeCreateBody, InitiativeDTO, InitiativeUpdateBody } from './types';
@@ -22,9 +21,7 @@ const fallbackHealth = healthRegistry.find((h) => h.id === 'no-update') ?? healt
 
 export function dtoToInitiative(dto: InitiativeDTO): Initiative {
    const owner =
-      (dto.ownerId && useMembersStore.getState().members.find((u) => u.id === dto.ownerId)) ||
-      (dto.ownerId && mockUsers.find((u) => u.id === dto.ownerId)) ||
-      undefined;
+      dto.ownerId && useMembersStore.getState().members.find((u) => u.id === dto.ownerId);
    return {
       id: dto.id,
       name: dto.name,
@@ -57,8 +54,7 @@ export function initiativePatchToBody(patch: Partial<Initiative>): InitiativeUpd
 }
 
 export async function fetchInitiatives(): Promise<Initiative[]> {
-   const dtos = await http<InitiativeDTO[]>(BASE).catch(() => null);
-   return dtos ? dtos.map(dtoToInitiative) : mockInitiatives;
+   return (await http<InitiativeDTO[]>(BASE)).map(dtoToInitiative);
 }
 
 export async function createInitiative(input: InitiativeCreateBody): Promise<Initiative> {

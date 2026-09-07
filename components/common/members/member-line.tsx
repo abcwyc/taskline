@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils';
 import { User } from '@/mock-data/users';
 import { useMembersStore } from '@/store/members-store';
 import { format, parseISO } from 'date-fns';
-import { SquareUser } from 'lucide-react';
+import { SquareUser, UserMinus } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 
@@ -44,9 +44,11 @@ const hashString = (value: string): number => {
 
 export default function MemberLine({ user }: MemberLineProps) {
    const { orgId } = useParams<{ orgId: string }>();
+   const removeMember = useMembersStore((s) => s.removeMember);
    const updateMember = useMembersStore((s) => s.updateMember);
    const isAdmin = useIsAdmin();
    const isApplication = user.role === 'Application';
+   const canRemove = isAdmin && !isApplication;
    // Like Linear, some accounts show their e-mail as the primary line.
    const showEmailAsName = !isApplication && hashString(user.id) % 4 === 0;
 
@@ -103,7 +105,6 @@ export default function MemberLine({ user }: MemberLineProps) {
             {joinedLabel(user.joinedDate)}
          </div>
 
-         {/* Teams */}
          <div className="hidden md:flex w-[170px] shrink-0 items-center gap-1.5 text-xs text-muted-foreground min-w-0">
             {user.teamIds.length > 0 && (
                <>
@@ -115,6 +116,22 @@ export default function MemberLine({ user }: MemberLineProps) {
                </>
             )}
          </div>
+
+         {canRemove && (
+            <button
+               type="button"
+               aria-label={`Remove ${user.name}`}
+               className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+               onClick={(event) => {
+                  event.preventDefault();
+                  if (window.confirm(`Remove ${user.name} from this workspace?`)) {
+                     removeMember(user.id);
+                  }
+               }}
+            >
+               <UserMinus className="size-3.5" />
+            </button>
+         )}
 
          {/* Last seen (Linear only shows currently-online members) */}
          <div className="hidden sm:flex w-[90px] shrink-0 items-center gap-1.5 text-xs text-muted-foreground">

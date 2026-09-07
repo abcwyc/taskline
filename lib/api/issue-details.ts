@@ -1,23 +1,25 @@
 import { formatDistanceToNowStrict } from 'date-fns';
 
-import { Issue } from '@/mock-data/issues';
-import {
-   ActivityItem,
-   ContentBlock,
-   getIssueDetail as mockGetIssueDetail,
-   IssueDetail,
-} from '@/mock-data/issue-details';
-import { users as mockUsers } from '@/mock-data/users';
+import type { ActivityItem, ContentBlock, IssueDetail } from '@/mock-data/issue-details';
+import type { User } from '@/mock-data/users';
 import { useMembersStore } from '@/store/members-store';
 
 import { IssueDetailDTO, IssueCommentDTO, PostCommentBody } from './types';
 
 const BASE = '/api/issues';
 const ago = (iso: string) => formatDistanceToNowStrict(new Date(iso), { addSuffix: false });
-const user = (id: string) =>
-   useMembersStore.getState().members.find((u) => u.id === id) ??
-   mockUsers.find((u) => u.id === id) ??
-   mockUsers[0];
+const user = (id: string): User =>
+   useMembersStore.getState().members.find((u) => u.id === id) ?? {
+      id,
+      name: 'Unknown member',
+      avatarUrl: '',
+      email: '',
+      status: 'offline',
+      role: 'Member',
+      joinedDate: '',
+      teamIds: [],
+      timezone: 'UTC',
+   };
 
 async function http<T>(url: string, init?: RequestInit): Promise<T> {
    const res = await fetch(url, { headers: { 'content-type': 'application/json' }, ...init });
@@ -41,10 +43,7 @@ function commentToItem(c: IssueCommentDTO): Extract<ActivityItem, { kind: 'comme
    };
 }
 
-export function dtoToIssueDetail(dto: IssueDetailDTO, fallbackIssue?: Issue): IssueDetail {
-   const mock = fallbackIssue ? mockGetIssueDetail(fallbackIssue) : null;
-   const hasDescription = dto.description.length > 0;
-
+export function dtoToIssueDetail(dto: IssueDetailDTO): IssueDetail {
    // interleave events + comments in chronological order
    const dated: { at: number; item: ActivityItem }[] = [
       ...dto.activity.map((a) => ({
@@ -68,9 +67,8 @@ export function dtoToIssueDetail(dto: IssueDetailDTO, fallbackIssue?: Issue): Is
 
    return {
       identifier: dto.identifier,
-      description: hasDescription ? (dto.description as ContentBlock[]) : (mock?.description ?? []),
-      activity: activity.length ? activity : (mock?.activity ?? []),
-      subIssueIds: dto.subIssueIds,
+      description: dto.description as ContentBlock[],
+      activity,
       relatedIds: dto.relatedIds,
       blockedByIds: dto.blockedByIds,
       prLinks: dto.prLinks.map((p) => ({
@@ -96,20 +94,9 @@ export async function setIssueSubscription(
 
 /* -------------------------------- calls --------------------------------- */
 
-export async function fetchIssueDetail(
-   idOrIdentifier: string,
-   fallbackIssue?: Issue
-): Promise<IssueDetail> {
-   try {
-      const dto = await http<IssueDetailDTO>(
-         `${BASE}/${encodeURIComponent(idOrIdentifier)}/detail`
-      );
-      return dtoToIssueDetail(dto, fallbackIssue);
-   } catch {
-      return fallbackIssue
-         ? mockGetIssueDetail(fallbackIssue)
-         : ({ identifier: idOrIdentifier, description: [], activity: [] } as IssueDetail);
-   }
+export async function fetchIssueDetail(idOrIdentifier: string): Promise<IssueDetail> {
+   const dto = await http<IssueDetailDTO>(`${BASE}/${encodeURIComponent(idOrIdentifier)}/detail`);
+   return dtoToIssueDetail(dto);
 }
 
 export async function postIssueComment(

@@ -1,5 +1,5 @@
-import { View, views as mockViews, ViewFilter } from '@/mock-data/views';
-import { users as mockUsers } from '@/mock-data/users';
+import type { View, ViewFilter } from '@/mock-data/views';
+import type { User } from '@/mock-data/users';
 import { useMembersStore } from '@/store/members-store';
 
 import { ViewCreateBody, ViewDTO, ViewUpdateBody } from './types';
@@ -18,8 +18,17 @@ async function http<T>(url: string, init?: RequestInit): Promise<T> {
 export function dtoToView(dto: ViewDTO): View {
    const owner =
       useMembersStore.getState().members.find((u) => u.id === dto.ownerId) ??
-      mockUsers.find((u) => u.id === dto.ownerId) ??
-      mockUsers[0];
+      ({
+         id: dto.ownerId,
+         name: 'Unknown member',
+         avatarUrl: '',
+         email: '',
+         status: 'offline',
+         role: 'Member',
+         joinedDate: '',
+         teamIds: [],
+         timezone: 'UTC',
+      } satisfies User);
    return {
       id: dto.id,
       name: dto.name,
@@ -46,8 +55,7 @@ export const viewPatchToBody = (patch: Partial<View>): ViewUpdateBody => {
 };
 
 export async function fetchViews(): Promise<View[]> {
-   const dtos = await http<ViewDTO[]>(BASE).catch(() => null);
-   return dtos ? dtos.map(dtoToView) : mockViews;
+   return (await http<ViewDTO[]>(BASE)).map(dtoToView);
 }
 
 export async function createView(input: ViewCreateBody): Promise<View> {

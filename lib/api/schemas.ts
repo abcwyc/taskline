@@ -2,6 +2,10 @@ import { z } from 'zod';
 
 import { zDate, zId, zOptText, zText } from './http';
 
+const priorityId = z.enum(['no-priority', 'urgent', 'high', 'medium', 'low']);
+const cycleStatus = z.enum(['planned', 'upcoming', 'current', 'completed']);
+const healthId = z.enum(['no-update', 'off-track', 'on-track', 'at-risk']);
+
 /**
  * Request-body schemas for the write routes. Keep these permissive about which
  * fields are present (most updates are partial) but strict about types, lengths
@@ -16,7 +20,7 @@ export const issueCreate = z
       title: zText(300),
       description: RICH.optional(),
       statusId: zId.optional(),
-      priorityId: zId.optional(),
+      priorityId: priorityId.optional(),
       assigneeId: zId.nullable().optional(),
       labelIds: idList.optional(),
       projectId: zId.nullable().optional(),
@@ -50,8 +54,8 @@ export const projectCreate = z
       icon: zOptText(64),
       teamId: zId.optional(),
       statusId: zId.optional(),
-      priorityId: zId.optional(),
-      healthId: zId.optional(),
+      priorityId: priorityId.optional(),
+      healthId: healthId.optional(),
       leadId: zId.nullable().optional(),
       initiativeId: zId.nullable().optional(),
       startDate: zDate,
@@ -71,9 +75,9 @@ export const cycleCreate = z
    .object({
       name: zText(160),
       teamId: zId,
-      status: zOptText(40),
-      startDate: z.string().max(40).optional(),
-      endDate: z.string().max(40).optional(),
+      status: cycleStatus.optional(),
+      startDate: zDate,
+      endDate: zDate,
       capacity: z.number().int().min(0).max(100_000).optional(),
    })
    .strict();

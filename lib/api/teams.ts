@@ -1,17 +1,14 @@
-import { Project, projects as projectFallback } from '@/mock-data/projects';
-import { Team } from '@/mock-data/teams';
-import { User, users as userFallback } from '@/mock-data/users';
+import type { Project } from '@/mock-data/projects';
+import type { Team } from '@/mock-data/teams';
+import type { User } from '@/mock-data/users';
 import { useProjectsStore } from '@/store/projects-store';
 import { useMembersStore } from '@/store/members-store';
 
 import { TeamCreateBody, TeamDTO, TeamUpdateBody } from './types';
 
 /**
- * Client-side teams API — mirrors lib/api/projects.ts.
- *
- * `dtoToTeam` re-hydrates the nested `members` (User[]) and `projects`
- * (Project[]) the components expect, preferring the live members/projects caches
- * and falling back to the static mock arrays before those stores hydrate.
+ * Client-side teams API. Related members/projects are resolved from the
+ * persisted workspace caches, which hydrate before teams.
  */
 
 const BASE = '/api/teams';
@@ -29,16 +26,12 @@ async function http<T>(url: string, init?: RequestInit): Promise<T> {
 
 function resolveMembers(ids: string[]): User[] {
    const cache = useMembersStore.getState().members;
-   return ids
-      .map((id) => cache.find((u) => u.id === id) ?? userFallback.find((u) => u.id === id))
-      .filter((u): u is User => Boolean(u));
+   return ids.map((id) => cache.find((u) => u.id === id)).filter((u): u is User => Boolean(u));
 }
 
 function resolveProjects(ids: string[]): Project[] {
    const cache = useProjectsStore.getState().projects;
-   return ids
-      .map((id) => cache.find((p) => p.id === id) ?? projectFallback.find((p) => p.id === id))
-      .filter((p): p is Project => Boolean(p));
+   return ids.map((id) => cache.find((p) => p.id === id)).filter((p): p is Project => Boolean(p));
 }
 
 export function dtoToTeam(dto: TeamDTO): Team {

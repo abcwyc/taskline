@@ -1,6 +1,8 @@
 import 'server-only';
 
+import bcrypt from 'bcryptjs';
 import { db } from '@/lib/db';
+import { PublicError } from './http';
 import { normalizePreferences } from './preferences';
 import { MeDTO, MeUpdateBody, ROLE_ENUM_TO_KEY } from './types';
 
@@ -45,4 +47,26 @@ export async function updateMe(userId: string, body: MeUpdateBody): Promise<MeDT
       await db.user.update({ where: { id: userId }, data });
    }
    return getMe(userId);
+}
+
+export async function changePassword(
+   userId: string,
+   currentPassword: string,
+   nextPassword: string
+): Promise<void> {
+   const user = await db.user.findUnique({
+      where: { id: userId },
+      select: { passwordHash: true },
+   });
+   if (!user?.passwordHash || !(await bcrypt.compare(currentPassword, user.passwordHash))) {
+      throw new PublicError('current password is incorrect', 403);
+   }
+
+   await db.user.update({
+      where: { id: userId },
+      data: {
+         passwordHash: await bcrypt.hash(nextPassword, 12),
+         sessionVersion: { increment: 1 },
+      },
+   });
 }

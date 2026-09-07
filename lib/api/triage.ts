@@ -1,9 +1,8 @@
-import { Issue } from '@/mock-data/issues';
-import { LabelInterface, labels as mockLabels } from '@/mock-data/labels';
-import { projects as mockProjects } from '@/mock-data/projects';
-import { status as mockStatus } from '@/mock-data/status';
-import { TriageIntelligence, TriageItem, triageItems as mockTriage } from '@/mock-data/triage';
-import { users as mockUsers } from '@/mock-data/users';
+import type { Issue } from '@/mock-data/issues';
+import type { LabelInterface } from '@/mock-data/labels';
+import { status as statusRegistry } from '@/mock-data/status';
+import type { TriageIntelligence, TriageItem } from '@/mock-data/triage';
+import type { User } from '@/mock-data/users';
 import { dtoToIssue } from '@/lib/api/issues';
 import { useLabelsStore } from '@/store/labels-store';
 import { useMembersStore } from '@/store/members-store';
@@ -23,16 +22,11 @@ async function http<T>(url: string, init?: RequestInit): Promise<T> {
 }
 
 const findUser = (id?: string | null) =>
-   (id && useMembersStore.getState().members.find((u) => u.id === id)) ||
-   (id && mockUsers.find((u) => u.id === id)) ||
-   undefined;
+   id ? useMembersStore.getState().members.find((u) => u.id === id) : undefined;
 const findProject = (id?: string | null) =>
-   (id && useProjectsStore.getState().projects.find((p) => p.id === id)) ||
-   (id && mockProjects.find((p) => p.id === id)) ||
-   undefined;
+   id ? useProjectsStore.getState().projects.find((p) => p.id === id) : undefined;
 const findLabel = (key: string): LabelInterface | undefined =>
-   useLabelsStore.getState().labels.find((l) => l.id === key) ??
-   mockLabels.find((l) => l.id === key);
+   useLabelsStore.getState().labels.find((l) => l.id === key);
 
 export function dtoToTriageItem(dto: TriageItemDTO): TriageItem {
    const intelRaw = dto.intelligence as {
@@ -50,7 +44,7 @@ export function dtoToTriageItem(dto: TriageItemDTO): TriageItem {
       related: (intelRaw.related ?? []).map((r) => ({
          identifier: r.identifier,
          title: r.title,
-         status: mockStatus.find((s) => s.id === r.statusKey) ?? mockStatus[0],
+         status: statusRegistry.find((s) => s.id === r.statusKey) ?? statusRegistry[0],
       })),
    };
 
@@ -62,7 +56,22 @@ export function dtoToTriageItem(dto: TriageItemDTO): TriageItem {
       reporter:
          dto.reporterKind === 'integration'
             ? { kind: 'integration', name: dto.reporterName ?? 'Integration' }
-            : { kind: 'user', user: findUser(dto.reporterUserId) ?? mockUsers[0] },
+            : {
+                 kind: 'user',
+                 user:
+                    findUser(dto.reporterUserId) ??
+                    ({
+                       id: dto.reporterUserId ?? 'unknown',
+                       name: 'Unknown member',
+                       avatarUrl: '',
+                       email: '',
+                       status: 'offline',
+                       role: 'Member',
+                       joinedDate: '',
+                       teamIds: [],
+                       timezone: 'UTC',
+                    } satisfies User),
+              },
       receivedAgo: relativeAgo(dto.receivedAt),
       intelligence,
       sections: (dto.sections as { heading: string; body: string }[]) ?? [],
@@ -78,8 +87,7 @@ function relativeAgo(iso: string): string {
 }
 
 export async function fetchTriageItems(): Promise<TriageItem[]> {
-   const dtos = await http<TriageItemDTO[]>(BASE).catch(() => null);
-   return dtos ? dtos.map(dtoToTriageItem) : mockTriage;
+   return (await http<TriageItemDTO[]>(BASE)).map(dtoToTriageItem);
 }
 
 export async function acceptTriageItem(id: string): Promise<Issue> {

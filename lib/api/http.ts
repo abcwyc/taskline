@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
+import { logError } from '@/lib/logger';
+
 /**
  * A validation / business-rule error whose message is safe to show the client.
  * Anything else caught in a route handler is logged and returned as a generic
@@ -25,7 +27,7 @@ export function errorResponse(err: unknown): NextResponse {
          { status: 400 }
       );
    }
-   console.error('[api] unhandled error:', err);
+   logError('api.unhandled', err);
    return NextResponse.json({ error: 'something went wrong' }, { status: 500 });
 }
 
@@ -50,8 +52,16 @@ export const zId = z
    .min(1)
    .max(64)
    .regex(/^[A-Za-z0-9_.:@+-]+$/, 'invalid id');
-export const zDate = z
+const dateOnly = z
    .string()
    .regex(/^\d{4}-\d{2}-\d{2}$/, 'expected YYYY-MM-DD')
-   .nullable()
-   .optional();
+   .refine((value) => {
+      const [year, month, day] = value.split('-').map(Number);
+      const date = new Date(Date.UTC(year, month - 1, day));
+      return (
+         date.getUTCFullYear() === year &&
+         date.getUTCMonth() === month - 1 &&
+         date.getUTCDate() === day
+      );
+   }, 'invalid calendar date');
+export const zDate = dateOnly.nullable().optional();

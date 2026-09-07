@@ -1,4 +1,4 @@
-import { Initiative, initiatives as mockInitiatives } from '@/mock-data/initiatives';
+import type { Initiative } from '@/mock-data/initiatives';
 import { Project } from '@/mock-data/projects';
 import { create } from 'zustand';
 import { toast } from 'sonner';
@@ -16,6 +16,8 @@ import { useProjectsStore } from '@/store/projects-store';
 interface InitiativesState {
    initiatives: Initiative[];
    hydrated: boolean;
+   isLoading: boolean;
+   error: string | null;
    hydrate: () => Promise<void>;
 
    getAllInitiatives: () => Initiative[];
@@ -44,15 +46,20 @@ export const countCompletedProjects = (initiative: Initiative): number =>
 const projectsOf = getInitiativeProjects;
 
 export const useInitiativesStore = create<InitiativesState>((set, get) => ({
-   initiatives: mockInitiatives,
+   initiatives: [],
    hydrated: false,
+   isLoading: false,
+   error: null,
 
    hydrate: async () => {
-      if (get().hydrated) return;
+      if (get().hydrated || get().isLoading) return;
+      set({ isLoading: true, error: null });
       try {
-         set({ initiatives: await apiFetch(), hydrated: true });
+         set({ initiatives: await apiFetch(), hydrated: true, isLoading: false });
       } catch (err) {
-         console.error(err);
+         set({ isLoading: false, error: (err as Error).message });
+         toast.error('Failed to load initiatives');
+         throw err;
       }
    },
 

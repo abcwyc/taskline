@@ -3,9 +3,10 @@
 import { InboxItem } from '@/mock-data/inbox';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
-import { motion } from 'motion/react';
-import { renderStatusIcon } from '@/lib/status-utils';
 import { getNotificationIcon } from '@/lib/notification-utils';
+import { renderStatusIcon } from '@/lib/status-utils';
+import { formatDistanceToNowStrict } from 'date-fns';
+import { motion } from 'motion/react';
 
 interface IssueLineProps {
    notification: InboxItem;
@@ -92,7 +93,9 @@ export default function IssueLine({
                      {notification.content}
                   </p>
                   <span className="text-xs text-muted-foreground shrink-0">
-                     {notification.timestamp}
+                     {formatDistanceToNowStrict(new Date(notification.timestamp), {
+                        addSuffix: true,
+                     })}
                   </span>
                </div>
             </div>

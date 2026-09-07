@@ -1,6 +1,6 @@
 import { Issue } from '@/mock-data/issues';
 import { Project } from '@/mock-data/projects';
-import { View, views as mockViews } from '@/mock-data/views';
+import type { View } from '@/mock-data/views';
 import { create } from 'zustand';
 import { toast } from 'sonner';
 
@@ -43,6 +43,8 @@ export function filterProjectsForView(view: View, source?: Project[]): Project[]
 interface ViewsState {
    views: View[];
    hydrated: boolean;
+   isLoading: boolean;
+   error: string | null;
    hydrate: () => Promise<void>;
 
    getAllViews: () => View[];
@@ -57,15 +59,20 @@ interface ViewsState {
 }
 
 export const useViewsStore = create<ViewsState>((set, get) => ({
-   views: mockViews,
+   views: [],
    hydrated: false,
+   isLoading: false,
+   error: null,
 
    hydrate: async () => {
-      if (get().hydrated) return;
+      if (get().hydrated || get().isLoading) return;
+      set({ isLoading: true, error: null });
       try {
-         set({ views: await apiFetch(), hydrated: true });
+         set({ views: await apiFetch(), hydrated: true, isLoading: false });
       } catch (err) {
-         console.error(err);
+         set({ isLoading: false, error: (err as Error).message });
+         toast.error('Failed to load views');
+         throw err;
       }
    },
 

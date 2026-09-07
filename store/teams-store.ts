@@ -1,4 +1,4 @@
-import { Team, teams as mockTeams } from '@/mock-data/teams';
+import type { Team } from '@/mock-data/teams';
 import { create } from 'zustand';
 import { toast } from 'sonner';
 
@@ -32,9 +32,7 @@ interface TeamsState {
 }
 
 export const useTeamsStore = create<TeamsState>((set, get) => ({
-   // Seeded with the static mock so `teams.find(...)` call sites and the
-   // `[teamId]` headers render immediately; `hydrate()` swaps in DB data.
-   teams: mockTeams,
+   teams: [],
    hydrated: false,
    isLoading: false,
    error: null,
@@ -48,6 +46,7 @@ export const useTeamsStore = create<TeamsState>((set, get) => ({
       } catch (err) {
          set({ isLoading: false, error: (err as Error).message });
          toast.error('Failed to load teams');
+         throw err;
       }
    },
 

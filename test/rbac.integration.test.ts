@@ -12,8 +12,8 @@ d('workspace authorization', () => {
    let db: import('@prisma/client').PrismaClient;
    let assertOrgScope: typeof import('@/lib/api/ownership.server').assertOrgScope;
    let claimInvite: typeof import('@/lib/api/invites.server').claimInvite;
+   let removeMember: typeof import('@/lib/api/members.server').removeMember;
    let updateMember: typeof import('@/lib/api/members.server').updateMember;
-
    const tag = `t${Date.now()}${Math.floor(Math.random() * 1000)}`;
    let orgId = '';
    let otherOrgId = '';
@@ -21,10 +21,10 @@ d('workspace authorization', () => {
    let foreignProjectId = '';
 
    beforeAll(async () => {
-      process.env.DATABASE_URL = url;
       ({ db } = await import('@/lib/db'));
       ({ assertOrgScope } = await import('@/lib/api/ownership.server'));
       ({ claimInvite } = await import('@/lib/api/invites.server'));
+      ({ removeMember } = await import('@/lib/api/members.server'));
       ({ updateMember } = await import('@/lib/api/members.server'));
 
       const org = await db.organization.create({
@@ -164,8 +164,36 @@ d('workspace authorization', () => {
          updateMember(orgId, a2.id, { role: 'Member' }),
       ]);
       const ok = outcomes.filter((o) => o.status === 'fulfilled').length;
-      expect(ok).toBe(1); // exactly one demotion succeeds
+      expect(ok).toBe(1);
       const admins = await db.membership.count({ where: { orgId, role: 'ADMIN' } });
       expect(admins).toBe(1);
+   });
+
+   it('removes a member from the workspace and its teams', async () => {
+      const team = await db.team.create({
+         data: {
+            id: `${tag}-remove-team`,
+            orgId,
+            key: `${tag}REMOVE`,
+            name: 'Remove team',
+            icon: 'x',
+            color: '#000',
+         },
+      });
+      const member = await db.user.create({
+         data: {
+            email: `${tag}-remove@x.com`,
+            name: 'Remove',
+            memberships: { create: { orgId, role: 'MEMBER' } },
+            teamMemberships: { create: { teamId: team.id } },
+         },
+      });
+      await expect(removeMember(orgId, member.id)).resolves.toBe(true);
+      await expect(
+         db.membership.findUnique({ where: { userId_orgId: { userId: member.id, orgId } } })
+      ).resolves.toBeNull();
+      await expect(
+         db.teamMembership.findFirst({ where: { userId: member.id, teamId: team.id } })
+      ).resolves.toBeNull();
    });
 });

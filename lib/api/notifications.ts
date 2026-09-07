@@ -1,5 +1,5 @@
-import { InboxItem, inboxItems as mockInbox, NotificationType } from '@/mock-data/inbox';
-import { users as mockUsers } from '@/mock-data/users';
+import type { InboxItem, NotificationType } from '@/mock-data/inbox';
+import type { User } from '@/mock-data/users';
 import { useIssuesStore } from '@/store/issues-store';
 import { useMembersStore } from '@/store/members-store';
 
@@ -16,10 +16,18 @@ async function http<T>(url: string, init?: RequestInit): Promise<T> {
    return res.status === 204 ? (undefined as T) : ((await res.json()) as T);
 }
 
-const actor = (id: string | null) =>
-   (id && useMembersStore.getState().members.find((u) => u.id === id)) ||
-   (id && mockUsers.find((u) => u.id === id)) ||
-   mockUsers[0];
+const actor = (id: string | null): User =>
+   (id && useMembersStore.getState().members.find((u) => u.id === id)) || {
+      id: id ?? 'system',
+      name: id ? 'Unknown member' : 'System',
+      avatarUrl: '',
+      email: '',
+      status: 'offline',
+      role: 'Application',
+      joinedDate: '',
+      teamIds: [],
+      timezone: 'UTC',
+   };
 
 /** Merge a notification with the live issue it points at (InboxItem = Issue + fields). */
 export function dtoToInboxItem(dto: NotificationDTO): InboxItem | null {
@@ -39,8 +47,7 @@ export function dtoToInboxItem(dto: NotificationDTO): InboxItem | null {
 }
 
 export async function fetchNotifications(): Promise<InboxItem[]> {
-   const dtos = await http<NotificationDTO[]>(BASE).catch(() => null);
-   if (!dtos) return mockInbox;
+   const dtos = await http<NotificationDTO[]>(BASE);
    return dtos.map(dtoToInboxItem).filter((n): n is InboxItem => n !== null);
 }
 

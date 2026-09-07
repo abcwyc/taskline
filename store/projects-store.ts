@@ -1,6 +1,7 @@
-import { Project } from '@/mock-data/projects';
+import type { Project } from '@/mock-data/projects';
 import { create } from 'zustand';
 import { toast } from 'sonner';
+import { createMutationGuard } from '@/lib/client-mutation';
 
 import {
    createProject as apiCreateProject,
@@ -38,77 +39,85 @@ interface ProjectsState {
    deleteProject: (id: string) => void;
 }
 
-export const useProjectsStore = create<ProjectsState>((set, get) => ({
-   projects: [],
-   hydrated: false,
-   isLoading: false,
-   error: null,
+export const useProjectsStore = create<ProjectsState>((set, get) => {
+   const mutations = createMutationGuard();
+   return {
+      projects: [],
+      hydrated: false,
+      isLoading: false,
+      error: null,
 
-   hydrate: async () => {
-      if (get().hydrated || get().isLoading) return;
-      set({ isLoading: true, error: null });
-      try {
-         const projects = await apiFetchProjects();
-         set({ projects, hydrated: true, isLoading: false });
-      } catch (err) {
-         set({ isLoading: false, error: (err as Error).message });
-         toast.error('Failed to load projects');
-      }
-   },
+      hydrate: async () => {
+         if (get().hydrated || get().isLoading) return;
+         set({ isLoading: true, error: null });
+         try {
+            const projects = await apiFetchProjects();
+            set({ projects, hydrated: true, isLoading: false });
+         } catch (err) {
+            set({ isLoading: false, error: (err as Error).message });
+            toast.error('Failed to load projects');
+            throw err;
+         }
+      },
 
-   getAllProjects: () => get().projects,
-   getProjectById: (id) => get().projects.find((p) => p.id === id),
-   getProjectsByTeam: (teamId) => get().projects.filter((p) => p.teamId === teamId),
+      getAllProjects: () => get().projects,
+      getProjectById: (id) => get().projects.find((p) => p.id === id),
+      getProjectsByTeam: (teamId) => get().projects.filter((p) => p.teamId === teamId),
 
-   addProject: (project) => {
-      set({ projects: [...get().projects, project] });
-      apiCreateProject(projectToCreateBody(project))
-         .then((saved) => {
-            set({ projects: get().projects.map((p) => (p.id === project.id ? saved : p)) });
-         })
-         .catch((err) => {
-            set({ projects: get().projects.filter((p) => p.id !== project.id) });
+      addProject: (project) => {
+         set({ projects: [...get().projects, project] });
+         apiCreateProject(projectToCreateBody(project))
+            .then((saved) => {
+               set({ projects: get().projects.map((p) => (p.id === project.id ? saved : p)) });
+            })
+            .catch((err) => {
+               set({ projects: get().projects.filter((p) => p.id !== project.id) });
+               toast.error('Failed to create project');
+               console.error(err);
+            });
+      },
+
+      createProject: async (project) => {
+         try {
+            const saved = await apiCreateProject(projectToCreateBody(project));
+            set({ projects: [...get().projects, saved] });
+            return saved;
+         } catch (err) {
             toast.error('Failed to create project');
             console.error(err);
-         });
-   },
+            return null;
+         }
+      },
 
-   createProject: async (project) => {
-      try {
-         const saved = await apiCreateProject(projectToCreateBody(project));
-         set({ projects: [...get().projects, saved] });
-         return saved;
-      } catch (err) {
-         toast.error('Failed to create project');
-         console.error(err);
-         return null;
-      }
-   },
+      updateProject: (id, patch) => {
+         const snapshot = get().projects.find((p) => p.id === id);
+         if (!snapshot) return;
+         set({ projects: get().projects.map((p) => (p.id === id ? { ...p, ...patch } : p)) });
 
-   updateProject: (id, patch) => {
-      const snapshot = get().projects.find((p) => p.id === id);
-      if (!snapshot) return;
+         const version = mutations.begin(id);
+         apiUpdateProject(id, projectPatchToBody(patch))
+            .then((saved) => {
+               if (!mutations.isCurrent(id, version)) return;
+               set({ projects: get().projects.map((p) => (p.id === id ? saved : p)) });
+            })
+            .catch((err) => {
+               if (!mutations.isCurrent(id, version)) return;
+               set({ projects: get().projects.map((p) => (p.id === id ? snapshot : p)) });
+               toast.error('Failed to save changes');
+               console.error(err);
+            });
+      },
 
-      set({ projects: get().projects.map((p) => (p.id === id ? { ...p, ...patch } : p)) });
-
-      apiUpdateProject(id, projectPatchToBody(patch))
-         .then((saved) => {
-            set({ projects: get().projects.map((p) => (p.id === id ? saved : p)) });
-         })
-         .catch((err) => {
-            set({ projects: get().projects.map((p) => (p.id === id ? snapshot : p)) });
-            toast.error('Failed to save changes');
+      deleteProject: (id) => {
+         const snapshot = get().projects;
+         set({ projects: snapshot.filter((project) => project.id !== id) });
+         const version = mutations.begin(id);
+         apiDeleteProject(id).catch((err) => {
+            if (!mutations.isCurrent(id, version)) return;
+            set({ projects: snapshot });
+            toast.error('Failed to delete project');
             console.error(err);
          });
-   },
-
-   deleteProject: (id) => {
-      const snapshot = get().projects;
-      set({ projects: snapshot.filter((p) => p.id !== id) });
-      apiDeleteProject(id).catch((err) => {
-         set({ projects: snapshot });
-         toast.error('Failed to delete project');
-         console.error(err);
-      });
-   },
-}));
+      },
+   };
+});

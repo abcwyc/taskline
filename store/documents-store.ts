@@ -1,4 +1,4 @@
-import { DocumentFolder, documentFolders as mockFolders } from '@/mock-data/documents';
+import type { DocumentFolder } from '@/mock-data/documents';
 import { create } from 'zustand';
 import { toast } from 'sonner';
 
@@ -31,7 +31,7 @@ const patchDoc = (
 ) => folders.map((f) => ({ ...f, documents: f.documents.map((d) => (d.id === id ? fn(d) : d)) }));
 
 export const useDocumentsStore = create<DocumentsState>((set, get) => ({
-   folders: mockFolders,
+   folders: [],
    hydrated: false,
 
    hydrate: async () => {

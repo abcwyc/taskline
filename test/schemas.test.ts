@@ -28,6 +28,10 @@ describe('issueCreate schema', () => {
       expect(() => issueCreate.parse({ title: 'x', dueDate: 'tomorrow' })).toThrow();
       expect(issueCreate.parse({ title: 'x', dueDate: '2026-01-02' }).dueDate).toBe('2026-01-02');
    });
+
+   it('rejects impossible calendar dates', () => {
+      expect(() => issueCreate.parse({ title: 'x', dueDate: '2026-02-30' })).toThrow();
+   });
 });
 
 describe('memberUpdate schema', () => {

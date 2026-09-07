@@ -1,7 +1,5 @@
 import { redirect } from 'next/navigation';
 
-import { IssuesProvider } from '@/components/providers/issues-provider';
-import { ProjectsProvider } from '@/components/providers/projects-provider';
 import { AuthSessionProvider } from '@/components/providers/session-provider';
 import { WorkspaceProvider } from '@/components/providers/workspace-provider';
 import { auth } from '@/lib/auth';
@@ -32,11 +30,7 @@ export default async function OrgLayout({
 
    return (
       <AuthSessionProvider session={session}>
-         <WorkspaceProvider>
-            <ProjectsProvider>
-               <IssuesProvider>{children}</IssuesProvider>
-            </ProjectsProvider>
-         </WorkspaceProvider>
+         <WorkspaceProvider>{children}</WorkspaceProvider>
       </AuthSessionProvider>
    );
 }

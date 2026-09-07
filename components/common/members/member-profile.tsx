@@ -126,7 +126,7 @@ export default function MemberProfile({ member }: { member: User }) {
          return issues.filter((issue) => issueCreatorIndex(issue, users.length) === memberIndex);
       }
       return issues.filter((issue) => issue.assignee?.id === member.id);
-   }, [issues, activeTab, member.id, memberIndex]);
+   }, [issues, activeTab, member.id, memberIndex, users.length]);
 
    const displayedIssues = useMemo(
       () => applyIssueFilters(scopedIssues, filters),

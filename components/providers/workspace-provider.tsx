@@ -1,53 +1,102 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 
 import { useCyclesStore } from '@/store/cycles-store';
-import { useDocumentsStore } from '@/store/documents-store';
+import { useInitiativesStore } from '@/store/initiatives-store';
+import { useIssuesStore } from '@/store/issues-store';
 import { useLabelsStore } from '@/store/labels-store';
 import { useMeStore } from '@/store/me-store';
 import { useMembersStore } from '@/store/members-store';
-import { useReviewsStore } from '@/store/reviews-store';
+import { useNotificationsStore } from '@/store/notifications-store';
+import { useProjectsStore } from '@/store/projects-store';
 import { useTeamsStore } from '@/store/teams-store';
-import { useTriageStore } from '@/store/triage-store';
 import { useViewsStore } from '@/store/views-store';
 
-/**
- * Hydrates the workspace reference data (teams, members, labels, …) that the
- * whole app reads. One provider, mounted once in the `[orgId]` layout.
- */
 export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
-   const hydrateTeams = useTeamsStore((s) => s.hydrate);
-   const hydrateMembers = useMembersStore((s) => s.hydrate);
-   const hydrateLabels = useLabelsStore((s) => s.hydrate);
-   const hydrateCycles = useCyclesStore((s) => s.hydrate);
-   const hydrateViews = useViewsStore((s) => s.hydrate);
-   const hydrateTriage = useTriageStore((s) => s.hydrate);
-   const hydrateDocuments = useDocumentsStore((s) => s.hydrate);
-   const hydrateReviews = useReviewsStore((s) => s.hydrate);
-   const hydrateMe = useMeStore((s) => s.hydrate);
+   const hydrateMe = useMeStore((state) => state.hydrate);
+   const hydrateMembers = useMembersStore((state) => state.hydrate);
+   const hydrateLabels = useLabelsStore((state) => state.hydrate);
+   const hydrateProjects = useProjectsStore((state) => state.hydrate);
+   const hydrateTeams = useTeamsStore((state) => state.hydrate);
+   const hydrateCycles = useCyclesStore((state) => state.hydrate);
+   const hydrateViews = useViewsStore((state) => state.hydrate);
+   const hydrateIssues = useIssuesStore((state) => state.hydrate);
+   const hydrateInitiatives = useInitiativesStore((state) => state.hydrate);
+   const hydrateNotifications = useNotificationsStore((state) => state.hydrate);
+   const pathname = usePathname();
+   const [attempt, setAttempt] = useState(0);
+   const [ready, setReady] = useState(false);
+   const [error, setError] = useState<string | null>(null);
 
    useEffect(() => {
-      void hydrateMe();
-      void hydrateMembers();
-      void hydrateTeams();
-      void hydrateLabels();
-      void hydrateCycles();
-      void hydrateViews();
-      void hydrateTriage();
-      void hydrateDocuments();
-      void hydrateReviews();
+      let active = true;
+      const needsCycles = pathname.includes('/cycle');
+      const needsViews = pathname.includes('/view');
+      const needsInitiatives = pathname.includes('initiative');
+      setReady(false);
+      setError(null);
+
+      async function hydrateWorkspace() {
+         try {
+            await Promise.all([hydrateMe(), hydrateMembers(), hydrateLabels()]);
+            await hydrateProjects();
+            await Promise.all([hydrateTeams(), hydrateIssues()]);
+            if (needsCycles) await hydrateCycles();
+            if (needsViews) await hydrateViews();
+            if (needsInitiatives) await hydrateInitiatives();
+            await hydrateNotifications();
+            if (active) setReady(true);
+         } catch {
+            if (active) setError('Workspace data could not be loaded.');
+         }
+      }
+
+      void hydrateWorkspace();
+      return () => {
+         active = false;
+      };
    }, [
+      attempt,
+      pathname,
       hydrateMe,
       hydrateMembers,
-      hydrateTeams,
       hydrateLabels,
+      hydrateProjects,
+      hydrateTeams,
       hydrateCycles,
       hydrateViews,
-      hydrateTriage,
-      hydrateDocuments,
-      hydrateReviews,
+      hydrateIssues,
+      hydrateInitiatives,
+      hydrateNotifications,
    ]);
+
+   if (error) {
+      return (
+         <main className="flex min-h-svh items-center justify-center bg-background p-6">
+            <div className="max-w-sm rounded-lg border bg-container p-6 text-center">
+               <h1 className="text-base font-semibold">Unable to load workspace</h1>
+               <p className="mt-2 text-sm text-muted-foreground">{error}</p>
+               <button
+                  type="button"
+                  className="mt-4 rounded-md bg-foreground px-3 py-2 text-sm text-background"
+                  onClick={() => setAttempt((value) => value + 1)}
+               >
+                  Retry
+               </button>
+            </div>
+         </main>
+      );
+   }
+
+   if (!ready) {
+      return (
+         <main className="flex min-h-svh items-center justify-center bg-background text-sm text-muted-foreground">
+            Loading workspace…
+         </main>
+      );
+   }
 
    return <>{children}</>;
 }

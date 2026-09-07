@@ -1,8 +1,9 @@
-import { User, users as mockUsers } from '@/mock-data/users';
+import type { User } from '@/mock-data/users';
 import { create } from 'zustand';
 import { toast } from 'sonner';
 
 import {
+   deleteMember as apiDeleteMember,
    fetchMembers as apiFetchMembers,
    memberPatchToBody,
    updateMember as apiUpdateMember,
@@ -26,11 +27,11 @@ interface MembersState {
    updateMember: (id: string, patch: Partial<User>) => void;
    /** Patch the cache only (no API call) — e.g. after the user edits their own profile. */
    updateMemberLocal: (id: string, patch: Partial<User>) => void;
+   removeMember: (id: string) => void;
 }
 
 export const useMembersStore = create<MembersState>((set, get) => ({
-   // Seeded with the static mock so pickers/avatars render before hydrate.
-   members: mockUsers,
+   members: [],
    hydrated: false,
    isLoading: false,
    error: null,
@@ -44,6 +45,7 @@ export const useMembersStore = create<MembersState>((set, get) => ({
       } catch (err) {
          set({ isLoading: false, error: (err as Error).message });
          toast.error('Failed to load members');
+         throw err;
       }
    },
 
@@ -69,5 +71,15 @@ export const useMembersStore = create<MembersState>((set, get) => ({
             toast.error('Failed to save changes');
             console.error(err);
          });
+   },
+
+   removeMember: (id) => {
+      const snapshot = get().members;
+      set({ members: snapshot.filter((member) => member.id !== id) });
+      apiDeleteMember(id).catch((err) => {
+         set({ members: snapshot });
+         toast.error('Failed to remove member');
+         console.error(err);
+      });
    },
 }));

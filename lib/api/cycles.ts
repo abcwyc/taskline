@@ -1,4 +1,4 @@
-import { Cycle, cycles as mockCycles } from '@/mock-data/cycles';
+import type { Cycle } from '@/mock-data/cycles';
 
 import { CycleCreateBody, CycleDTO, CycleUpdateBody } from './types';
 
@@ -44,8 +44,7 @@ export function cyclePatchToBody(patch: Partial<Cycle>): CycleUpdateBody {
 }
 
 export async function fetchCycles(): Promise<Cycle[]> {
-   const dtos = await http<CycleDTO[]>(BASE).catch(() => null);
-   return dtos ? dtos.map(dtoToCycle) : mockCycles;
+   return (await http<CycleDTO[]>(BASE)).map(dtoToCycle);
 }
 
 export async function createCycle(input: CycleCreateBody): Promise<Cycle> {

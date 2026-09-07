@@ -25,11 +25,13 @@ services:
       environment:
          DATABASE_URL: postgresql://${POSTGRES_USER:-circle}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@db:5432/${POSTGRES_DB:-circle}?schema=public
          AUTH_SECRET: ${AUTH_SECRET:?set AUTH_SECRET in .env (npx auth secret)}
-         AUTH_URL: ${AUTH_URL:-http://localhost:3000}
+         AUTH_URL: ${AUTH_URL:?set AUTH_URL in .env (public URL)}
          AUTH_TRUST_HOST: 'true'
          SIGNUP_MODE: ${SIGNUP_MODE:-invite}
          BOOTSTRAP_SECRET: ${BOOTSTRAP_SECRET:-}
          UPLOAD_DIR: /app/uploads
+         MAX_ATTACHMENT_BYTES: ${MAX_ATTACHMENT_BYTES:-10485760}
+         MAX_WORKSPACE_ATTACHMENT_BYTES: ${MAX_WORKSPACE_ATTACHMENT_BYTES:-2147483648}
       volumes:
          - uploads:/app/uploads
       ports:
