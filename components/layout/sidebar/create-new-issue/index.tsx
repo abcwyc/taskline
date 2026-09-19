@@ -29,6 +29,7 @@ import { ProjectSelector } from './project-selector';
 import { LabelSelector } from './label-selector';
 import { TemplatePicker } from './template-picker';
 import { ranks } from '@/mock-data/issues';
+import { useParams, useRouter } from 'next/navigation';
 
 export function CreateNewIssue() {
    const [createMore, setCreateMore] = useState<boolean>(false);
@@ -36,6 +37,8 @@ export function CreateNewIssue() {
    const { addIssue, getAllIssues } = useIssuesStore();
    const me = useCurrentUser();
    const autoAssignSelf = useMeStore((s) => s.preferences.autoAssignSelf);
+   const router = useRouter();
+   const { orgId } = useParams<{ orgId: string }>();
 
    const generateUniqueIdentifier = useCallback(() => {
       const identifiers = getAllIssues().map((issue) => issue.identifier);
@@ -75,13 +78,23 @@ export function CreateNewIssue() {
       setAddIssueForm(createDefaultData());
    }, [createDefaultData]);
 
-   const createIssue = () => {
+   const createIssue = async () => {
       if (!addIssueForm.title) {
          toast.error('Title is required');
          return;
       }
-      toast.success(parentIssue ? 'Sub-issue created' : 'Issue created');
-      addIssue(addIssueForm, parentIssue?.identifier);
+      const saved = await addIssue(addIssueForm, parentIssue?.identifier);
+      if (saved) {
+         // Point the user at what was just created: the identifier plus a
+         // one-click jump — new issues are unassigned by default, so the
+         // previously visible list may not have shown them.
+         toast.success(`${saved.identifier} created`, {
+            action: {
+               label: 'View',
+               onClick: () => router.push(`/${orgId}/issue/${saved.identifier}`),
+            },
+         });
+      }
       if (!createMore) {
          closeModal();
       }
@@ -189,7 +202,7 @@ export function CreateNewIssue() {
                <Button
                   size="sm"
                   onClick={() => {
-                     createIssue();
+                     void createIssue();
                   }}
                >
                   Create issue

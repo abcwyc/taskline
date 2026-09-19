@@ -45,7 +45,8 @@ interface IssuesState {
    getAllIssues: () => Issue[];
 
    // Actions (unchanged signatures — now optimistic + persisted)
-   addIssue: (issue: Issue, parentId?: string) => void;
+   /** Creates the issue and resolves with the persisted issue (null on failure). */
+   addIssue: (issue: Issue, parentId?: string) => Promise<Issue | null>;
    /** Insert an issue that was already created server-side (no POST). */
    receiveIssue: (issue: Issue) => void;
    updateIssue: (id: string, updatedIssue: Partial<Issue>) => void;
@@ -112,19 +113,23 @@ export const useIssuesStore = create<IssuesState>((set, get) => {
       addIssue: (issue: Issue, parentId?: string) => {
          set(withDerived([...get().issues, issue]));
          const version = mutations.begin(issue.id);
-         apiCreateIssue(issueToCreateBody(issue, parentId))
+         return apiCreateIssue(issueToCreateBody(issue, parentId))
             .then((saved) => {
-               if (!mutations.isCurrent(issue.id, version)) return;
-               set(withDerived(get().issues.map((i) => (i.id === issue.id ? saved : i))));
-               if (parentId) useIssueDetailsStore.getState().invalidate(parentId);
-               mutations.finish(issue.id, version);
+               if (mutations.isCurrent(issue.id, version)) {
+                  set(withDerived(get().issues.map((i) => (i.id === issue.id ? saved : i))));
+                  if (parentId) useIssueDetailsStore.getState().invalidate(parentId);
+                  mutations.finish(issue.id, version);
+               }
+               return saved;
             })
             .catch((err) => {
-               if (!mutations.isCurrent(issue.id, version)) return;
-               set(withDerived(get().issues.filter((i) => i.id !== issue.id)));
+               if (mutations.isCurrent(issue.id, version)) {
+                  set(withDerived(get().issues.filter((i) => i.id !== issue.id)));
+                  mutations.finish(issue.id, version);
+               }
                toast.error('Failed to create issue');
                console.error(err);
-               mutations.finish(issue.id, version);
+               return null;
             });
       },
 
