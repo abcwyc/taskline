@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Circle · 产品使用手册</title>
+<style>
+  :root {
+    --bg: #0e0f13;
+    --panel: #16171d;
+    --panel-2: #1c1e26;
+    --border: #2a2d38;
+    --text: #e8eaf0;
+    --muted: #9aa1b2;
+    --accent: #7c7cf4;
+    --accent-2: #5e6ad2;
+    --green: #4cb782;
+    --amber: #f2c94c;
+    --red: #eb5757;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+    line-height: 1.75;
+    padding: 0 0 80px;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 0 32px; }
+  header {
+    padding: 64px 0 40px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 48px;
+  }
+  .logo {
+    display: inline-flex; align-items: center; gap: 12px;
+    font-size: 28px; font-weight: 700; letter-spacing: -0.02em;
+  }
+  .logo .mark {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent-2), var(--accent));
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 20px; font-weight: 800; color: #fff;
+  }
+  .tagline { color: var(--muted); margin-top: 12px; font-size: 15px; }
+  .badges { margin-top: 20px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .badge {
+    font-size: 12px; padding: 4px 12px; border-radius: 999px;
+    border: 1px solid var(--border); color: var(--muted); background: var(--panel);
+  }
+  h1 { font-size: 22px; margin: 0 0 8px; }
+  h2 {
+    font-size: 20px; margin: 56px 0 16px; padding-top: 24px;
+    border-top: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  h2 .num {
+    font-size: 12px; color: var(--accent); background: rgba(124,124,244,.12);
+    border: 1px solid rgba(124,124,244,.3); border-radius: 6px;
+    padding: 2px 8px; font-weight: 600;
+  }
+  h3 { font-size: 15px; margin: 24px 0 8px; color: var(--text); }
+  p { margin: 10px 0; color: #c9cdd8; font-size: 14.5px; }
+  p.small, li.small { font-size: 13px; color: var(--muted); }
+  ul, ol { padding-left: 22px; margin: 10px 0; }
+  li { margin: 6px 0; color: #c9cdd8; font-size: 14.5px; }
+  li::marker { color: var(--accent); }
+  strong { color: var(--text); }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace;
+    background: var(--panel-2); border: 1px solid var(--border);
+    padding: 1px 7px; border-radius: 6px; font-size: 13px; color: #d8b4fe;
+  }
+  pre {
+    background: var(--panel-2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px 20px; overflow-x: auto; margin: 14px 0;
+  }
+  pre code { background: none; border: none; padding: 0; color: #c9cdd8; line-height: 1.6; }
+  kbd {
+    font-family: inherit; font-size: 12px;
+    background: var(--panel-2); border: 1px solid var(--border);
+    border-bottom-width: 2px; border-radius: 6px; padding: 2px 7px; color: var(--text);
+  }
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 14px; }
+  th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 13px; }
+  td { color: #c9cdd8; }
+  .tip, .warn {
+    border-radius: 10px; padding: 14px 18px; margin: 16px 0; font-size: 14px;
+  }
+  .tip { background: rgba(76,183,130,.08); border: 1px solid rgba(76,183,130,.25); }
+  .tip::before { content: "💡 "; }
+  .warn { background: rgba(242,201,76,.07); border: 1px solid rgba(242,201,76,.25); }
+  .warn::before { content: "⚠️ "; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin: 18px 0; }
+  .card {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px; padding: 18px 20px;
+  }
+  .card .ico { font-size: 22px; }
+  .card h4 { font-size: 14.5px; margin: 8px 0 6px; }
+  .card p { font-size: 13px; color: var(--muted); margin: 0; }
+  .toc {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+    padding: 20px 24px; margin: 24px 0;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 4px 32px;
+  }
+  .toc a { color: #c9cdd8; text-decoration: none; font-size: 14px; padding: 5px 0; display: block; }
+  .toc a:hover { color: var(--accent); }
+  .toc .n { color: var(--accent); font-family: ui-monospace, monospace; font-size: 12px; margin-right: 10px; }
+  footer { margin-top: 72px; padding-top: 24px; border-top: 1px solid var(--border); color: var(--muted); font-size: 13px; }
+  @media (max-width: 640px) { .toc { grid-template-columns: 1fr; } .wrap { padding: 0 18px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="logo"><span class="mark">C</span> Circle</div>
+  <p class="tagline">自托管的类 Linear 项目管理工具 —— Issue 跟踪、项目、周期、评审、文档与 AI 助手，全部数据归你自己所有。</p>
+  <div class="badges">
+    <span class="badge">单工作区部署</span>
+    <span class="badge">Next.js 15 · PostgreSQL</span>
+    <span class="badge">角色：管理员 / 成员 / 访客</span>
+    <span class="badge">中文 / English 界面</span>
+  </div>
+</header>
+
+<div class="toc">
+  <a href="#s1"><span class="n">01</span>开始使用（登录与账号）</a>
+  <a href="#s2"><span class="n">02</span>核心概念：Issue</a>
+  <a href="#s3"><span class="n">03</span>团队与周期（Cycles）</a>
+  <a href="#s4"><span class="n">04</span>项目（Projects）与里程碑</a>
+  <a href="#s5"><span class="n">05</span>收件箱与通知</a>
+  <a href="#s6"><span class="n">06</span>代码评审（Reviews）</a>
+  <a href="#s7"><span class="n">07</span>AI 助手（Agent）</a>
+  <a href="#s8"><span class="n">08</span>文档、Triage 与其他功能</a>
+  <a href="#s9"><span class="n">09</span>设置与个人偏好</a>
+  <a href="#s10"><span class="n">10</span>安全：MFA / Passkey / API Key</a>
+  <a href="#s11"><span class="n">11</span>管理员指南：部署与运维</a>
+  <a href="#s12"><span class="n">12</span>能力边界与常见问题</a>
+</div>
+
+<!-- 01 -->
+<h2 id="s1"><span class="num">01</span>开始使用</h2>
+<p><strong>登录</strong>：访问你的 Circle 地址（自托管时通常是 <code>http://你的服务器:3000</code>），输入邮箱和密码。如果管理员为你开启了双重验证，还需要输入验证器 App 上的 6 位动态码；绑定过 Passkey 的用户也可以直接点「Sign in with a passkey」用指纹 / 人脸登录。</p>
+<p><strong>获取账号</strong>：Circle 默认是邀请制。联系工作区管理员在「成员」页生成邀请链接，打开链接即可设置密码加入。第一位管理员由部署者在初始化时创建。</p>
+<h3>界面速览</h3>
+<ul>
+  <li><strong>左侧边栏</strong>：收件箱、我的问题、以及工作区（计划 / 项目 / 视图 / AI 助手 / Reviews / 团队 / 成员）和你的团队列表。界面语言跟随浏览器，支持中英文。</li>
+  <li><strong>顶部命令面板</strong>：按 <kbd>⌘</kbd>+<kbd>K</kbd>（Windows 为 <kbd>Ctrl</kbd>+<kbd>K</kbd>）随时呼出——搜索 Issue / 项目 / 计划 / 文档，或直接执行动作（如 <em>Create new issue</em>）。</li>
+  <li><strong>团队子页</strong>：每个团队下有 首页、问题（全部 / 活跃 / Backlog）、周期、计划、项目、视图 等标签页。</li>
+</ul>
+<div class="tip">新创建的 Issue 默认不指派、归属团队由系统按「项目 → 周期 → 第一个团队」决定。创建成功后通知条会显示编号（如 <code>LNUI-1004 created</code>），点 <strong>View</strong> 直接跳到该 Issue。</div>
+
+<!-- 02 -->
+<h2 id="s2"><span class="num">02</span>核心概念：Issue</h2>
+<p>Issue 是一切工作的最小单元，编号形如 <code>LNUI-703</code>。</p>
+<div class="cards">
+  <div class="card"><div class="ico">✍️</div><h4>创建</h4><p>侧边栏编辑按钮或命令面板 → Create new issue；支持从模板预填标题与描述，可勾选「创建多个」连续录入。</p></div>
+  <div class="card"><div class="ico">🚦</div><h4>状态流转</h4><p>Todo → In Progress → Done… 状态可由管理员自定义（见设置），拖动或点击状态图标即可流转。</p></div>
+  <div class="card"><div class="ico">💬</div><h4>评论与协作</h4><p>支持富文本评论（代码块 / 清单 / 引用）、@邮箱提及、表情回应；自己的评论可编辑或删除。</p></div>
+  <div class="card"><div class="ico">🔗</div><h4>关系与子任务</h4><p>建立 Blocked by / Blocks / Related / Duplicate 关系；添加子 Issue 拆解工作； 附件直接拖入。</p></div>
+</div>
+<h3>Issue 详情页右侧面板</h3>
+<ul>
+  <li><strong>Properties</strong>：状态、优先级（Urgent→No priority 五档）、负责人、所属周期；</li>
+  <li><strong>Labels</strong>：点标签旁的 <strong>+</strong> 打开选择器，多人协作时用颜色标签分类；</li>
+  <li><strong>Project / Milestone</strong>：归入项目与里程碑；</li>
+  <li><strong>Relations / Diffs</strong>：阻塞关系与关联的 Pull Request（可手动添加标题 + 链接）。</li>
+</ul>
+<h3>视图与筛选</h3>
+<p>列表支持按状态分组、按优先级排序；顶部「Filter」用 <code>⌘F</code> 风格的筛选条组合条件（状态 / 优先级 / 负责人 / 标签）。「我的问题」页按 <strong>Assigned / Created / Subscribed / Activity</strong> 四个标签组织与你相关的工作。</p>
+
+<!-- 03 -->
+<h2 id="s3"><span class="num">03</span>团队与周期（Cycles）</h2>
+<p>团队是 Issue 的组织单位；<strong>周期</strong>是团队的两周（可自定义）冲刺节奏。</p>
+<ul>
+  <li><strong>当前周期</strong>：燃尽图实时展示 Scope（总量）、Started（已开始）、Completed（已完成）与理想完成线，容量占用一目了然。</li>
+  <li><strong>规划</strong>：把 Issue 拖入 / 移出周期；周期结束后查看成功率（完成 / 总量）。</li>
+  <li><strong>Triage</strong>：每个团队有收件队列（外部请求、客户反馈先进 Triage），在「Accept → 变成正式 Issue」或「Decline / Snooze」之间处理。</li>
+</ul>
+
+<!-- 04 -->
+<h2 id="s4"><span class="num">04</span>项目（Projects）与里程碑</h2>
+<p>项目是跨周期的更大交付单元，归属某个团队、可挂到公司级「计划」（Initiative）下面。</p>
+<ul>
+  <li><strong>概览页</strong>：富文本描述、资源链接、成员、健康度（进展顺利 / 存在风险 / 偏离计划）。</li>
+  <li><strong>里程碑</strong>：勾选完成、重命名、调整目标日期、删除——全部即时保存。</li>
+  <li><strong>进展更新</strong>：在「活动」标签页发布带健康度的更新（如「进展顺利：核心链路已合并」），所有更新按月归档，管理员或作者可删除。</li>
+  <li><strong>进度</strong>：项目完成度 = 已完成 Issue / 总 Issue，自动计算，无需手工维护。</li>
+</ul>
+<div class="warn">计划（Initiatives）目前提供列表与项目关联；「写计划更新」等入口为占位提示，属于后续版本能力。</div>
+
+<!-- 05 -->
+<h2 id="s5"><span class="num">05</span>收件箱与通知</h2>
+<p>收件箱聚合所有与你相关的事件：被评论、被 @、被指派、状态变更、问题被阻塞等。</p>
+<ul>
+  <li><strong>预览面板</strong>：点击任意通知，右侧直接展示对应 Issue 的完整详情，可就地评论（⌘↵ 发送）或附加文件，无需跳转。</li>
+  <li><strong>整理</strong>：单条通知可 已读 / 未读 / 小睡（1 小时 / 3 小时 / 明天）/ 删除；顶部可「全部已读」与「清空」。</li>
+  <li><strong>偏好</strong>：在 设置 → Notifications 选择接收哪些类型（评论 / 提及 / 指派 / 状态），可选开启邮件通知（需管理员配置 SMTP）。</li>
+</ul>
+
+<!-- 06 -->
+<h2 id="s6"><span class="num">06</span>代码评审（Reviews）</h2>
+<p>Circle 内置轻量评审流，<strong>不依赖 GitHub 等外部仓库</strong>——适合私有代码或非代码变更（设计方案、SQL 脚本）的评审。</p>
+<ol>
+  <li><strong>创建</strong>：Reviews 页 → New review，粘贴 <code>git diff main...你的分支</code> 的输出。系统自动解析出文件清单、增删行数，并区分实现 / 测试文件。</li>
+  <li><strong>评审</strong>：Diff 标签页查看着色差异，可对<strong>整个评审或某个文件</strong>发表评论；Guide 页阅读作者的 Summary 与测试计划。</li>
+  <li><strong>裁决</strong>：Approve（批准）或 Request changes（要求修改）；完成后可标记 Merged / Closed。作者会收到站内（及可选邮件）通知。</li>
+</ol>
+<div class="warn">评审内容保存在 Circle 数据库中，不会回写到任何 Git 服务器；它不替代 GitHub/GitLab 的代码托管与合并。</div>
+
+<!-- 07 -->
+<h2 id="s7"><span class="num">07</span>AI 助手（Agent）</h2>
+<p>工作区内置 AI 对话助手，理解你的项目上下文（团队、项目、当前未完成的 Issue）。</p>
+<ul>
+  <li><strong>入口</strong>：侧边栏「AI 助手」；对话历史保存在服务器，可随时回看。</li>
+  <li><strong>能问什么</strong>：「什么在阻塞团队？」「按优先级总结未完成的工作」「帮我规划本周」等。回答基于真实的 Issue 数据，不会编造编号。</li>
+  <li><strong>个性化</strong>：设置 → Agent personalization 写下你的偏好（如「回答用中文、优先关注我负责的 Issue」）；管理员可在 设置 → AI &amp; Agents 配置工作区级提示词与模型。</li>
+</ul>
+<div class="warn">AI 需要管理员配置 OpenAI 兼容端点（<code>AGENT_LLM_*</code> 环境变量）并在设置中启用。未配置时助手会明确提示不可用，<strong>不会假装回答</strong>。</div>
+
+<!-- 08 -->
+<h2 id="s8"><span class="num">08</span>文档、Triage 与其他功能</h2>
+<div class="cards">
+  <div class="card"><div class="ico">📄</div><h4>团队文档</h4><p>每个团队有文档区：新建文件夹（支持 emoji 图标）、创建 / 重命名 / 置顶 / 删除文档，固定常用文档到团队首页。</p></div>
+  <div class="card"><div class="ico">📥</div><h4>Asks / 客户请求</h4><p>设置 → Asks 提交请求（选团队、写描述），系统分配 <code>REQ-n</code> 编号并进入该团队 Triage 队列；Customer requests 页集中查看所有待处理请求。</p></div>
+  <div class="card"><div class="ico">📊</div><h4>Pulse 分析</h4><p>设置 → Pulse：每周创建趋势、状态分布、成员负载、优先级占比四张图，全部基于工作区真实数据。</p></div>
+  <div class="card"><div class="ico">🏷️</div><h4>标签与状态定制</h4><p>管理员可在设置中维护 Issue 标签（含描述）、项目标签，以及<strong>自定义工作流状态</strong>（名称 / 颜色 / 分类 / 图标），新建状态立即出现在所有选择器中。</p></div>
+  <div class="card"><div class="ico">⏱️</div><h4>SLA</h4><p>按优先级配置响应 / 解决时限，页面实时监控超时的未完成 Issue。</p></div>
+  <div class="card"><div class="ico">🚀</div><h4>Releases</h4><p>跨项目聚合所有里程碑为一条发布时间线，直接勾选「已发布」。</p></div>
+</div>
+
+<!-- 09 -->
+<h2 id="s9"><span class="num">09</span>设置与个人偏好</h2>
+<table>
+  <tr><th>设置页</th><th>作用</th></tr>
+  <tr><td><strong>Preferences</strong></td><td>界面语言、默认首页、 姓名显示方式、每周起始日、评论发送快捷键（⌘↵ / ↵）、新建 Issue 自动指派给自己等。</td></tr>
+  <tr><td><strong>Profile</strong></td><td>姓名、头像、职位、时区（影响日期显示）。</td></tr>
+  <tr><td><strong>Notifications</strong></td><td>按类型开关站内通知；邮件通知需显式开启。</td></tr>
+  <tr><td><strong>Issue templates</strong></td><td>维护新建 Issue 的预填模板（标题 / 描述 / 团队），创建时可一键套用。</td></tr>
+  <tr><td><strong>Issue / Project labels</strong></td><td>标签全生命周期管理；项目页可给项目打标签。</td></tr>
+  <tr><td><strong>AI &amp; Agents</strong></td><td>管理员：启用 AI 助手、选择模型、编写工作区系统提示词。</td></tr>
+</table>
+
+<!-- 10 -->
+<h2 id="s10"><span class="num">10</span>安全：MFA / Passkey / API Key</h2>
+<p>全部在 <strong>设置 → Security &amp; access</strong>：</p>
+<ul>
+  <li><strong>两步验证（TOTP）</strong>：Enable two-factor → 用验证器扫码 → 输入 6 位码确认。之后每次登录需输入动态码；关闭需验证账户密码。</li>
+  <li><strong>Passkey</strong>：为设备注册指纹 / 人脸 / 硬件密钥，登录页一键免密登录。支持多设备多把钥匙，可随时删除。</li>
+  <li><strong>API Key</strong>：为脚本 / CI 生成 <code>circle_…</code> 密钥（仅创建时展示一次），以 <code>Authorization: Bearer &lt;key&gt;</code> 调用全部 REST API，权限等同你本人。可随时吊销。</li>
+  <li><strong>会话管理</strong>：「Sign out all sessions」一键注销所有已登录设备（改密码同样会全端下线）。</li>
+</ul>
+<div class="tip">忘记密码联系管理员：管理员可在成员列表为你生成<strong>一次性重置链接</strong>（30 分钟有效），无需邮件服务。</div>
+
+<!-- 11 -->
+<h2 id="s11"><span class="num">11</span>管理员指南：部署与运维</h2>
+<h3>Docker Compose 部署（推荐）</h3>
+<pre><code># 1. 准备环境变量
+cp .env.example .env
+#    必填：POSTGRES_PASSWORD、AUTH_SECRET（npx auth secret 生成）、AUTH_URL
+#    可选：SIGNUP_MODE=invite（默认）、BOOTSTRAP_SECRET、CRON_SECRET
+
+# 2. 启动
+docker compose up -d --build
+
+# 3. 创建第一位管理员
+#    设置 BOOTSTRAP_SECRET 后访问 /sign-up，或：
+curl -X POST http://localhost:3000/api/bootstrap \
+  -H "Authorization: Bearer $BOOTSTRAP_SECRET" \
+  -H "content-type: application/json" \
+  -d '{"email":"admin@example.com","password":"a-strong-password","name":"Admin"}'</code></pre>
+<h3>可选能力开关</h3>
+<table>
+  <tr><th>能力</th><th>环境变量</th><th>未配置时</th></tr>
+  <tr><td>AI 助手</td><td><code>AGENT_LLM_BASE_URL / _API_KEY / _MODEL</code>（任意 OpenAI 兼容网关）</td><td>助手页明确提示未启用，其余功能不受影响</td></tr>
+  <tr><td>邮件通知</td><td><code>SMTP_URL</code> 或 <code>SMTP_HOST/PORT/USER/PASS</code> + <code>MAIL_FROM</code></td><td>仅站内通知，邮件静默跳过</td></tr>
+  <tr><td>周期快照</td><td><code>CRON_SECRET</code> + 每日定时调用 <code>POST /api/jobs/cycle-burnup</code></td><td>燃尽图使用种子 / 手动数据</td></tr>
+</table>
+<h3>日常运维</h3>
+<ul>
+  <li><strong>备份</strong>：<code>pnpm backup</code> 导出数据库快照 + 附件包（含校验和）；恢复用 <code>scripts/restore.sh</code>。请把备份拷贝到主机之外。</li>
+  <li><strong>健康检查</strong>：<code>GET /api/health</code> 返回进程与数据库状态，可接入监控。</li>
+  <li><strong>安全基线</strong>：TLS 在反向代理终止（<code>deploy/nginx.conf.example</code> 提供参考配置）；保持邀请制注册；生产环境绝不执行 <code>db:seed</code>（会创建演示账号）。</li>
+  <li><strong>角色</strong>：<strong>Admin</strong> 管理成员 / 团队 / 工作流状态 / 工作区设置；<strong>Member</strong> 正常读写；<strong>Guest</strong> 只读 + 可评论 / 提请求。</li>
+</ul>
+
+<!-- 12 -->
+<h2 id="s12"><span class="num">12</span>能力边界与常见问题</h2>
+<h3>当前版本不包含（诚实边界）</h3>
+<ul>
+  <li><strong>无 VCS 集成</strong>：评审通过粘贴 diff 创建，不会自动同步 GitHub/GitLab 的 PR；</li>
+  <li><strong>无第三方集成</strong>：Integrations / Connected accounts 页面为参考目录，暂无可连接的 SaaS；</li>
+  <li><strong>通知无推送</strong>：站内 + 可选邮件，没有浏览器 / 手机推送；</li>
+  <li><strong>计划（Initiative）更新</strong>：暂不支持发布计划级进展更新。</li>
+</ul>
+<h3>常见问题</h3>
+<p><strong>Q：创建的 Issue 在「我的问题」里看不到？</strong><br>
+新 Issue 默认未指派，「我的问题」默认显示 Assigned 标签。切到 <strong>Created</strong> 标签即可看到，或点击创建成功通知上的 <strong>View</strong> 直接打开。</p>
+<p><strong>Q：改了工作流状态，旧 Issue 会受影响吗？</strong><br>
+使用中的状态不可删除（按钮会禁用并提示），避免历史 Issue 失去状态。</p>
+<p><strong>Q：API 返回 401？</strong><br>
+检查密钥是否以 <code>Bearer circle_…</code> 形式携带、是否已被吊销；密钥只在创建时展示一次，丢失请重新生成。</p>
+
+<footer>
+  Circle · 自托管项目管理工作区 — 本手册对应当前构建；功能以应用内实际为准。
+</footer>
+
+</div>
+</body>
+</html>
