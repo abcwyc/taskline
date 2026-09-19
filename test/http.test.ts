@@ -56,6 +56,11 @@ describe('normalizePreferences', () => {
       const out = normalizePreferences({ autoAssignSelf: 'yes' });
       expect(out.autoAssignSelf).toBe(false);
    });
+
+   it('defaults invalid language preferences to the browser setting', () => {
+      expect(normalizePreferences({ language: 'fr' }).language).toBe('system');
+      expect(normalizePreferences({ language: 'zh-CN' }).language).toBe('zh-CN');
+   });
 });
 
 describe('rateLimit', () => {

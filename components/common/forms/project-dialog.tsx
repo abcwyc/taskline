@@ -26,6 +26,12 @@ import { displayOrderedStatus } from '@/mock-data/status';
 import { useMembersStore } from '@/store/members-store';
 import { useProjectsStore } from '@/store/projects-store';
 import { useTeamsStore } from '@/store/teams-store';
+import { useLanguage } from '@/components/providers/language-provider';
+import {
+   projectHealthLabel,
+   projectPriorityLabel,
+   projectStatusLabel,
+} from '@/lib/project-localization';
 
 const NONE = '__none__';
 
@@ -46,6 +52,7 @@ export function ProjectDialog({
    const updateProject = useProjectsStore((s) => s.updateProject);
    const teams = useTeamsStore((s) => s.teams);
    const members = useMembersStore((s) => s.members);
+   const { locale, t } = useLanguage();
 
    const [name, setName] = useState('');
    const [iconKey, setIconKey] = useState('Box');
@@ -116,11 +123,11 @@ export function ProjectDialog({
       <Dialog open={open} onOpenChange={onOpenChange}>
          <DialogContent className="sm:max-w-lg">
             <DialogHeader>
-               <DialogTitle>{project ? 'Edit project' : 'New project'}</DialogTitle>
+               <DialogTitle>{project ? t('Edit project') : t('New project')}</DialogTitle>
             </DialogHeader>
             <div className="flex flex-col gap-4 py-2">
                <div className="flex gap-3">
-                  <F label="Icon" className="w-24">
+                  <F label={t('Icon')} className="w-24">
                      <Select value={iconKey} onValueChange={setIconKey}>
                         <SelectTrigger>
                            <SelectValue />
@@ -134,18 +141,18 @@ export function ProjectDialog({
                         </SelectContent>
                      </Select>
                   </F>
-                  <F label="Name" className="flex-1">
+                  <F label={t('Name')} className="flex-1">
                      <Input
                         autoFocus
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        placeholder="Mobile redesign"
+                        placeholder={locale === 'zh-CN' ? '例如：移动端改版' : 'Mobile redesign'}
                      />
                   </F>
                </div>
 
                <div className="grid grid-cols-2 gap-3">
-                  <F label="Team">
+                  <F label={t('Team')}>
                      <Select value={teamId} onValueChange={setTeamId}>
                         <SelectTrigger>
                            <SelectValue />
@@ -159,13 +166,13 @@ export function ProjectDialog({
                         </SelectContent>
                      </Select>
                   </F>
-                  <F label="Lead">
+                  <F label={t('Lead')}>
                      <Select value={leadId} onValueChange={setLeadId}>
                         <SelectTrigger>
                            <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                           <SelectItem value={NONE}>No lead</SelectItem>
+                           <SelectItem value={NONE}>{t('No lead')}</SelectItem>
                            {members.map((m) => (
                               <SelectItem key={m.id} value={m.id}>
                                  {m.name}
@@ -174,7 +181,7 @@ export function ProjectDialog({
                         </SelectContent>
                      </Select>
                   </F>
-                  <F label="Status">
+                  <F label={t('Status')}>
                      <Select value={statusId} onValueChange={setStatusId}>
                         <SelectTrigger>
                            <SelectValue />
@@ -182,13 +189,13 @@ export function ProjectDialog({
                         <SelectContent>
                            {displayOrderedStatus.map((s) => (
                               <SelectItem key={s.id} value={s.id}>
-                                 {s.name}
+                                 {projectStatusLabel(locale, s.id, s.name)}
                               </SelectItem>
                            ))}
                         </SelectContent>
                      </Select>
                   </F>
-                  <F label="Priority">
+                  <F label={t('Priority')}>
                      <Select value={priorityId} onValueChange={setPriorityId}>
                         <SelectTrigger>
                            <SelectValue />
@@ -196,13 +203,13 @@ export function ProjectDialog({
                         <SelectContent>
                            {priorities.map((p) => (
                               <SelectItem key={p.id} value={p.id}>
-                                 {p.name}
+                                 {projectPriorityLabel(locale, p.id, p.name)}
                               </SelectItem>
                            ))}
                         </SelectContent>
                      </Select>
                   </F>
-                  <F label="Health">
+                  <F label={t('Health')}>
                      <Select value={healthId} onValueChange={setHealthId}>
                         <SelectTrigger>
                            <SelectValue />
@@ -210,21 +217,21 @@ export function ProjectDialog({
                         <SelectContent>
                            {healthOptions.map((h) => (
                               <SelectItem key={h.id} value={h.id}>
-                                 {h.name}
+                                 {projectHealthLabel(locale, h.id, h.name)}
                               </SelectItem>
                            ))}
                         </SelectContent>
                      </Select>
                   </F>
                   <div />
-                  <F label="Start date">
+                  <F label={t('Start date')}>
                      <Input
                         type="date"
                         value={startDate}
                         onChange={(e) => setStartDate(e.target.value)}
                      />
                   </F>
-                  <F label="Target date">
+                  <F label={t('Target date')}>
                      <Input
                         type="date"
                         value={targetDate}
@@ -235,10 +242,10 @@ export function ProjectDialog({
             </div>
             <DialogFooter>
                <Button variant="ghost" onClick={() => onOpenChange(false)}>
-                  Cancel
+                  {t('Cancel')}
                </Button>
                <Button onClick={submit} disabled={!name.trim() || !teamId}>
-                  {project ? 'Save' : 'Create'}
+                  {project ? t('Save') : t('Create')}
                </Button>
             </DialogFooter>
          </DialogContent>

@@ -53,3 +53,9 @@ next-env.d.ts
 # local attachment storage (dev)
 /uploads
 /backups
+
+# browser-tool session artifacts
+.playwright-mcp/
+
+# unreferenced local screenshots (force-add with `git add -f` if wanted)
+sidebar-*-no-promo.png

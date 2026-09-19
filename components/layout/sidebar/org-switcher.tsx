@@ -24,11 +24,13 @@ import { CreateNewIssue } from './create-new-issue';
 import { ThemeToggle } from '../theme-toggle';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { useLanguage } from '@/components/providers/language-provider';
 
 export function OrgSwitcher() {
    const { orgId } = useParams<{ orgId: string }>();
    const me = useCurrentUser();
    const canWrite = useCanWrite();
+   const { t } = useLanguage();
    const initials = (me?.name ?? orgId ?? 'W').slice(0, 2).toUpperCase();
    return (
       <SidebarMenu>
@@ -63,25 +65,25 @@ export function OrgSwitcher() {
                   <DropdownMenuGroup>
                      <DropdownMenuItem asChild>
                         <Link href={`/${orgId}/settings`}>
-                           Settings
+                           {t('Settings')}
                            <DropdownMenuShortcut>G then S</DropdownMenuShortcut>
                         </Link>
                      </DropdownMenuItem>
                      <DropdownMenuItem asChild>
-                        <Link href={`/${orgId}/members`}>Invite and manage members</Link>
+                        <Link href={`/${orgId}/members`}>{t('Invite and manage members')}</Link>
                      </DropdownMenuItem>
                   </DropdownMenuGroup>
                   <DropdownMenuSeparator />
                   <DropdownMenuGroup>
-                     <DropdownMenuItem>Download desktop app</DropdownMenuItem>
+                     <DropdownMenuItem>{t('Download desktop app')}</DropdownMenuItem>
                   </DropdownMenuGroup>
                   <DropdownMenuSeparator />
                   <DropdownMenuSub>
-                     <DropdownMenuSubTrigger>Switch Workspace</DropdownMenuSubTrigger>
+                     <DropdownMenuSubTrigger>{t('Switch Workspace')}</DropdownMenuSubTrigger>
                      <DropdownMenuPortal>
                         <DropdownMenuSubContent>
                            <DropdownMenuLabel className="truncate">
-                              {me?.email ?? 'Signed in'}
+                              {me?.email ?? t('Signed in')}
                            </DropdownMenuLabel>
                            <DropdownMenuSeparator />
                            <DropdownMenuItem>
@@ -91,15 +93,15 @@ export function OrgSwitcher() {
                               {orgId}
                            </DropdownMenuItem>
                            <DropdownMenuSeparator />
-                           <DropdownMenuItem>Create or join workspace</DropdownMenuItem>
-                           <DropdownMenuItem>Add an account</DropdownMenuItem>
+                           <DropdownMenuItem>{t('Create or join workspace')}</DropdownMenuItem>
+                           <DropdownMenuItem>{t('Add an account')}</DropdownMenuItem>
                         </DropdownMenuSubContent>
                      </DropdownMenuPortal>
                   </DropdownMenuSub>
                   <form action={signOutAction}>
                      <DropdownMenuItem asChild>
                         <button type="submit" className="w-full cursor-pointer">
-                           Log out
+                           {t('Log out')}
                            <DropdownMenuShortcut>⌥⇧Q</DropdownMenuShortcut>
                         </button>
                      </DropdownMenuItem>

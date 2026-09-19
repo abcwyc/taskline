@@ -33,14 +33,16 @@ import {
 } from '@/components/ui/sidebar';
 import { useTeamsStore } from '@/store/teams-store';
 import { RiDonutChartFill } from '@remixicon/react';
+import { useLanguage } from '@/components/providers/language-provider';
 
 export function NavTeams() {
    const { orgId = 'lndev-ui' } = useParams<{ orgId: string }>();
    const teams = useTeamsStore((s) => s.teams);
    const joinedTeams = teams.filter((t) => t.joined);
+   const { t } = useLanguage();
    return (
       <SidebarGroup>
-         <SidebarGroupLabel>Your teams</SidebarGroupLabel>
+         <SidebarGroupLabel>{t('Your teams')}</SidebarGroupLabel>
          <SidebarMenu>
             {joinedTeams.map((item, index) => (
                <Collapsible
@@ -76,7 +78,7 @@ export function NavTeams() {
                                  <DropdownMenuItem asChild>
                                     <Link href={`/${orgId}/settings/teams/${item.id}`}>
                                        <Settings className="size-4" />
-                                       <span>Team settings</span>
+                                       <span>{t('Team settings')}</span>
                                     </Link>
                                  </DropdownMenuItem>
                               </DropdownMenuContent>
@@ -89,7 +91,7 @@ export function NavTeams() {
                               <SidebarMenuSubButton asChild>
                                  <Link href={`/${orgId}/team/${item.id}/overview`}>
                                     <Home size={14} />
-                                    <span>Home</span>
+                                    <span>{t('Home')}</span>
                                  </Link>
                               </SidebarMenuSubButton>
                            </SidebarMenuSubItem>
@@ -97,7 +99,7 @@ export function NavTeams() {
                               <SidebarMenuSubButton asChild>
                                  <Link href={`/${orgId}/team/${item.id}/all`}>
                                     <CopyMinus size={14} />
-                                    <span>Issues</span>
+                                    <span>{t('Issues')}</span>
                                  </Link>
                               </SidebarMenuSubButton>
                            </SidebarMenuSubItem>
@@ -105,21 +107,21 @@ export function NavTeams() {
                               <SidebarMenuSubButton asChild>
                                  <Link href={`/${orgId}/team/${item.id}/cycles`}>
                                     <RiDonutChartFill size={14} />
-                                    <span>Cycles</span>
+                                    <span>{t('Cycles')}</span>
                                  </Link>
                               </SidebarMenuSubButton>
                               <SidebarMenuSub className="mr-0 pr-0">
                                  <SidebarMenuSubItem>
                                     <SidebarMenuSubButton asChild>
                                        <Link href={`/${orgId}/team/${item.id}/cycle/active`}>
-                                          <span>Current</span>
+                                          <span>{t('Current')}</span>
                                        </Link>
                                     </SidebarMenuSubButton>
                                  </SidebarMenuSubItem>
                                  <SidebarMenuSubItem>
                                     <SidebarMenuSubButton asChild>
                                        <Link href={`/${orgId}/team/${item.id}/cycle/upcoming`}>
-                                          <span>Upcoming</span>
+                                          <span>{t('Upcoming')}</span>
                                        </Link>
                                     </SidebarMenuSubButton>
                                  </SidebarMenuSubItem>
@@ -129,7 +131,7 @@ export function NavTeams() {
                               <SidebarMenuSubButton asChild>
                                  <Link href={`/${orgId}/team/${item.id}/initiatives`}>
                                     <Compass size={14} />
-                                    <span>Initiatives</span>
+                                    <span>{t('Initiatives')}</span>
                                  </Link>
                               </SidebarMenuSubButton>
                            </SidebarMenuSubItem>
@@ -137,7 +139,7 @@ export function NavTeams() {
                               <SidebarMenuSubButton asChild>
                                  <Link href={`/${orgId}/team/${item.id}/projects`}>
                                     <Box size={14} />
-                                    <span>Projects</span>
+                                    <span>{t('Projects')}</span>
                                  </Link>
                               </SidebarMenuSubButton>
                            </SidebarMenuSubItem>
@@ -145,7 +147,7 @@ export function NavTeams() {
                               <SidebarMenuSubButton asChild>
                                  <Link href={`/${orgId}/team/${item.id}/views`}>
                                     <Layers size={14} />
-                                    <span>Views</span>
+                                    <span>{t('Views')}</span>
                                  </Link>
                               </SidebarMenuSubButton>
                            </SidebarMenuSubItem>

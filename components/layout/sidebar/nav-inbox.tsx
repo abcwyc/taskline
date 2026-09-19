@@ -18,6 +18,7 @@ import {
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { useLanguage } from '@/components/providers/language-provider';
 
 const ITEM_KEYS: Record<string, SidebarItemKey> = {
    'Inbox': 'inbox',
@@ -29,6 +30,7 @@ export function NavInbox() {
    const { visibility, badgeStyle, order } = useSidebarPrefsStore();
    const { getUnreadCount } = useNotificationsStore();
    const [mounted, setMounted] = useState(false);
+   const { t } = useLanguage();
    useEffect(() => setMounted(true), []);
 
    const unread = mounted ? getUnreadCount() : 0;
@@ -55,7 +57,7 @@ export function NavInbox() {
                   <SidebarMenuButton asChild>
                      <Link href={`/${orgId}${item.url}`}>
                         <item.icon />
-                        <span>{item.name}</span>
+                        <span>{t(item.name)}</span>
                      </Link>
                   </SidebarMenuButton>
                   {mounted && item.name === 'Inbox' && unread > 0 && (

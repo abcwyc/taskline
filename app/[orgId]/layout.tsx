@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 
 import { AuthSessionProvider } from '@/components/providers/session-provider';
 import { WorkspaceProvider } from '@/components/providers/workspace-provider';
+import { LanguageProvider } from '@/components/providers/language-provider';
 import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
 
@@ -35,7 +36,9 @@ export default async function OrgLayout({
 
    return (
       <AuthSessionProvider session={session}>
-         <WorkspaceProvider refreshIntervalMs={refreshIntervalMs}>{children}</WorkspaceProvider>
+         <WorkspaceProvider refreshIntervalMs={refreshIntervalMs}>
+            <LanguageProvider>{children}</LanguageProvider>
+         </WorkspaceProvider>
       </AuthSessionProvider>
    );
 }
