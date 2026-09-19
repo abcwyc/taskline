@@ -3,44 +3,13 @@
 import { InlineText } from '@/components/common/issues/details/content-blocks';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import {
-   DropdownMenu,
-   DropdownMenuContent,
-   DropdownMenuItem,
-   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
-import { agentExamples, agentSkills } from '@/mock-data/agent';
 import { useMembersStore } from '@/store/members-store';
+import { useMeStore } from '@/store/me-store';
 import { useAgentChatStore } from '@/store/agent-chat-store';
-import { ArrowUp, Blocks, Bot, ChevronDown, Paperclip, X } from 'lucide-react';
+import { toast } from 'sonner';
+import { ArrowUp, Bot, Loader2, Sparkles, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-
-/** Streams the canned reply into the assistant message, word by word. */
-function useStreamReply() {
-   const { appendToMessage, finishMessage } = useAgentChatStore();
-   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-   useEffect(() => {
-      return () => {
-         if (intervalRef.current) clearInterval(intervalRef.current);
-      };
-   }, []);
-
-   return (chatId: string, messageId: string, reply: string) => {
-      const words = reply.split(/(\s+)/);
-      let index = 0;
-      intervalRef.current = setInterval(() => {
-         if (index >= words.length) {
-            if (intervalRef.current) clearInterval(intervalRef.current);
-            finishMessage(chatId, messageId);
-            return;
-         }
-         appendToMessage(chatId, messageId, words[index]);
-         index += 1;
-      }, 14);
-   };
-}
 
 function AgentMessageBody({ content, streaming }: { content: string; streaming?: boolean }) {
    const lines = content.split('\n');
@@ -85,10 +54,12 @@ function ChatComposer({
    onSend,
    autoFocus,
    large,
+   busy,
 }: {
    onSend: (input: string) => void;
    autoFocus?: boolean;
    large?: boolean;
+   busy?: boolean;
 }) {
    const [value, setValue] = useState('');
 
@@ -105,7 +76,7 @@ function ChatComposer({
             autoFocus={autoFocus}
             onChange={(event) => setValue(event.target.value)}
             onKeyDown={(event) => {
-               if (event.key === 'Enter' && !event.shiftKey) {
+               if (event.key === 'Enter' && !event.shiftKey && !busy) {
                   event.preventDefault();
                   submit();
                }
@@ -117,77 +88,83 @@ function ChatComposer({
             )}
          />
          <div className="flex items-center justify-between px-2.5 pb-2.5">
-            <DropdownMenu>
-               <DropdownMenuTrigger className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground px-1.5 py-1 rounded-md outline-none transition-colors">
-                  <Blocks className="size-3.5" />
-                  Skills
-                  <ChevronDown className="size-3" />
-               </DropdownMenuTrigger>
-               <DropdownMenuContent align="start" className="w-48">
-                  {agentSkills.map((skill) => (
-                     <DropdownMenuItem key={skill}>{skill}</DropdownMenuItem>
-                  ))}
-               </DropdownMenuContent>
-            </DropdownMenu>
-            <div className="flex items-center gap-1">
-               <Button variant="ghost" size="icon" className="size-7 text-muted-foreground">
-                  <Paperclip className="size-4" />
-               </Button>
-               <Button
-                  size="icon"
-                  className="size-7 rounded-full"
-                  onClick={submit}
-                  disabled={value.trim() === ''}
-                  aria-label="Send"
-               >
-                  <ArrowUp className="size-4" />
-               </Button>
-            </div>
+            <span className="flex items-center gap-1.5 text-xs text-muted-foreground px-1.5">
+               <Sparkles className="size-3.5" />
+               Workspace agent
+            </span>
+            <Button
+               size="icon"
+               className="size-7 rounded-full"
+               onClick={submit}
+               disabled={value.trim() === '' || busy}
+               aria-label="Send"
+            >
+               {busy ? <Loader2 className="size-4 animate-spin" /> : <ArrowUp className="size-4" />}
+            </Button>
          </div>
       </div>
    );
 }
 
+const STARTERS = [
+   {
+      title: 'What is blocking the team?',
+      description: 'Ask about blockers, stale issues and what changed recently.',
+   },
+   {
+      title: 'Summarize open work',
+      description: 'Get a digest of open issues by status, priority and assignee.',
+   },
+   {
+      title: 'Plan my week',
+      description: 'Ask for a suggested focus list based on open work.',
+   },
+];
+
 /**
- * Functional mock of the Linear Agent page: ask anything, get a canned
- * (deterministic) reply streamed word by word. Conversations live in a
- * client store and can be revisited from the header dropdown.
+ * The workspace Agent page. Conversations persist on the server; replies come
+ * from the configured LLM backend. When the backend is unavailable the page
+ * shows the operator's reason instead of fabricating answers.
  */
 export default function AgentChat() {
-   const users = useMembersStore((s) => s.members);
-   const { chats, activeChatId, sendMessage } = useAgentChatStore();
-   const stream = useStreamReply();
-   const [bannerDismissed, setBannerDismissed] = useState(false);
+   const members = useMembersStore((s) => s.members);
+   const me = useMeStore((s) => s.me);
+   const chats = useAgentChatStore((s) => s.chats);
+   const activeChatId = useAgentChatStore((s) => s.activeChatId);
+   const sendMessage = useAgentChatStore((s) => s.sendMessage);
+   const hydrate = useAgentChatStore((s) => s.hydrate);
+   const sending = useAgentChatStore((s) => s.sending);
+   const unconfigured = useAgentChatStore((s) => s.unconfigured);
    const [examplesDismissed, setExamplesDismissed] = useState(false);
    const scrollRef = useRef<HTMLDivElement>(null);
 
    const activeChat = chats.find((chat) => chat.id === activeChatId);
+   const meMember = (me && members.find((m) => m.id === me.id)) ?? members[0];
+
+   useEffect(() => {
+      void hydrate();
+   }, [hydrate]);
 
    useEffect(() => {
       scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
-   }, [activeChat?.messages]);
+   }, [activeChat?.messages, sending]);
 
    const handleSend = (input: string) => {
-      const { chatId, assistantMessageId, reply } = sendMessage(input);
-      stream(chatId, assistantMessageId, reply);
+      if (unconfigured) {
+         toast.error(unconfigured);
+         return;
+      }
+      void sendMessage(input);
    };
 
    /* ------------------------------- Hero ------------------------------- */
    if (!activeChat) {
       return (
          <div className="w-full h-full flex flex-col items-center overflow-y-auto">
-            {!bannerDismissed && (
-               <div className="mt-4 flex items-center gap-3 rounded-full border bg-container shadow-xs px-4 py-1.5 text-sm">
-                  <span>Agent is now your default view</span>
-                  <button className="text-muted-foreground hover:text-foreground transition-colors">
-                     Change
-                  </button>
-                  <button
-                     onClick={() => setBannerDismissed(true)}
-                     className="font-medium rounded-full border px-2.5 py-0.5 hover:bg-accent transition-colors"
-                  >
-                     Keep
-                  </button>
+            {unconfigured && (
+               <div className="mt-4 max-w-2xl mx-6 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm">
+                  <p className="font-medium">The agent is unavailable on this server</p>
+                  <p className="mt-1 text-muted-foreground">{unconfigured}</p>
                </div>
             )}
 
@@ -212,14 +189,14 @@ export default function AgentChat() {
                         </button>
                      </div>
                      <div className="grid sm:grid-cols-3 gap-3">
-                        {agentExamples.map((example) => (
+                        {STARTERS.map((example) => (
                            <button
-                              key={example.id}
+                              key={example.title}
                               type="button"
-                              onClick={() => handleSend(example.prompt)}
+                              onClick={() => handleSend(example.title)}
                               className="border rounded-lg p-4 text-left hover:bg-accent/40 transition-colors"
                            >
-                              <example.icon className="size-4 text-muted-foreground" />
+                              <Sparkles className="size-4 text-muted-foreground" />
                               <p className="mt-6 text-sm font-medium">{example.title}</p>
                               <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
                                  {example.description}
@@ -237,6 +214,14 @@ export default function AgentChat() {
    /* --------------------------- Conversation --------------------------- */
    return (
       <div className="w-full h-full flex flex-col overflow-hidden">
+         {unconfigured && (
+            <div className="shrink-0 max-w-2xl w-full mx-auto px-6 pt-4">
+               <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm">
+                  <p className="font-medium">The agent is unavailable on this server</p>
+                  <p className="mt-1 text-muted-foreground">{unconfigured}</p>
+               </div>
+            </div>
+         )}
          <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto">
             <div className="max-w-2xl mx-auto px-6 py-8 flex flex-col gap-6">
                {activeChat.messages.map((message) =>
@@ -247,8 +232,11 @@ export default function AgentChat() {
                               {message.content}
                            </div>
                            <Avatar className="size-6 mt-1 shrink-0">
-                              <AvatarImage src={users[0].avatarUrl} alt={users[0].name} />
-                              <AvatarFallback>{users[0].name[0]}</AvatarFallback>
+                              <AvatarImage
+                                 src={meMember?.avatarUrl}
+                                 alt={meMember?.name ?? 'You'}
+                              />
+                              <AvatarFallback>{(meMember?.name ?? 'Y')[0]}</AvatarFallback>
                            </Avatar>
                         </div>
                      </div>
@@ -270,7 +258,7 @@ export default function AgentChat() {
          </div>
          <div className="shrink-0 border-t bg-container">
             <div className="max-w-2xl mx-auto px-6 py-4">
-               <ChatComposer onSend={handleSend} />
+               <ChatComposer onSend={handleSend} busy={sending} />
             </div>
          </div>
       </div>
