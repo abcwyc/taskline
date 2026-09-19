@@ -182,8 +182,9 @@ function ViewRow({ view, orgId }: { view: View; orgId: string }) {
  */
 export default function Views({ teamId }: { teamId?: string }) {
    const teams = useTeamsStore((s) => s.teams);
-   const issueViews = useViewsStore((s) => s.issueViews());
-   const projectViews = useViewsStore((s) => s.projectViews());
+   const allViews = useViewsStore((s) => s.views);
+   const issueViews = useMemo(() => allViews.filter((v) => v.type === 'issue'), [allViews]);
+   const projectViews = useMemo(() => allViews.filter((v) => v.type === 'project'), [allViews]);
    const { orgId } = useParams<{ orgId: string }>();
    const [tab, setTab] = useQueryState('tab', parseAsStringLiteral(TABS).withDefault('issues'));
    const { ordering } = useViewsDisplayStore();
