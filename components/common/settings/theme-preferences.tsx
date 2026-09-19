@@ -12,6 +12,7 @@ import { Check, ChevronDown, Pipette } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { SettingsCard, SettingsRow } from './shared';
+import { useLanguage } from '@/components/providers/language-provider';
 
 /* ------------------------------- theme list ------------------------------- */
 
@@ -68,12 +69,13 @@ function ThemeSelect({
    value: string;
    onChange: (id: string) => void;
 }) {
+   const { t } = useLanguage();
    const current = options.find((candidate) => candidate.id === value) ?? options[0];
    return (
       <DropdownMenu>
          <DropdownMenuTrigger className="h-8 px-2.5 rounded-md border bg-container text-sm inline-flex items-center gap-1.5 hover:bg-accent transition-colors outline-none">
             <ThemeSwatch swatch={current.swatch} />
-            {current.label}
+            {t(current.label)}
             <ChevronDown className="size-3.5 text-muted-foreground" />
          </DropdownMenuTrigger>
          <DropdownMenuContent align="end" className="min-w-52">
@@ -84,7 +86,7 @@ function ThemeSelect({
                   className="flex items-center gap-2 text-sm"
                >
                   <ThemeSwatch swatch={candidate.swatch} />
-                  <span className="flex-1">{candidate.label}</span>
+                  <span className="flex-1">{t(candidate.label)}</span>
                   {value === candidate.id && <Check className="size-3.5" />}
                </DropdownMenuItem>
             ))}
@@ -142,6 +144,7 @@ function ContrastField({ value, onChange }: { value: number; onChange: (value: n
  * variables, import/export via the clipboard).
  */
 export function ThemePreferences() {
+   const { t } = useLanguage();
    const {
       mode,
       lightVariant,
@@ -181,9 +184,9 @@ export function ThemePreferences() {
    const copyTheme = async () => {
       try {
          await navigator.clipboard.writeText(JSON.stringify(custom, null, 2));
-         toast.success('Theme copied to clipboard');
+         toast.success(t('Theme copied to clipboard'));
       } catch {
-         toast.error('Could not access the clipboard');
+         toast.error(t('Could not access the clipboard'));
       }
    };
 
@@ -193,9 +196,9 @@ export function ThemePreferences() {
          if (typeof parsed !== 'object' || parsed === null) throw new Error('invalid');
          setCustom(parsed);
          setMode('custom');
-         toast.success('Theme imported from clipboard');
+         toast.success(t('Theme imported from clipboard'));
       } catch {
-         toast.error('Clipboard does not contain a valid theme');
+         toast.error(t('Clipboard does not contain a valid theme'));
       }
    };
 
@@ -203,8 +206,8 @@ export function ThemePreferences() {
       <>
          <SettingsCard>
             <SettingsRow
-               title="Interface theme"
-               description="Select or customize your interface color scheme"
+               title={t('Interface theme')}
+               description={t('Select or customize your interface color scheme')}
                trailing={
                   <ThemeSelect
                      options={ALL_OPTIONS}
@@ -216,8 +219,8 @@ export function ThemePreferences() {
             {mode !== 'custom' && (
                <>
                   <SettingsRow
-                     title="Light"
-                     description="Theme to use for light system appearance"
+                     title={t('Light')}
+                     description={t('Theme to use for light system appearance')}
                      trailing={
                         <ThemeSelect
                            options={LIGHT_VARIANTS}
@@ -227,8 +230,8 @@ export function ThemePreferences() {
                      }
                   />
                   <SettingsRow
-                     title="Dark"
-                     description="Theme to use for dark system appearance"
+                     title={t('Dark')}
+                     description={t('Theme to use for dark system appearance')}
                      trailing={
                         <ThemeSelect
                            options={DARK_VARIANTS}
@@ -242,7 +245,7 @@ export function ThemePreferences() {
             {mode === 'custom' && (
                <>
                   <SettingsRow
-                     title="Accent"
+                     title={t('Accent')}
                      trailing={
                         <ColorField
                            value={custom.accent}
@@ -251,7 +254,7 @@ export function ThemePreferences() {
                      }
                   />
                   <SettingsRow
-                     title="Background"
+                     title={t('Background')}
                      trailing={
                         <ColorField
                            value={custom.background}
@@ -260,7 +263,7 @@ export function ThemePreferences() {
                      }
                   />
                   <SettingsRow
-                     title="Contrast"
+                     title={t('Contrast')}
                      trailing={
                         <ContrastField
                            value={custom.contrast}
@@ -276,7 +279,7 @@ export function ThemePreferences() {
             <>
                <SettingsCard>
                   <SettingsRow
-                     title="Custom sidebar theme"
+                     title={t('Custom sidebar theme')}
                      trailing={
                         <Switch
                            checked={custom.sidebar}
@@ -287,7 +290,7 @@ export function ThemePreferences() {
                   {custom.sidebar && (
                      <>
                         <SettingsRow
-                           title="Accent"
+                           title={t('Accent')}
                            trailing={
                               <ColorField
                                  value={custom.sidebarAccent}
@@ -296,7 +299,7 @@ export function ThemePreferences() {
                            }
                         />
                         <SettingsRow
-                           title="Background"
+                           title={t('Background')}
                            trailing={
                               <ColorField
                                  value={custom.sidebarBackground}
@@ -305,7 +308,7 @@ export function ThemePreferences() {
                            }
                         />
                         <SettingsRow
-                           title="Contrast"
+                           title={t('Contrast')}
                            trailing={
                               <ContrastField
                                  value={custom.sidebarContrast}
@@ -318,20 +321,20 @@ export function ThemePreferences() {
                </SettingsCard>
                <SettingsCard>
                   <SettingsRow
-                     title="Sharing"
+                     title={t('Sharing')}
                      trailing={
                         <span className="inline-flex items-center gap-4 text-sm">
                            <button
                               onClick={importTheme}
                               className="hover:text-foreground text-muted-foreground transition-colors"
                            >
-                              Import theme
+                              {t('Import theme')}
                            </button>
                            <button
                               onClick={copyTheme}
                               className="hover:text-foreground text-muted-foreground transition-colors"
                            >
-                              Copy current theme
+                              {t('Copy current theme')}
                            </button>
                         </span>
                      }

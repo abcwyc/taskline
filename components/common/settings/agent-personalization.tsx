@@ -1,24 +1,53 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
+import { useMeStore } from '@/store/me-store';
 import { SettingsCard, SettingsRow, SettingsSection, SettingsShell } from './shared';
 
 /** Personal settings for the workspace agent. */
 export default function AgentPersonalization() {
+   const guidance = useMeStore((s) => s.preferences.agentGuidance);
+   const setPreference = useMeStore((s) => s.setPreference);
+   const [draft, setDraft] = useState(guidance);
+
+   useEffect(() => {
+      setDraft(guidance);
+   }, [guidance]);
+
+   /** Persist on blur; the store is optimistic with rollback on failure. */
+   const commit = async () => {
+      const next = draft.trim();
+      if (next === guidance) return;
+      setDraft(next);
+      await setPreference('agentGuidance', next);
+      // setPreference resolves even after a rolled-back failure, so confirm
+      // the persisted value actually took before claiming success.
+      if (useMeStore.getState().preferences.agentGuidance === next) {
+         toast.success('Guidance saved');
+      }
+   };
+
    return (
       <SettingsShell
          title="Agent personalization"
-         description="Your personal settings for the LNDev Agent"
+         description="Your personal settings for the workspace agent"
       >
          <SettingsSection
             title="Guidance"
             description="Provide personal instructions and context for the agent when responding to conversations"
          >
-            <textarea
+            <Textarea
+               value={draft}
                placeholder="Enter personal guidance for the agent (optional)..."
-               className="w-full min-h-36 rounded-lg border bg-container p-4 text-sm outline-none resize-y placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring/40"
+               onChange={(e) => setDraft(e.target.value)}
+               onBlur={commit}
+               className="min-h-36"
             />
+            <p className="text-xs text-muted-foreground">
+               Saved automatically when you click away.
+            </p>
          </SettingsSection>
 
          <SettingsSection
@@ -27,29 +56,9 @@ export default function AgentPersonalization() {
          >
             <SettingsCard>
                <SettingsRow
-                  title="No skills created"
-                  trailing={
-                     <Button size="icon" variant="ghost" className="size-7">
-                        <Plus className="size-4" />
-                     </Button>
-                  }
-               />
-            </SettingsCard>
-         </SettingsSection>
-
-         <SettingsSection
-            title="MCP connectors"
-            description="Add MCP connectors for use with the agent. Workspace admins can manage available connectors in security settings."
-         >
-            <SettingsCard>
-               <SettingsRow
-                  title="Agent MCP access disabled in this workspace"
+                  title="No skills available"
+                  description="Skills are managed by your workspace operator"
                   muted
-                  trailing={
-                     <Button size="xs" variant="ghost">
-                        Configure
-                     </Button>
-                  }
                />
             </SettingsCard>
          </SettingsSection>

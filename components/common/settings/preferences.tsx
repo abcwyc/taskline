@@ -9,6 +9,7 @@ import type { Preferences } from '@/lib/api/preferences';
 import { useMeStore } from '@/store/me-store';
 import { SettingsCard, SettingsRow, SettingsSection, SettingsShell, SelectMenu } from './shared';
 import { ThemePreferences } from './theme-preferences';
+import { useLanguage } from '@/components/providers/language-provider';
 
 /** Bind a boolean preference to a <Switch>. */
 function PrefSwitch({ name }: { name: keyof Preferences }) {
@@ -44,59 +45,74 @@ function PrefSelect({
 /** Personal "Preferences" settings (general, theme, automations). */
 export default function Preferences() {
    const [customizeOpen, setCustomizeOpen] = useState(false);
+   const { t } = useLanguage();
    return (
-      <SettingsShell title="Preferences">
-         <SettingsSection title="General">
+      <SettingsShell title={t('Preferences')}>
+         <SettingsSection title={t('General')}>
             <SettingsCard>
                <SettingsRow
-                  title="Default home view"
-                  description="Which view opens when you launch the app"
+                  title={t('Language')}
+                  description={t('Choose the language used across the interface')}
+                  trailing={
+                     <PrefSelect
+                        name="language"
+                        options={[
+                           ['system', t('Browser default')],
+                           ['en', t('English')],
+                           ['zh-CN', t('Simplified Chinese')],
+                        ]}
+                     />
+                  }
+               />
+               <SettingsRow
+                  title={t('Default home view')}
+                  description={t('Which view opens when you launch the app')}
                   trailing={
                      <PrefSelect
                         name="defaultHomeView"
                         options={[
-                           ['agent', 'Agent'],
-                           ['inbox', 'Inbox'],
-                           ['my-issues', 'My issues'],
+                           ['agent', t('Agent')],
+                           ['inbox', t('Inbox')],
+                           ['my-issues', t('My issues')],
                         ]}
                      />
                   }
                />
                <SettingsRow
-                  title="Display names"
-                  description="How names are shown across the interface"
+                  title={t('Display names')}
+                  description={t('How names are shown across the interface')}
                   trailing={
                      <PrefSelect
                         name="displayNames"
                         options={[
-                           ['full-name', 'Full name'],
-                           ['username', 'Username'],
+                           ['full-name', t('Full name')],
+                           ['username', t('Username')],
                         ]}
                      />
                   }
                />
                <SettingsRow
-                  title="First day of the week"
-                  description="Used for date pickers"
+                  title={t('First day of the week')}
+                  description={t('Used for date pickers')}
                   trailing={
                      <PrefSelect
                         name="firstDayOfWeek"
                         options={[
-                           ['monday', 'Monday'],
-                           ['sunday', 'Sunday'],
-                           ['saturday', 'Saturday'],
+                           ['monday', t('Monday')],
+                           ['sunday', t('Sunday')],
+                           ['saturday', t('Saturday')],
                         ]}
                      />
                   }
                />
                <SettingsRow
-                  title="Convert text emoticons into emojis"
-                  description="Strings like :) become 🙂"
+                  title={t('Convert text emoticons into emojis')}
+                  description={t('Strings like :) become 🙂')}
                   trailing={<PrefSwitch name="emoticonsToEmoji" />}
                />
                <SettingsRow
-                  title="Submit comments with"
-                  description="Key press that sends a comment"
+                  title={t('Submit comments with')}
+                  description={t('Key press that sends a comment')}
                   trailing={
                      <PrefSelect
                         name="submitCommentOn"
@@ -110,55 +126,57 @@ export default function Preferences() {
             </SettingsCard>
          </SettingsSection>
 
-         <SettingsSection title="Interface and theme">
+         <SettingsSection title={t('Interface and theme')}>
             <SettingsCard>
                <SettingsRow
-                  title="App sidebar"
-                  description="Customize sidebar item visibility, ordering, and badge style"
+                  title={t('App sidebar')}
+                  description={t('Customize sidebar item visibility, ordering, and badge style')}
                   trailing={
                      <Button size="xs" variant="ghost" onClick={() => setCustomizeOpen(true)}>
-                        Customize
+                        {t('Customize')}
                      </Button>
                   }
                />
                <SettingsRow
-                  title="Font size"
-                  description="Adjust the size of text across the app"
+                  title={t('Font size')}
+                  description={t('Adjust the size of text across the app')}
                   trailing={
                      <PrefSelect
                         name="fontSize"
                         options={[
-                           ['default', 'Default'],
-                           ['small', 'Small'],
-                           ['large', 'Large'],
+                           ['default', t('Default')],
+                           ['small', t('Small')],
+                           ['large', t('Large')],
                         ]}
                      />
                   }
                />
                <SettingsRow
-                  title="Use pointer cursors"
-                  description="Show a pointer cursor over interactive elements"
+                  title={t('Use pointer cursors')}
+                  description={t('Show a pointer cursor over interactive elements')}
                   trailing={<PrefSwitch name="pointerCursors" />}
                />
                <SettingsRow
-                  title="Underline links"
-                  description="Always underline links in text content"
+                  title={t('Underline links')}
+                  description={t('Always underline links in text content')}
                   trailing={<PrefSwitch name="underlineLinks" />}
                />
             </SettingsCard>
             <ThemePreferences />
          </SettingsSection>
 
-         <SettingsSection title="Automations">
+         <SettingsSection title={t('Automations')}>
             <SettingsCard>
                <SettingsRow
-                  title="Auto-assign new issues to me"
-                  description="New issues you create default to you as the assignee"
+                  title={t('Auto-assign new issues to me')}
+                  description={t('New issues you create default to you as the assignee')}
                   trailing={<PrefSwitch name="autoAssignSelf" />}
                />
                <SettingsRow
-                  title="Assign to me when I start an issue"
-                  description="Moving an unassigned issue to a started status assigns it to you"
+                  title={t('Assign to me when I start an issue')}
+                  description={t(
+                     'Moving an unassigned issue to a started status assigns it to you'
+                  )}
                   trailing={<PrefSwitch name="assignSelfOnStart" />}
                />
             </SettingsCard>

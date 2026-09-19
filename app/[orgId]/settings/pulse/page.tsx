@@ -1,12 +1,11 @@
-import SettingsPlaceholder from '@/components/common/settings/settings-placeholder';
-import { PLACEHOLDER_SECTIONS } from '@/components/common/settings/placeholder-sections';
 import MainLayout from '@/components/layout/main-layout';
 import Header from '@/components/layout/headers/settings/header';
+import PulseSettings from '@/components/common/settings/pulse-settings';
 
-export default function PulseSettingsPage() {
+export default function Page() {
    return (
       <MainLayout header={<Header />} headersNumber={1}>
-         <SettingsPlaceholder config={PLACEHOLDER_SECTIONS['pulse']} />
+         <PulseSettings />
       </MainLayout>
    );
 }

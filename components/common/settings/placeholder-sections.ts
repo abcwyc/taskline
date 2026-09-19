@@ -28,22 +28,10 @@ export const PLACEHOLDER_SECTIONS: Record<string, PlaceholderConfig> = {
       description: 'Configure how project updates are collected across the workspace',
       emptyLabel: 'No updates',
    },
-   'initiatives': {
-      title: 'Initiatives',
-      description: 'Group projects into larger bodies of work',
-      actionLabel: 'New initiative',
-      emptyLabel: 'No initiatives',
-   },
    'documents': {
       title: 'Documents',
       actionLabel: 'New document',
       emptyLabel: 'No documents',
-   },
-   'customer-requests': {
-      title: 'Customer requests',
-      description: 'Track and manage customer requests alongside your team’s work',
-      actionLabel: 'New request',
-      emptyLabel: 'No customer requests',
    },
    'releases': {
       title: 'Releases',
@@ -54,12 +42,6 @@ export const PLACEHOLDER_SECTIONS: Record<string, PlaceholderConfig> = {
       title: 'Pulse',
       description: 'A feed of important updates across your workspace',
       emptyLabel: 'No updates',
-   },
-   'asks': {
-      title: 'Asks',
-      description: 'Turn requests into actionable issues',
-      actionLabel: 'New Ask',
-      emptyLabel: 'No asks',
    },
    'emojis': {
       title: 'Emojis',

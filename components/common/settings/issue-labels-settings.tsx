@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import {
    DropdownMenu,
    DropdownMenuContent,
@@ -12,35 +13,73 @@ import { LabelDialog } from '@/components/common/forms/label-dialog';
 import type { LabelInterface } from '@/mock-data/labels';
 import { useIssuesStore } from '@/store/issues-store';
 import { useLabelsStore } from '@/store/labels-store';
-import { MoreHorizontal } from 'lucide-react';
+import { format, isValid, parseISO } from 'date-fns';
+import { MoreHorizontal, Pencil } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { SelectMenu } from './shared';
 
-/** Invented descriptions for a few labels (Linear shows a Description column). */
-const DESCRIPTIONS: Record<string, string> = {
-   bug: 'Something is broken and needs a fix',
-   accessibility: 'Keyboard, focus and screen-reader work',
-   performance: 'Speed, memory and bundle size work',
-};
-
-const hashString = (value: string): number => {
-   let hash = 0;
-   for (let i = 0; i < value.length; i++) hash = (hash * 31 + value.charCodeAt(i)) >>> 0;
-   return hash;
-};
-
-const LAST_APPLIED = [
-   '12 minutes ago',
-   '41 minutes ago',
-   '3 hours ago',
-   '17 hours ago',
-   '2 days ago',
-   '6 days ago',
-];
-const CREATED = ['Sep 2023', 'Jan 2024', 'Jun 2024', 'Feb 2025', 'Jun 2025', 'Jul 12'];
-
 const formatCount = (count: number) =>
    count >= 1000 ? `${(count / 1000).toFixed(1)}K` : String(count);
+
+const formatCreated = (iso?: string): string => {
+   if (!iso) return '—';
+   const date = parseISO(iso);
+   return isValid(date) ? format(date, 'MMM d, yyyy') : '—';
+};
+
+/** Description cell: click (or hover-pencil) to edit, commits on blur. */
+function DescriptionCell({ label }: { label: LabelInterface }) {
+   const updateLabel = useLabelsStore((s) => s.updateLabel);
+   const [editing, setEditing] = useState(false);
+   const [draft, setDraft] = useState('');
+
+   const start = () => {
+      setDraft(label.description ?? '');
+      setEditing(true);
+   };
+   const commit = () => {
+      setEditing(false);
+      const next = draft.trim();
+      if (next !== (label.description ?? '')) {
+         updateLabel(label.id, { description: next || null });
+      }
+   };
+
+   if (editing) {
+      return (
+         <Textarea
+            autoFocus
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={commit}
+            onKeyDown={(e) => {
+               if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  e.currentTarget.blur();
+               }
+               if (e.key === 'Escape') setEditing(false);
+            }}
+            placeholder="What is this label for?"
+            maxLength={500}
+            className="h-9 min-h-0 w-full resize-none text-xs px-2 py-1.5"
+         />
+      );
+   }
+
+   return (
+      <button
+         type="button"
+         onClick={start}
+         title="Edit description"
+         className="group flex w-full items-center gap-1.5 text-left"
+      >
+         <span className="flex-1 truncate text-xs text-muted-foreground">
+            {label.description || '—'}
+         </span>
+         <Pencil className="size-3 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+      </button>
+   );
+}
 
 /** Workspace "Issue labels" settings: filterable table of every label. */
 export default function IssueLabelsSettings() {
@@ -68,13 +107,7 @@ export default function IssueLabelsSettings() {
          }
       }
       return labels
-         .map((label) => ({
-            ...label,
-            issues: counts.get(label.id) ?? 0,
-            description: DESCRIPTIONS[label.id],
-            lastApplied: LAST_APPLIED[hashString(label.id) % LAST_APPLIED.length],
-            created: CREATED[hashString(label.name) % CREATED.length],
-         }))
+         .map((label) => ({ ...label, issues: counts.get(label.id) ?? 0 }))
          .filter((label) => label.name.toLowerCase().includes(query.toLowerCase()))
          .sort((a, b) => a.name.localeCompare(b.name));
    }, [issues, labels, query]);
@@ -106,8 +139,7 @@ export default function IssueLabelsSettings() {
                <div className="flex-1 min-w-0">Name ↓</div>
                <div className="hidden md:block w-[260px]">Description</div>
                <div className="w-[70px]">Issues</div>
-               <div className="hidden sm:block w-[110px]">Last applied</div>
-               <div className="w-[80px]">Created</div>
+               <div className="w-[110px]">Created</div>
             </div>
 
             {rows.map((label) => (
@@ -122,16 +154,15 @@ export default function IssueLabelsSettings() {
                      />
                      <span className="truncate">{label.name}</span>
                   </div>
-                  <div className="hidden md:block w-[260px] text-xs text-muted-foreground truncate pr-4">
-                     {label.description}
+                  <div className="hidden md:block w-[260px] pr-4">
+                     <DescriptionCell label={label} />
                   </div>
                   <div className="w-[70px] text-xs text-muted-foreground">
                      {label.issues > 0 && formatCount(label.issues)}
                   </div>
-                  <div className="hidden sm:block w-[110px] text-xs text-muted-foreground">
-                     {label.issues > 0 && label.lastApplied}
+                  <div className="w-[110px] text-xs text-muted-foreground">
+                     {formatCreated(label.createdAt)}
                   </div>
-                  <div className="w-[80px] text-xs text-muted-foreground">{label.created}</div>
                   <DropdownMenu>
                      <DropdownMenuTrigger className="text-muted-foreground hover:text-foreground shrink-0">
                         <MoreHorizontal className="size-4" />

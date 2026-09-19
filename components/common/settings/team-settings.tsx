@@ -3,10 +3,9 @@
 import { Button } from '@/components/ui/button';
 import { TeamDialog } from '@/components/common/forms/team-dialog';
 import { useCyclesStore } from '@/store/cycles-store';
-import { status } from '@/mock-data/status';
 import { useTeamsStore } from '@/store/teams-store';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
    Bot,
    ChevronRight,
@@ -18,7 +17,6 @@ import {
    Settings,
    Sparkles,
    Tag,
-   Target,
    Users,
    Workflow,
    Zap,
@@ -26,6 +24,7 @@ import {
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { SettingsCard, SettingsRow, SettingsSection } from './shared';
+import { WorkflowStatusesSection } from './workflow-statuses-section';
 
 interface TeamSettingsProps {
    teamId: string;
@@ -36,7 +35,8 @@ export default function TeamSettings({ teamId }: TeamSettingsProps) {
    const teams = useTeamsStore((s) => s.teams);
    const updateTeam = useTeamsStore((s) => s.updateTeam);
    const deleteTeam = useTeamsStore((s) => s.deleteTeam);
-   const cycles = useCyclesStore((s) => s.getCyclesByTeam(teamId));
+   const allCycles = useCyclesStore((s) => s.cycles);
+   const cycles = useMemo(() => allCycles.filter((c) => c.teamId === teamId), [allCycles, teamId]);
    const { orgId } = useParams<{ orgId: string }>();
    const router = useRouter();
    const [editOpen, setEditOpen] = useState(false);
@@ -126,14 +126,10 @@ export default function TeamSettings({ teamId }: TeamSettingsProps) {
                   </SettingsCard>
                </SettingsSection>
 
+               <WorkflowStatusesSection />
+
                <SettingsSection title="Workflow">
                   <SettingsCard>
-                     <SettingsRow
-                        icon={<Target className="size-4" />}
-                        title="Issue statuses"
-                        description="Customize the statuses issues go through"
-                        trailing={<span>{status.length} statuses</span>}
-                     />
                      <SettingsRow
                         icon={<Workflow className="size-4" />}
                         title="Workflows & automations"

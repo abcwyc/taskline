@@ -163,6 +163,48 @@ export function SelectMenu({
    );
 }
 
+/** Pull the server's error message out of the client http helper's message. */
+export function apiErrorMessage(err: unknown, fallback: string): string {
+   if (err instanceof Error) {
+      const match = err.message.match(/\{.*\}\s*$/);
+      if (match) {
+         try {
+            const parsed = JSON.parse(match[0]) as { error?: string };
+            if (parsed.error) return parsed.error;
+         } catch {
+            // message tail is not JSON — fall through to the raw message
+         }
+      }
+      return err.message;
+   }
+   return fallback;
+}
+
+/** Small stat card: label heading, big value, optional detail line. */
+export function SettingsStatCard({
+   label,
+   value,
+   detail,
+   detailClassName,
+}: {
+   label: string;
+   value: React.ReactNode;
+   detail?: React.ReactNode;
+   detailClassName?: string;
+}) {
+   return (
+      <div className="rounded-lg border bg-container px-4 py-3">
+         <div className="text-xs text-muted-foreground">{label}</div>
+         <div className="text-2xl font-medium mt-1 tabular-nums">{value}</div>
+         {detail && (
+            <div className={cn('text-xs text-muted-foreground mt-0.5', detailClassName)}>
+               {detail}
+            </div>
+         )}
+      </div>
+   );
+}
+
 /** "● Enabled ..." green-dot status text. */
 export function EnabledDot({ children }: { children: React.ReactNode }) {
    return (

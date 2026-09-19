@@ -1,15 +1,10 @@
 'use client';
 
 import { Input } from '@/components/ui/input';
-import { ChevronRight, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { INTEGRATION_LOGOS } from './integration-logos';
-import {
-   ENABLED_INTEGRATIONS,
-   INTEGRATION_CATEGORIES,
-   INTEGRATIONS,
-   Integration,
-} from './integrations-data';
+import { INTEGRATION_CATEGORIES, INTEGRATIONS, Integration } from './integrations-data';
 
 /** How many cards a category shows before "Show all". */
 const VISIBLE_PER_CATEGORY = 8;
@@ -51,28 +46,29 @@ function IntegrationIcon({ integration, size = 36 }: { integration: Integration;
    );
 }
 
-function StatusBadge({ status }: { status: NonNullable<Integration['status']> }) {
+/** Honest availability tag — none of these can be connected in this build. */
+function NotAvailableTag() {
    return (
       <span className="text-[11px] text-muted-foreground border rounded px-1 py-px leading-none shrink-0">
-         {status === 'enabled' ? 'Enabled' : 'Pre-installed'}
+         Not available in this build
       </span>
    );
 }
 
 function IntegrationCard({ integration }: { integration: Integration }) {
    return (
-      <button className="flex items-start gap-3 rounded-lg border bg-container p-3 text-left hover:bg-accent/50 transition-colors">
+      <div className="flex items-start gap-3 rounded-lg border bg-container p-3">
          <IntegrationIcon integration={integration} />
          <span className="flex flex-col gap-0.5 min-w-0">
-            <span className="flex items-center gap-2">
+            <span className="flex items-center gap-2 min-w-0">
                <span className="text-sm font-medium truncate">{integration.name}</span>
-               {integration.status && <StatusBadge status={integration.status} />}
+               <NotAvailableTag />
             </span>
             <span className="text-xs text-muted-foreground line-clamp-2">
                {integration.description}
             </span>
          </span>
-      </button>
+      </div>
    );
 }
 
@@ -90,10 +86,9 @@ function CategorySection({ label, items }: { label: string; items: Integration[]
          {!expanded && items.length > VISIBLE_PER_CATEGORY && (
             <button
                onClick={() => setExpanded(true)}
-               className="self-start text-xs text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1"
+               className="self-start text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
                Show all
-               <ChevronRight className="size-3" />
             </button>
          )}
       </section>
@@ -101,8 +96,9 @@ function CategorySection({ label, items }: { label: string; items: Integration[]
 }
 
 /**
- * Workspace "Integrations" directory (settings/integrations): search,
- * enabled integrations carousel and categorized integration cards.
+ * Workspace "Integrations" settings. Circle runs self-hosted and does not
+ * bundle third-party SaaS integrations in this build, so this page keeps the
+ * catalog purely as a browsable reference — nothing here can be connected.
  */
 export default function Integrations() {
    const [query, setQuery] = useState('');
@@ -123,8 +119,14 @@ export default function Integrations() {
             <div className="flex flex-col gap-1">
                <h1 className="text-2xl font-medium">Integrations</h1>
                <p className="text-sm text-muted-foreground">
-                  Enhance your workspace with a wide variety of add-ons and integrations
+                  Circle runs self-hosted and does not bundle third-party SaaS integrations in this
+                  build.
                </p>
+            </div>
+
+            <div className="rounded-md border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-sm text-amber-700 dark:text-amber-400">
+               The list below is a reference catalog of common integrations — none of them can be
+               connected or configured in this build.
             </div>
 
             <div className="relative">
@@ -149,40 +151,13 @@ export default function Integrations() {
                   </div>
                </section>
             ) : (
-               <>
-                  <section className="flex flex-col gap-3">
-                     <div className="flex items-center justify-between">
-                        <h2 className="text-base font-medium">Enabled</h2>
-                        <button className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-                           View all
-                        </button>
-                     </div>
-                     <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
-                        {ENABLED_INTEGRATIONS.map((integration) => (
-                           <button
-                              key={integration.id}
-                              className="flex flex-col items-start gap-2 rounded-lg border bg-container p-3 w-32 shrink-0 hover:bg-accent/50 transition-colors"
-                           >
-                              <IntegrationIcon integration={integration} size={28} />
-                              <span className="flex flex-col items-start">
-                                 <span className="text-xs font-medium truncate max-w-full">
-                                    {integration.name}
-                                 </span>
-                                 <span className="text-[11px] text-muted-foreground">Enabled</span>
-                              </span>
-                           </button>
-                        ))}
-                     </div>
-                  </section>
-
-                  {INTEGRATION_CATEGORIES.map((category) => (
-                     <CategorySection
-                        key={category.id}
-                        label={category.label}
-                        items={category.items.map((id) => INTEGRATIONS[id])}
-                     />
-                  ))}
-               </>
+               INTEGRATION_CATEGORIES.map((category) => (
+                  <CategorySection
+                     key={category.id}
+                     label={category.label}
+                     items={category.items.map((id) => INTEGRATIONS[id])}
+                  />
+               ))
             )}
          </div>
       </div>

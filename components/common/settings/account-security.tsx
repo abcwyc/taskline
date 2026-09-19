@@ -1,11 +1,730 @@
 'use client';
 
+import { startRegistration } from '@simplewebauthn/browser';
+import { format, parseISO } from 'date-fns';
+import { Check, Copy, Fingerprint, KeyRound, LogOut, Trash2 } from 'lucide-react';
+import { signOut } from 'next-auth/react';
+import { useCallback, useEffect, useState } from 'react';
+import { toast } from 'sonner';
+
+import {
+   AlertDialog,
+   AlertDialogAction,
+   AlertDialogCancel,
+   AlertDialogContent,
+   AlertDialogDescription,
+   AlertDialogFooter,
+   AlertDialogHeader,
+   AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+   Dialog,
+   DialogContent,
+   DialogDescription,
+   DialogFooter,
+   DialogHeader,
+   DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { toast } from 'sonner';
-import { useState } from 'react';
-import { SettingsSection, SettingsShell } from './shared';
+import { SettingsCard, SettingsRow, SettingsSection, SettingsShell } from './shared';
+
+interface PasskeyRow {
+   id: string;
+   label: string;
+   createdAt: string;
+   lastUsedAt: string | null;
+   backedUp: boolean;
+}
+
+interface ApiKeyRow {
+   id: string;
+   name: string;
+   prefix: string;
+   createdAt: string;
+   lastUsedAt: string | null;
+   revokedAt: string | null;
+}
+
+/** Read the { error } body of a failed response, or fall back to a generic message. */
+async function responseError(response: Response, fallback: string): Promise<string> {
+   const payload = (await response.json().catch(() => ({}))) as { error?: string };
+   return payload.error ?? fallback;
+}
+
+const fmtDate = (iso: string) => format(parseISO(iso), 'MMM d, yyyy');
+
+/** Copy-to-clipboard button with transient check feedback. */
+function CopyButton({ value, label }: { value: string; label: string }) {
+   const [copied, setCopied] = useState(false);
+   return (
+      <Button
+         variant="ghost"
+         size="icon"
+         className="size-7 shrink-0 text-muted-foreground"
+         aria-label={label}
+         onClick={async () => {
+            try {
+               await navigator.clipboard.writeText(value);
+               setCopied(true);
+               setTimeout(() => setCopied(false), 1500);
+            } catch {
+               toast.error('Could not copy — select and copy manually');
+            }
+         }}
+      >
+         {copied ? <Check className="size-3.5 text-green-600" /> : <Copy className="size-3.5" />}
+      </Button>
+   );
+}
+
+/** Two-factor authentication (TOTP): enable via setup + verify, disable with password. */
+function TotpSection() {
+   const [enabled, setEnabled] = useState(false);
+   const [setupBusy, setSetupBusy] = useState(false);
+   const [setup, setSetup] = useState<{ secret: string; otpauthUrl: string } | null>(null);
+   const [code, setCode] = useState('');
+   const [verifyBusy, setVerifyBusy] = useState(false);
+   const [disableOpen, setDisableOpen] = useState(false);
+   const [password, setPassword] = useState('');
+   const [disableBusy, setDisableBusy] = useState(false);
+
+   const startSetup = async () => {
+      setSetupBusy(true);
+      try {
+         const res = await fetch('/api/me/mfa/totp/setup', { method: 'POST' });
+         if (res.status === 409) {
+            // Setup refuses when two-factor is already on — that's our signal.
+            setEnabled(true);
+            toast('Two-factor is already enabled');
+            return;
+         }
+         if (!res.ok) throw new Error(await responseError(res, 'Could not start two-factor setup'));
+         setSetup(await res.json());
+         setCode('');
+      } catch (error) {
+         toast.error(error instanceof Error ? error.message : 'Could not start two-factor setup');
+      } finally {
+         setSetupBusy(false);
+      }
+   };
+
+   const verify = async () => {
+      if (!setup || !/^\d{6}$/.test(code)) return;
+      setVerifyBusy(true);
+      try {
+         const res = await fetch('/api/me/mfa/totp/enable', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ code }),
+         });
+         if (!res.ok) throw new Error(await responseError(res, 'Could not enable two-factor'));
+         setEnabled(true);
+         setSetup(null);
+         setCode('');
+         toast.success('Two-factor authentication enabled');
+      } catch (error) {
+         toast.error(error instanceof Error ? error.message : 'Could not enable two-factor');
+      } finally {
+         setVerifyBusy(false);
+      }
+   };
+
+   const disable = async () => {
+      if (!password) return;
+      setDisableBusy(true);
+      try {
+         const res = await fetch('/api/me/mfa/totp/disable', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ password }),
+         });
+         if (!res.ok) throw new Error(await responseError(res, 'Could not disable two-factor'));
+         setEnabled(false);
+         setDisableOpen(false);
+         setPassword('');
+         toast.success('Two-factor authentication disabled');
+      } catch (error) {
+         toast.error(error instanceof Error ? error.message : 'Could not disable two-factor');
+      } finally {
+         setDisableBusy(false);
+      }
+   };
+
+   return (
+      <SettingsSection
+         title="Two-factor authentication"
+         description="Require a code from your authenticator app in addition to your password."
+      >
+         <div className="flex items-center gap-2">
+            {enabled && (
+               <Badge variant="secondary" className="px-1.5 py-0 text-[10px]">
+                  Enabled
+               </Badge>
+            )}
+            <Button size="sm" onClick={startSetup} disabled={setupBusy}>
+               {setupBusy ? 'Starting…' : 'Enable two-factor'}
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => setDisableOpen(true)}>
+               Disable
+            </Button>
+         </div>
+         <p className="text-xs text-muted-foreground">
+            If enabled, a 6-digit code is required at sign-in.
+         </p>
+
+         <Dialog open={!!setup} onOpenChange={(v) => !v && setSetup(null)}>
+            <DialogContent className="sm:max-w-md">
+               <DialogHeader>
+                  <DialogTitle>Enable two-factor authentication</DialogTitle>
+                  <DialogDescription>
+                     Add the secret to your authenticator app, then enter the current 6-digit code.
+                  </DialogDescription>
+               </DialogHeader>
+               <div className="flex flex-col gap-4 py-2">
+                  <div className="flex flex-col gap-1.5">
+                     <Label>Secret</Label>
+                     <div className="flex items-center gap-2">
+                        <code className="min-w-0 flex-1 truncate rounded-md border bg-muted/50 px-3 py-2 font-mono text-sm">
+                           {setup?.secret}
+                        </code>
+                        <CopyButton value={setup?.secret ?? ''} label="Copy secret" />
+                     </div>
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                     <Label htmlFor="totp-verify-code">Current code</Label>
+                     <Input
+                        id="totp-verify-code"
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={6}
+                        autoComplete="one-time-code"
+                        value={code}
+                        onChange={(e) => setCode(e.target.value)}
+                        placeholder="123456"
+                     />
+                  </div>
+               </div>
+               <DialogFooter>
+                  <Button variant="ghost" onClick={() => setSetup(null)}>
+                     Cancel
+                  </Button>
+                  <Button onClick={verify} disabled={verifyBusy || !/^\d{6}$/.test(code)}>
+                     {verifyBusy ? 'Verifying…' : 'Verify'}
+                  </Button>
+               </DialogFooter>
+            </DialogContent>
+         </Dialog>
+
+         <Dialog
+            open={disableOpen}
+            onOpenChange={(v) => {
+               setDisableOpen(v);
+               if (!v) setPassword('');
+            }}
+         >
+            <DialogContent className="sm:max-w-md">
+               <DialogHeader>
+                  <DialogTitle>Disable two-factor authentication</DialogTitle>
+                  <DialogDescription>
+                     Enter your account password to turn off two-factor.
+                  </DialogDescription>
+               </DialogHeader>
+               <div className="flex flex-col gap-1.5 py-2">
+                  <Label htmlFor="totp-password">Password</Label>
+                  <Input
+                     id="totp-password"
+                     type="password"
+                     autoComplete="current-password"
+                     value={password}
+                     onChange={(e) => setPassword(e.target.value)}
+                  />
+               </div>
+               <DialogFooter>
+                  <Button variant="ghost" onClick={() => setDisableOpen(false)}>
+                     Cancel
+                  </Button>
+                  <Button onClick={disable} disabled={disableBusy || !password}>
+                     {disableBusy ? 'Disabling…' : 'Disable two-factor'}
+                  </Button>
+               </DialogFooter>
+            </DialogContent>
+         </Dialog>
+      </SettingsSection>
+   );
+}
+
+/** Passkeys: register new credentials, list them, remove them. */
+function PasskeysSection() {
+   const [passkeys, setPasskeys] = useState<PasskeyRow[]>([]);
+   const [loaded, setLoaded] = useState(false);
+   const [addOpen, setAddOpen] = useState(false);
+   const [label, setLabel] = useState('');
+   const [addBusy, setAddBusy] = useState(false);
+   const [deleting, setDeleting] = useState<PasskeyRow | null>(null);
+   const [deleteBusy, setDeleteBusy] = useState(false);
+
+   const load = useCallback(() => {
+      fetch('/api/me/passkeys')
+         .then(async (res) => {
+            if (!res.ok) throw new Error(await responseError(res, 'Could not load passkeys'));
+            return (await res.json()) as PasskeyRow[];
+         })
+         .then(setPasskeys)
+         .catch((error) => {
+            toast.error(error instanceof Error ? error.message : 'Could not load passkeys');
+         })
+         .finally(() => setLoaded(true));
+   }, []);
+
+   useEffect(() => {
+      load();
+   }, [load]);
+
+   const add = async () => {
+      setAddBusy(true);
+      try {
+         const res = await fetch('/api/me/passkeys/options', { method: 'POST' });
+         if (!res.ok) throw new Error(await responseError(res, 'Could not start passkey setup'));
+         const options = (await res.json()) as Parameters<
+            typeof startRegistration
+         >[0]['optionsJSON'];
+         const attestation = await startRegistration({ optionsJSON: options });
+         const save = await fetch('/api/me/passkeys', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({
+               label: label.trim() || 'Passkey',
+               attestation: JSON.stringify(attestation),
+            }),
+         });
+         if (!save.ok) throw new Error(await responseError(save, 'Could not save passkey'));
+         toast.success('Passkey added');
+         setAddOpen(false);
+         setLabel('');
+         load();
+      } catch (error) {
+         toast.error(error instanceof Error ? error.message : 'Could not add passkey');
+      } finally {
+         setAddBusy(false);
+      }
+   };
+
+   const remove = async () => {
+      if (!deleting) return;
+      setDeleteBusy(true);
+      try {
+         const res = await fetch(`/api/me/passkeys/${deleting.id}`, { method: 'DELETE' });
+         if (!res.ok) throw new Error(await responseError(res, 'Could not delete passkey'));
+         toast.success('Passkey removed');
+         setDeleting(null);
+         load();
+      } catch (error) {
+         toast.error(error instanceof Error ? error.message : 'Could not delete passkey');
+      } finally {
+         setDeleteBusy(false);
+      }
+   };
+
+   return (
+      <SettingsSection
+         title={`${passkeys.length} passkeys`}
+         description="Sign in with a fingerprint, face or hardware security key."
+         action={
+            <Button
+               size="xs"
+               onClick={() => {
+                  setLabel('');
+                  setAddOpen(true);
+               }}
+            >
+               Add passkey
+            </Button>
+         }
+      >
+         <SettingsCard>
+            {passkeys.map((passkey) => (
+               <SettingsRow
+                  key={passkey.id}
+                  icon={<Fingerprint className="size-4" />}
+                  title={passkey.label}
+                  description={`Added ${fmtDate(passkey.createdAt)} · Last used ${
+                     passkey.lastUsedAt ? fmtDate(passkey.lastUsedAt) : 'Never'
+                  }`}
+                  trailing={
+                     <>
+                        {passkey.backedUp && (
+                           <Badge variant="secondary" className="px-1.5 py-0 text-[10px]">
+                              Synced
+                           </Badge>
+                        )}
+                        <Button
+                           variant="ghost"
+                           size="icon"
+                           className="size-7 text-muted-foreground hover:text-destructive"
+                           aria-label={`Remove ${passkey.label}`}
+                           onClick={() => setDeleting(passkey)}
+                        >
+                           <Trash2 className="size-3.5" />
+                        </Button>
+                     </>
+                  }
+               />
+            ))}
+            {loaded && passkeys.length === 0 && (
+               <div className="px-4 py-3 text-sm text-muted-foreground">
+                  No passkeys yet — add one to sign in without a password.
+               </div>
+            )}
+         </SettingsCard>
+
+         <Dialog
+            open={addOpen}
+            onOpenChange={(v) => {
+               setAddOpen(v);
+               if (!v) setLabel('');
+            }}
+         >
+            <DialogContent className="sm:max-w-md">
+               <DialogHeader>
+                  <DialogTitle>Add passkey</DialogTitle>
+                  <DialogDescription>
+                     Name this passkey so you can recognize it later, then confirm with your device.
+                  </DialogDescription>
+               </DialogHeader>
+               <div className="flex flex-col gap-1.5 py-2">
+                  <Label htmlFor="passkey-label">Label</Label>
+                  <Input
+                     id="passkey-label"
+                     autoFocus
+                     maxLength={60}
+                     value={label}
+                     onChange={(e) => setLabel(e.target.value)}
+                     placeholder="MacBook Touch ID"
+                  />
+               </div>
+               <DialogFooter>
+                  <Button variant="ghost" onClick={() => setAddOpen(false)}>
+                     Cancel
+                  </Button>
+                  <Button onClick={add} disabled={addBusy}>
+                     {addBusy ? 'Waiting for device…' : 'Continue'}
+                  </Button>
+               </DialogFooter>
+            </DialogContent>
+         </Dialog>
+
+         <AlertDialog open={!!deleting} onOpenChange={(v) => !v && setDeleting(null)}>
+            <AlertDialogContent>
+               <AlertDialogHeader>
+                  <AlertDialogTitle>Remove passkey</AlertDialogTitle>
+                  <AlertDialogDescription>
+                     {`Remove "${deleting?.label}"? You will no longer be able to sign in with it.`}
+                  </AlertDialogDescription>
+               </AlertDialogHeader>
+               <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                     className="bg-destructive text-white hover:bg-destructive/90"
+                     onClick={remove}
+                     disabled={deleteBusy}
+                  >
+                     Remove
+                  </AlertDialogAction>
+               </AlertDialogFooter>
+            </AlertDialogContent>
+         </AlertDialog>
+      </SettingsSection>
+   );
+}
+
+/** Personal API keys: create (full key shown once), list, revoke. */
+function ApiKeysSection() {
+   const [keys, setKeys] = useState<ApiKeyRow[]>([]);
+   const [loaded, setLoaded] = useState(false);
+   const [createOpen, setCreateOpen] = useState(false);
+   const [name, setName] = useState('');
+   const [createBusy, setCreateBusy] = useState(false);
+   const [newKey, setNewKey] = useState<string | null>(null);
+   const [revoking, setRevoking] = useState<ApiKeyRow | null>(null);
+   const [revokeBusy, setRevokeBusy] = useState(false);
+
+   const load = useCallback(() => {
+      fetch('/api/me/api-keys')
+         .then(async (res) => {
+            if (!res.ok) throw new Error(await responseError(res, 'Could not load API keys'));
+            return (await res.json()) as ApiKeyRow[];
+         })
+         .then(setKeys)
+         .catch((error) => {
+            toast.error(error instanceof Error ? error.message : 'Could not load API keys');
+         })
+         .finally(() => setLoaded(true));
+   }, []);
+
+   useEffect(() => {
+      load();
+   }, [load]);
+
+   const create = async () => {
+      if (!name.trim()) return;
+      setCreateBusy(true);
+      try {
+         const res = await fetch('/api/me/api-keys', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ name: name.trim() }),
+         });
+         if (!res.ok) throw new Error(await responseError(res, 'Could not create API key'));
+         const created = (await res.json()) as ApiKeyRow & { key: string };
+         setNewKey(created.key);
+         setName('');
+         load();
+      } catch (error) {
+         toast.error(error instanceof Error ? error.message : 'Could not create API key');
+      } finally {
+         setCreateBusy(false);
+      }
+   };
+
+   const revoke = async () => {
+      if (!revoking) return;
+      setRevokeBusy(true);
+      try {
+         const res = await fetch(`/api/me/api-keys/${revoking.id}`, { method: 'DELETE' });
+         if (!res.ok) throw new Error(await responseError(res, 'Could not revoke API key'));
+         toast.success('API key revoked');
+         setRevoking(null);
+         load();
+      } catch (error) {
+         toast.error(error instanceof Error ? error.message : 'Could not revoke API key');
+      } finally {
+         setRevokeBusy(false);
+      }
+   };
+
+   return (
+      <SettingsSection
+         title={`${keys.length} API keys`}
+         description={
+            <>
+               Use with <code className="font-mono text-xs">Authorization: Bearer {'<key>'}</code>{' '}
+               against the REST API; keys act with your role.
+            </>
+         }
+         action={
+            <Button
+               size="xs"
+               onClick={() => {
+                  setName('');
+                  setNewKey(null);
+                  setCreateOpen(true);
+               }}
+            >
+               Create key
+            </Button>
+         }
+      >
+         <SettingsCard>
+            {keys.map((key) => (
+               <SettingsRow
+                  key={key.id}
+                  muted={!!key.revokedAt}
+                  icon={<KeyRound className="size-4" />}
+                  title={
+                     <>
+                        {key.name}
+                        {key.revokedAt && (
+                           <Badge variant="secondary" className="px-1.5 py-0 text-[10px]">
+                              Revoked
+                           </Badge>
+                        )}
+                     </>
+                  }
+                  description={`${key.prefix}… · Created ${fmtDate(key.createdAt)} · Last used ${
+                     key.lastUsedAt ? fmtDate(key.lastUsedAt) : 'Never'
+                  }`}
+                  trailing={
+                     !key.revokedAt && (
+                        <Button
+                           variant="ghost"
+                           size="icon"
+                           className="size-7 text-muted-foreground hover:text-destructive"
+                           aria-label={`Revoke ${key.name}`}
+                           onClick={() => setRevoking(key)}
+                        >
+                           <Trash2 className="size-3.5" />
+                        </Button>
+                     )
+                  }
+               />
+            ))}
+            {loaded && keys.length === 0 && (
+               <div className="px-4 py-3 text-sm text-muted-foreground">
+                  No API keys yet — create one to call the REST API.
+               </div>
+            )}
+         </SettingsCard>
+
+         <Dialog
+            open={createOpen}
+            onOpenChange={(v) => {
+               setCreateOpen(v);
+               if (!v) {
+                  setName('');
+                  setNewKey(null);
+               }
+            }}
+         >
+            <DialogContent className="sm:max-w-md">
+               {newKey ? (
+                  <>
+                     <DialogHeader>
+                        <DialogTitle>API key created</DialogTitle>
+                        <DialogDescription>
+                           Copy it now — you won&apos;t see this again.
+                        </DialogDescription>
+                     </DialogHeader>
+                     <div className="flex items-center gap-2 py-2">
+                        <code className="min-w-0 flex-1 truncate rounded-md border bg-muted/50 px-3 py-2 font-mono text-xs">
+                           {newKey}
+                        </code>
+                        <CopyButton value={newKey} label="Copy API key" />
+                     </div>
+                     <p className="text-xs text-muted-foreground">
+                        Treat this key like a password — requests made with it act with your role.
+                     </p>
+                     <DialogFooter>
+                        <Button
+                           onClick={() => {
+                              setCreateOpen(false);
+                              setNewKey(null);
+                           }}
+                        >
+                           Acknowledge
+                        </Button>
+                     </DialogFooter>
+                  </>
+               ) : (
+                  <>
+                     <DialogHeader>
+                        <DialogTitle>Create API key</DialogTitle>
+                        <DialogDescription>
+                           The full key is shown exactly once, right after it is created.
+                        </DialogDescription>
+                     </DialogHeader>
+                     <div className="flex flex-col gap-1.5 py-2">
+                        <Label htmlFor="api-key-name">Name</Label>
+                        <Input
+                           id="api-key-name"
+                           autoFocus
+                           maxLength={80}
+                           value={name}
+                           onChange={(e) => setName(e.target.value)}
+                           placeholder="CI pipeline"
+                        />
+                     </div>
+                     <DialogFooter>
+                        <Button variant="ghost" onClick={() => setCreateOpen(false)}>
+                           Cancel
+                        </Button>
+                        <Button onClick={create} disabled={createBusy || !name.trim()}>
+                           {createBusy ? 'Creating…' : 'Create key'}
+                        </Button>
+                     </DialogFooter>
+                  </>
+               )}
+            </DialogContent>
+         </Dialog>
+
+         <AlertDialog open={!!revoking} onOpenChange={(v) => !v && setRevoking(null)}>
+            <AlertDialogContent>
+               <AlertDialogHeader>
+                  <AlertDialogTitle>Revoke API key</AlertDialogTitle>
+                  <AlertDialogDescription>
+                     {`Revoke "${revoking?.name}"? Requests using it will stop working immediately.`}
+                  </AlertDialogDescription>
+               </AlertDialogHeader>
+               <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                     className="bg-destructive text-white hover:bg-destructive/90"
+                     onClick={revoke}
+                     disabled={revokeBusy}
+                  >
+                     Revoke
+                  </AlertDialogAction>
+               </AlertDialogFooter>
+            </AlertDialogContent>
+         </AlertDialog>
+      </SettingsSection>
+   );
+}
+
+/** Sessions: one destructive control that invalidates every JWT session. */
+function SessionsSection() {
+   const [open, setOpen] = useState(false);
+   const [busy, setBusy] = useState(false);
+
+   const revokeAll = async () => {
+      setBusy(true);
+      try {
+         const res = await fetch('/api/me/sessions/revoke-all', { method: 'POST' });
+         if (!res.ok) throw new Error(await responseError(res, 'Could not sign out all sessions'));
+         setOpen(false);
+         await signOut({ callbackUrl: '/sign-in' });
+      } catch (error) {
+         toast.error(error instanceof Error ? error.message : 'Could not sign out all sessions');
+         setBusy(false);
+      }
+   };
+
+   return (
+      <SettingsSection
+         title="Sessions"
+         description="Stay signed in everywhere until you sign out of all devices at once."
+      >
+         <SettingsCard>
+            <SettingsRow
+               icon={<LogOut className="size-4" />}
+               title="All devices"
+               description="Signs out of every session, including this one."
+               trailing={
+                  <Button variant="destructive" size="sm" onClick={() => setOpen(true)}>
+                     Sign out all sessions
+                  </Button>
+               }
+            />
+         </SettingsCard>
+
+         <AlertDialog open={open} onOpenChange={(v) => !busy && setOpen(v)}>
+            <AlertDialogContent>
+               <AlertDialogHeader>
+                  <AlertDialogTitle>Sign out all sessions</AlertDialogTitle>
+                  <AlertDialogDescription>
+                     You will be signed out immediately and need to sign in again to continue.
+                  </AlertDialogDescription>
+               </AlertDialogHeader>
+               <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                     className="bg-destructive text-white hover:bg-destructive/90"
+                     onClick={(e) => {
+                        e.preventDefault();
+                        revokeAll();
+                     }}
+                     disabled={busy}
+                  >
+                     {busy ? 'Signing out…' : 'Sign out everywhere'}
+                  </AlertDialogAction>
+               </AlertDialogFooter>
+            </AlertDialogContent>
+         </AlertDialog>
+      </SettingsSection>
+   );
+}
 
 export default function AccountSecurity() {
    const [currentPassword, setCurrentPassword] = useState('');
@@ -40,7 +759,10 @@ export default function AccountSecurity() {
    }
 
    return (
-      <SettingsShell title="Security & access" description="Manage the password for your account.">
+      <SettingsShell
+         title="Security & access"
+         description="Manage your password, two-factor authentication, passkeys, API keys and sessions."
+      >
          <SettingsSection
             title="Password"
             description="Changing your password signs out all sessions."
@@ -89,6 +811,11 @@ export default function AccountSecurity() {
                </Button>
             </form>
          </SettingsSection>
+
+         <TotpSection />
+         <PasskeysSection />
+         <ApiKeysSection />
+         <SessionsSection />
       </SettingsShell>
    );
 }
