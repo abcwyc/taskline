@@ -135,53 +135,66 @@ model Organization {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  members     Membership[]
-  teams       Team[]
-  states      WorkflowState[]
-  labels      Label[]
-  projects    Project[]
-  issues      Issue[]
-  initiatives Initiative[]
-  folders     DocumentFolder[]
-  views       SavedView[]
-  triageItems TriageItem[]
-  reviews     Review[]
-  invites     Invite[]
-  attachments Attachment[]
+  members            Membership[]
+  teams              Team[]
+  states             WorkflowState[]
+  labels             Label[]
+  projects           Project[]
+  issues             Issue[]
+  initiatives        Initiative[]
+  folders            DocumentFolder[]
+  views              SavedView[]
+  triageItems        TriageItem[]
+  reviews            Review[]
+  invites            Invite[]
+  attachments        Attachment[]
+  templates          IssueTemplate[]
+  apiKeys            ApiKey[]
+  agentConversations AgentConversation[]
+  workspaceSettings  WorkspaceSetting[]
 }
 
 model User {
-  id           String         @id @default(cuid())
-  email        String         @unique
-  name         String
-  avatarUrl    String?
-  jobTitle     String? // shown on the profile / member card
-  passwordHash  String? // bcrypt; null for OAuth-only / not-yet-invited users
-  sessionVersion Int      @default(0)
-  timezone      String    @default("UTC") // IANA — powers "Local time" on profiles
-  presence     PresenceStatus @default(OFFLINE)
-  preferences  Json? // personal settings blob (see lib/api/preferences.ts)
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  id             String         @id @default(cuid())
+  email          String         @unique
+  name           String
+  avatarUrl      String?
+  jobTitle       String? // shown on the profile / member card
+  passwordHash   String? // bcrypt; null for OAuth-only / not-yet-invited users
+  sessionVersion Int            @default(0)
+  timezone       String         @default("UTC") // IANA — powers "Local time" on profiles
+  presence       PresenceStatus @default(OFFLINE)
+  preferences    Json? // personal settings blob (see lib/api/preferences.ts)
+  totpSecret     String? // base32 TOTP secret (see lib/api/totp.ts); null = MFA off
+  mfaEnabled     Boolean        @default(false)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
 
   memberships         Membership[]
   teamMemberships     TeamMembership[]
-  ledProjects         Project[]         @relation("ProjectLead")
-  ownedInitiatives    Initiative[]      @relation("InitiativeOwner")
-  assignedIssues      Issue[]           @relation("IssueAssignee")
-  createdIssues       Issue[]           @relation("IssueCreator")
+  ledProjects         Project[]            @relation("ProjectLead")
+  ownedInitiatives    Initiative[]         @relation("InitiativeOwner")
+  assignedIssues      Issue[]              @relation("IssueAssignee")
+  createdIssues       Issue[]              @relation("IssueCreator")
   comments            IssueComment[]
   activities          IssueActivity[]
   projectUpdates      ProjectUpdate[]
   documents           Document[]
   views               SavedView[]
-  notifications       Notification[]    @relation("NotificationRecipient")
-  actedNotifications  Notification[]    @relation("NotificationActor")
-  triageReports       TriageItem[]      @relation("TriageReporter")
-  createdInvites      Invite[]          @relation("InviteCreator")
-  acceptedInvites     Invite[]          @relation("InviteAcceptor")
+  notifications       Notification[]       @relation("NotificationRecipient")
+  actedNotifications  Notification[]       @relation("NotificationActor")
+  triageReports       TriageItem[]         @relation("TriageReporter")
+  createdInvites      Invite[]             @relation("InviteCreator")
+  acceptedInvites     Invite[]             @relation("InviteAcceptor")
   uploadedAttachments Attachment[]
   issueSubscriptions  IssueSubscriber[]
+  passkeys            Passkey[]
+  apiKeys             ApiKey[]             @relation("ApiKeyCreator")
+  passwordResets      PasswordResetToken[]
+  agentConversations  AgentConversation[]
+  reviewComments      ReviewComment[]
+  createdReviews      Review[]             @relation("ReviewCreator")
+  reviewVerdicts      Review[]             @relation("ReviewVerdictBy")
 
   // Auth.js
   accounts Account[]
@@ -259,6 +272,56 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+/// WebAuthn credential (passkey) — see lib/api/passkeys.server.ts.
+model Passkey {
+  id         String    @id // base64url credential ID
+  userId     String
+  label      String    @default("Passkey") // display name, e.g. "YubiKey 5"
+  publicKey  String // base64 COSE key
+  counter    Int       @default(0)
+  transports String? // comma-separated ("internal", "hybrid", "usb", ...)
+  backedUp   Boolean   @default(false)
+  lastUsedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+/// Workspace-scoped bearer key for the REST API. Only a SHA-256 hash is
+/// stored; the full key is shown exactly once at creation.
+model ApiKey {
+  id          String    @id @default(cuid())
+  orgId       String
+  name        String
+  prefix      String    @unique // first characters of the key, for identification
+  hash        String    @unique // sha256(full key)
+  createdById String
+  lastUsedAt  DateTime?
+  revokedAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  org       Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  createdBy User         @relation("ApiKeyCreator", fields: [createdById], references: [id])
+
+  @@index([orgId])
+}
+
+/// Admin-generated password reset link. Opaque 256-bit token, single use.
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
 // ===================  Teams  ===================
 
 model Team {
@@ -281,6 +344,7 @@ model Team {
   folders        DocumentFolder[]
   triageItems    TriageItem[]
   ledInitiatives Initiative[]     @relation("InitiativeLeadTeam")
+  templates      IssueTemplate[]
 
   @@unique([orgId, key])
 }
@@ -322,11 +386,13 @@ model WorkflowState {
 
 /// mock-data/labels.ts
 model Label {
-  id    String @id @default(cuid())
-  orgId String
-  key   String // "ui", "bug", ...
-  name  String
-  color String // CSS color keyword
+  id          String   @id @default(cuid())
+  orgId       String
+  key         String // "ui", "bug", ...
+  name        String
+  color       String // CSS color keyword
+  description String?
+  createdAt   DateTime @default(now())
 
   org      Organization   @relation(fields: [orgId], references: [id], onDelete: Cascade)
   issues   IssueLabel[]
@@ -526,13 +592,14 @@ model IssueLabel {
 
 /// mock-data/issue-details.ts — ActivityItem (comment variant)
 model IssueComment {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   issueId   String
   authorId  String
   body      Json // rich text
-  reactions Json     @default("[]") // CommentReaction[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  reactions Json      @default("[]") // CommentReaction[]
+  editedAt  DateTime? // set when the body is edited after creation
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   issue  Issue @relation(fields: [issueId], references: [id], onDelete: Cascade)
   author User  @relation(fields: [authorId], references: [id])
@@ -702,14 +769,15 @@ model SavedView {
 
 /// mock-data/inbox.ts — InboxItem (notification fields; the issue is referenced)
 model Notification {
-  id        String    @id @default(cuid())
-  userId    String // recipient
-  actorId   String?
-  issueId   String?
-  type      String // comment | mention | assignment | status | reopened | closed | edited | created | upload
-  content   String
-  readAt    DateTime?
-  createdAt DateTime  @default(now())
+  id           String    @id @default(cuid())
+  userId       String // recipient
+  actorId      String?
+  issueId      String?
+  type         String // comment | mention | assignment | status | reopened | closed | edited | created | upload
+  content      String
+  readAt       DateTime?
+  snoozedUntil DateTime? // hidden from Inbox until this instant
+  createdAt    DateTime  @default(now())
 
   user  User   @relation("NotificationRecipient", fields: [userId], references: [id], onDelete: Cascade)
   actor User?  @relation("NotificationActor", fields: [actorId], references: [id])
@@ -747,15 +815,15 @@ model TriageItem {
 
 // ===================  Reviews  ===================
 
-/// mock-data/reviews.ts — Review (circle-specific PR review surface).
-/// Core columns are queryable; the heavy nested content (diffs, guide,
-/// verdict tables) lives in `data` until a real VCS integration replaces it.
+/// A code review. Created either by seed fixtures or by a user pasting a diff
+/// (no VCS integration yet — `data` carries files/diff text parsed from input).
 model Review {
   id                 String       @id @default(cuid())
   orgId              String
   title              String
   status             ReviewStatus
   list               ReviewList
+  createdById        String?
   repo               String
   prNumber           Int
   targetBranch       String
@@ -765,11 +833,99 @@ model Review {
   checksPassed       Int          @default(0)
   checksTotal        Int          @default(0)
   resolvesIdentifier String?
+  verdict            String? // "approved" | "changes_requested" — latest reviewer verdict
+  verdictById        String?
+  verdictAt          DateTime?
   data               Json // files, commits, summary, testPlan, deployment, reviewNote, guide, diffs
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
 
-  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  org       Organization    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  createdBy User?           @relation("ReviewCreator", fields: [createdById], references: [id])
+  verdictBy User?           @relation("ReviewVerdictBy", fields: [verdictById], references: [id])
+  comments  ReviewComment[]
 
   @@index([orgId, list])
+}
+
+/// Per-review discussion. `filePath`/`line` null = a general (non-inline) comment.
+model ReviewComment {
+  id        String   @id @default(cuid())
+  reviewId  String
+  authorId  String
+  filePath  String?
+  line      Int?
+  body      String   @db.Text
+  createdAt DateTime @default(now())
+
+  review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  author User   @relation(fields: [authorId], references: [id])
+
+  @@index([reviewId])
+}
+
+// ===================  Workspace settings  ===================
+
+/// Admin-managed workspace settings, stored as typed JSON documents keyed by
+/// name ('ai', 'slas', 'emojis', …). See lib/api/workspace-settings.server.ts.
+model WorkspaceSetting {
+  orgId     String
+  key       String
+  value     Json
+  updatedAt DateTime @updatedAt
+
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@id([orgId, key])
+}
+
+// ===================  Issue templates  ===================
+
+/// Prefill for the "new issue" dialog, managed on the settings page.
+model IssueTemplate {
+  id          String   @id @default(cuid())
+  orgId       String
+  teamId      String? // null = workspace-wide template
+  name        String
+  description String   @default("")
+  title       String   @default("") // prefilled issue title
+  body        String   @default("") // prefilled issue description
+  icon        String   @default("📄")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  org  Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  team Team?        @relation(fields: [teamId], references: [id], onDelete: SetNull)
+
+  @@index([orgId])
+}
+
+// ===================  Agent (AI assistant)  ===================
+
+/// One chat thread with the workspace assistant.
+model AgentConversation {
+  id        String   @id @default(cuid())
+  orgId     String
+  userId    String
+  title     String   @default("New chat")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  org      Organization   @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages AgentMessage[]
+
+  @@index([userId])
+}
+
+model AgentMessage {
+  id             String   @id @default(cuid())
+  conversationId String
+  role           String // "user" | "assistant"
+  content        String   @db.Text
+  createdAt      DateTime @default(now())
+
+  conversation AgentConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
 }
