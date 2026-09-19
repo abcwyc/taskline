@@ -1,6 +1,6 @@
 # Circle
 
-> Linear-inspired project management UI template (issues + issue detail pages, projects + project detail pages, a projects table/timeline, teams, cycles, members + member profiles, inbox, documents, and a mock Agent chat) built with Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS v4, shadcn/ui, Zustand and nuqs. Pure front-end: all data is fake and lives in `mock-data/`; mutations are in-memory via Zustand stores; filters/sorting are URL state via nuqs. No backend, no auth.
+> Circle — a self-hosted, Linear-inspired project management app (issues + details, projects, teams, cycles, initiatives, triage, saved views, reviews, documents, inbox, settings) built with Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS v4, shadcn/ui, Zustand, Prisma/PostgreSQL and Auth.js. Real backend: all product flows persist through `/api/**` route handlers into PostgreSQL (`lib/api/*.server.ts` domain layer, Zod validation, role-based authorization). `mock-data/` remains only as shared UI types, static registries (statuses/priorities/icons) and the optional demo seed source — never as live product state.
 
 Key facts for coding agents:
 
@@ -24,9 +24,8 @@ Key facts for coding agents:
 - [mock-data/cycles.ts](./mock-data/cycles.ts): cycles with capacity/scope/burn-up data + helpers
 - [mock-data/issue-details.ts](./mock-data/issue-details.ts): rich issue-page content blocks, activity, relations + deterministic fallback
 - [mock-data/project-details.ts](./mock-data/project-details.ts): rich project-page content (description blocks, milestones, updates, activity) + deterministic fallback
-- [mock-data/agent.ts](./mock-data/agent.ts): agent examples + deterministic canned replies
 - [store/issues-store.ts](./store/issues-store.ts): the only mutable issue state (CRUD + filters)
-- [store/agent-chat-store.ts](./store/agent-chat-store.ts): agent conversations (multi-chat, streamed replies)
+- [store/agent-chat-store.ts](./store/agent-chat-store.ts): agent conversations backed by `/api/agent/conversations` (LLM replies; degrades to a clear banner when unconfigured)
 
 ## Key UI
 

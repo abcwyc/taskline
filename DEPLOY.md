@@ -163,16 +163,24 @@ configured and never falls back to an authenticated browser session.
 content. `GUEST` is read-only but can comment. The first account is ADMIN;
 promote others from the Members page.
 
-## Not implemented
+## Optional integrations
 
-These render but do not do anything yet:
+- **Agent (workspace AI)** — set `AGENT_LLM_BASE_URL`, `AGENT_LLM_API_KEY` and
+  `AGENT_LLM_MODEL` (any OpenAI-compatible endpoint), then enable the agent on
+  _Settings → AI & Agents_. Without them the agent page shows a clear
+  "not configured" state and the rest of the app is unaffected.
+- **Email notifications** — set `SMTP_URL` (or `SMTP_HOST`/`SMTP_PORT`/
+  `SMTP_USER`/`SMTP_PASS`) and `MAIL_FROM`. Users opt in per-channel on
+  _Settings → Notifications_; without SMTP, delivery is skipped silently.
 
-- **Agent** — client-side canned replies, no LLM.
-- **Reviews** — read-only, no VCS integration.
-- **Integrations / Connected accounts / Security (passkeys, API keys)** — UI only.
-- 11 settings sub-pages (SLAs, releases, customer requests, emojis, …) show a
-  "not available in this build" banner.
-- **Notifications** are in-app only — no email/push delivery.
+## Known boundaries
+
+- **Reviews** are local-only: users paste a unified diff; there is no VCS
+  (GitHub/GitLab) integration yet, so nothing syncs automatically.
+- **Integrations / Connected accounts** pages state honestly that no
+  third-party SaaS integrations ship in this build.
+- **SLA** policies monitor resolution breaches; there is no escalation
+  automation.
 
 ## Attachments
 

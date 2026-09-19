@@ -13,22 +13,28 @@ context still selects the user's first membership. Do not advertise or implement
 multiple workspaces only in the UI: tenant selection must first be carried from
 the route to every API request and verified against membership.
 
-Do not expose disabled surfaces as finished functionality. Agent, Reviews/VCS,
-email/push, passkeys, API keys, and most integrations are placeholders or are
-redirected by `middleware.ts`.
+All product surfaces are enabled; `middleware.ts` only enforces authentication.
+Externally-dependent features degrade explicitly instead of faking: the agent
+requires `AGENT_LLM_*` env vars (503 + UI banner otherwise), email requires
+SMTP env vars (silently skipped otherwise), and reviews are a local
+paste-a-diff flow with no VCS integration. Do not reintroduce mock replies or
+procedurally generated content on these surfaces.
 
 ## Stack and source of truth
 
-| Concern                             | Source of truth                                 |
-| ----------------------------------- | ----------------------------------------------- |
-| Database model                      | `prisma/schema.prisma` and committed migrations |
-| Request context and roles           | `lib/api/context.ts`                            |
-| Server domain operations            | `lib/api/*.server.ts`                           |
-| Route validation                    | `lib/api/schemas.ts` and `app/api/**/route.ts`  |
-| Client HTTP/DTO adapters            | `lib/api/*.ts`                                  |
-| Client caches and optimistic writes | `store/*.ts`                                    |
-| UI/domain display types             | `mock-data/*.ts` plus component registries      |
-| Deployment and security             | `DEPLOY.md`, `SECURITY.md`, Docker/Compose      |
+| Concern                             | Source of truth                                               |
+| ----------------------------------- | ------------------------------------------------------------- |
+| Database model                      | `prisma/schema.prisma` and committed migrations               |
+| Request context and roles           | `lib/api/context.ts`                                          |
+| Server domain operations            | `lib/api/*.server.ts`                                         |
+| Route validation                    | `lib/api/schemas.ts` and `app/api/**/route.ts`                |
+| Client HTTP/DTO adapters            | `lib/api/*.ts`                                                |
+| Client caches and optimistic writes | `store/*.ts`                                                  |
+| UI/domain display types             | `mock-data/*.ts` plus component registries                    |
+| Workspace settings documents        | `lib/api/workspace-settings.server.ts`                        |
+| Diff parsing for local reviews      | `lib/api/diff.ts`                                             |
+| TOTP / passkeys / API keys          | `lib/api/totp.ts`, `passkeys.server.ts`, `api-keys.server.ts` |
+| Deployment and security             | `DEPLOY.md`, `SECURITY.md`, Docker/Compose                    |
 
 `mock-data/` is no longer the persisted product database. It remains because UI
 types, status/priority icons, deterministic seed fixtures, and unfinished demo

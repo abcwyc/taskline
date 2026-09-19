@@ -4,11 +4,13 @@ import {
    Box,
    Compass,
    ContactRound,
+   GitPullRequestArrow,
    Layers,
    LayoutList,
    LucideIcon,
    MoreHorizontal,
    UserRound,
+   Sparkles,
 } from 'lucide-react';
 
 import {
@@ -35,6 +37,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { CustomizeSidebarDialog } from './customize-sidebar-dialog';
+import { useLanguage } from '@/components/providers/language-provider';
 
 interface WorkspaceNavItem {
    key: SidebarItemKey;
@@ -48,6 +51,8 @@ const WORKSPACE_NAV: WorkspaceNavItem[] = [
    { key: 'initiatives', name: 'Initiatives', icon: Compass, url: '/initiatives' },
    { key: 'projects', name: 'Projects', icon: Box, url: '/projects' },
    { key: 'views', name: 'Views', icon: Layers, url: '/views' },
+   { key: 'agent', name: 'Agent', icon: Sparkles, url: '/agent' },
+   { key: 'reviews', name: 'Reviews', icon: GitPullRequestArrow, url: '/reviews' },
    { key: 'teams', name: 'Teams', icon: ContactRound, url: '/teams' },
    { key: 'members', name: 'Members', icon: UserRound, url: '/members' },
 ];
@@ -57,6 +62,7 @@ export function NavWorkspace() {
    const { visibility, order } = useSidebarPrefsStore();
    const [customizeOpen, setCustomizeOpen] = useState(false);
    const [mounted, setMounted] = useState(false);
+   const { t } = useLanguage();
    useEffect(() => setMounted(true), []);
 
    const orderedNav = mounted
@@ -77,14 +83,14 @@ export function NavWorkspace() {
 
    return (
       <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-         <SidebarGroupLabel>Workspace</SidebarGroupLabel>
+         <SidebarGroupLabel>{t('Workspace')}</SidebarGroupLabel>
          <SidebarMenu>
             {items.map((item) => (
                <SidebarMenuItem key={item.key}>
                   <SidebarMenuButton asChild>
                      <Link href={`/${orgId}${item.url}`}>
                         <item.icon />
-                        <span>{item.name}</span>
+                        <span>{t(item.name)}</span>
                      </Link>
                   </SidebarMenuButton>
                </SidebarMenuItem>
@@ -104,14 +110,14 @@ export function NavWorkspace() {
                         <DropdownMenuItem key={item.key} asChild>
                            <Link href={`/${orgId}${item.url}`}>
                               <item.icon className="text-muted-foreground" />
-                              <span>{item.name}</span>
+                              <span>{t(item.name)}</span>
                            </Link>
                         </DropdownMenuItem>
                      ))}
                      {hidden.length > 0 && <DropdownMenuSeparator />}
                      <DropdownMenuItem onClick={() => setCustomizeOpen(true)}>
                         <LayoutList className="text-muted-foreground" />
-                        <span>Customize sidebar</span>
+                        <span>{t('Customize sidebar')}</span>
                      </DropdownMenuItem>
                   </DropdownMenuContent>
                </DropdownMenu>

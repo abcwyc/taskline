@@ -292,7 +292,7 @@ export function CommandPalette() {
                               key={`n-${r.id}`}
                               forceMount
                               value={`search initiative ${r.name}`}
-                              onSelect={() => go(`/initiatives`)}
+                              onSelect={() => go(`/initiative/${r.id}`)}
                            >
                               <Compass className="text-muted-foreground" />
                               <span className="truncate">{r.name}</span>
@@ -301,6 +301,21 @@ export function CommandPalette() {
                               </span>
                            </CommandItem>
                         ))}
+                        {teams.length > 0 &&
+                           results.documents.map((r) => (
+                              <CommandItem
+                                 key={`d-${r.id}`}
+                                 forceMount
+                                 value={`search document ${r.title}`}
+                                 onSelect={() => go(`/team/${teams[0].id}/documents`)}
+                              >
+                                 <FileText className="text-muted-foreground" />
+                                 <span className="truncate">{r.title}</span>
+                                 <span className="ml-auto text-xs text-muted-foreground">
+                                    Document
+                                 </span>
+                              </CommandItem>
+                           ))}
                      </CommandGroup>
                   )}
 

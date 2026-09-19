@@ -12,15 +12,27 @@ putting it on a network.
 
 ## What works
 
-- Credentials authentication, invite-only registration, and ADMIN/MEMBER/GUEST
-  authorization
+- Credentials authentication (with optional TOTP two-factor and passkeys),
+  invite-only registration, and ADMIN/MEMBER/GUEST authorization
 - Issue, project, initiative, cycle, team, member, label, view, and triage flows
-- Comments, activity, subscriptions, in-app notifications, and attachments
+  — including comment edit/delete, issue relations, PR links, custom workflow
+  statuses, milestones, and issue templates
+- Comments, activity, subscriptions, in-app notifications (delete/snooze,
+  per-user preferences, optional SMTP email delivery), and attachments
+- Local code reviews: paste a unified diff, discuss per file, approve or
+  request changes
+- Workspace agent (AI chat with persisted conversations) backed by any
+  OpenAI-compatible endpoint — degrades to a clear "not configured" state
+- Personal API keys, admin-generated password-reset links, and global
+  session revocation
+- Settings surfaces: labels, notifications, AI, templates, statuses,
+  project labels/updates, documents, releases, SLAs, pulse analytics,
+  asks/customer requests (intake into triage), emojis, initiatives overview
 - Docker/Compose deployment, health checks, migrations, CI, security headers,
   backup/restore helpers, cycle snapshots, and basic abuse throttling
 
-Agent, Reviews/VCS integration, email/push delivery, API keys, passkeys, and most
-third-party integrations are intentionally unavailable in this build.
+Reviews have no VCS integration (paste-a-diff local flow), and third-party SaaS
+integrations/connected accounts intentionally do not ship in this build.
 
 ## Local development
 
