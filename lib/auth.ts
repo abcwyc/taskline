@@ -5,6 +5,8 @@ import bcrypt from 'bcryptjs';
 import { db } from '@/lib/db';
 import { authConfig } from '@/lib/auth.config';
 import { rateLimit } from '@/lib/api/rate-limit';
+import { verifyTotp } from '@/lib/api/totp';
+import { verifyAuthentication } from '@/lib/api/passkeys.server';
 
 /**
  * Full Auth.js setup (Node runtime — imports Prisma + bcrypt).
@@ -50,6 +52,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
          credentials: {
             email: { label: 'Email', type: 'email' },
             password: { label: 'Password', type: 'password' },
+            totp: { label: 'Two-factor code', type: 'text' },
          },
          async authorize(raw, request) {
             const email = String(raw?.email ?? '')
@@ -78,6 +81,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                   avatarUrl: true,
                   sessionVersion: true,
                   passwordHash: true,
+                  mfaEnabled: true,
+                  totpSecret: true,
                },
             });
             if (!user?.passwordHash) return null;
@@ -85,6 +90,50 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             const ok = await bcrypt.compare(password, user.passwordHash);
             if (!ok) return null;
 
+            if (user.mfaEnabled) {
+               const totp = String(raw?.totp ?? '');
+               if (!totp || !user.totpSecret || !verifyTotp(user.totpSecret, totp)) {
+                  return null;
+               }
+            }
+
+            return {
+               id: user.id,
+               email: user.email,
+               name: user.name,
+               image: user.avatarUrl,
+               sessionVersion: user.sessionVersion,
+            };
+         },
+      }),
+      Credentials({
+         id: 'passkey',
+         credentials: {
+            assertion: { label: 'Assertion', type: 'text' },
+         },
+         async authorize(raw, request) {
+            const ip = (request?.headers?.get('x-forwarded-for')?.split(',')[0] ?? 'local').trim();
+            if (!rateLimit(`passkey:ip:${ip}`, { windowMs: 5 * 60_000, max: 50 })) return null;
+
+            let assertion: Parameters<typeof verifyAuthentication>[0];
+            try {
+               assertion = JSON.parse(String(raw?.assertion ?? '')) as typeof assertion;
+            } catch {
+               return null;
+            }
+            const userId = await verifyAuthentication(assertion);
+            if (!userId) return null;
+            const user = await db.user.findUnique({
+               where: { id: userId },
+               select: {
+                  id: true,
+                  email: true,
+                  name: true,
+                  avatarUrl: true,
+                  sessionVersion: true,
+               },
+            });
+            if (!user) return null;
             return {
                id: user.id,
                email: user.email,

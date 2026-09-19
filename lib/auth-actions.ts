@@ -38,6 +38,7 @@ export async function signInAction(formData: FormData) {
       await signIn('credentials', {
          email: formData.get('email'),
          password: formData.get('password'),
+         totp: formData.get('totp') ?? undefined,
          redirectTo: callbackUrl.startsWith('/') ? callbackUrl : '/',
       });
    } catch (err) {

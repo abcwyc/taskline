@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 
+import { PasskeySignInButton } from '@/components/common/forms/passkey-sign-in-button';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -64,10 +65,26 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
                      required
                   />
                </div>
+               <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="totp">Two-factor code</Label>
+                  <Input
+                     id="totp"
+                     name="totp"
+                     type="text"
+                     inputMode="numeric"
+                     maxLength={6}
+                     autoComplete="one-time-code"
+                     placeholder="2FA code (if enabled)"
+                  />
+               </div>
                <Button type="submit" className="mt-2 w-full">
                   Sign in
                </Button>
             </form>
+
+            <div className="mt-4">
+               <PasskeySignInButton callbackUrl={callbackUrl} />
+            </div>
 
             <p className="mt-4 text-sm text-muted-foreground">
                Need an account?{' '}
