@@ -107,9 +107,6 @@ export default function Header({ projectId }: { projectId: string }) {
                      <project.icon className="size-3.5" />
                   </span>
                   <span className="font-medium truncate">{project.name}</span>
-                  <Button variant="ghost" size="icon" className="size-6 text-muted-foreground">
-                     <Star className="size-3.5" />
-                  </Button>
                </div>
             </div>
             <div className="flex items-center gap-1">

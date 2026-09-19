@@ -243,9 +243,6 @@ export function ProjectsDisplayOptions() {
                >
                   {t('Reset')}
                </button>
-               <button className="text-sm text-indigo-500 dark:text-indigo-400 hover:underline">
-                  {t('Set default for everyone')}
-               </button>
             </div>
          </PopoverContent>
       </Popover>

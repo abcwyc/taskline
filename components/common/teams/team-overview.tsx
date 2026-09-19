@@ -47,14 +47,6 @@ export default function TeamOverview() {
             <div className="mt-12">
                <div className="flex items-center justify-between">
                   <h2 className="text-xl font-semibold">Team resources</h2>
-                  <div className="flex items-center gap-1">
-                     <Button variant="ghost" size="icon" className="size-7 rounded-full border">
-                        <Plus className="size-4" />
-                     </Button>
-                     <Button variant="ghost" size="icon" className="size-7 rounded-full border">
-                        <SquareStack className="size-4" />
-                     </Button>
-                  </div>
                </div>
 
                <div className="mt-4 flex flex-col gap-1">

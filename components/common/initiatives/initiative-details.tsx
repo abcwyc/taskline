@@ -208,9 +208,6 @@ function InitiativeAside({ initiative }: { initiative: Initiative }) {
          <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between">
                <span className="text-sm font-medium">Activity</span>
-               <button className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-                  See all
-               </button>
             </div>
             <div className="flex flex-col gap-2 text-xs text-muted-foreground">
                <span className="flex items-start gap-2">
@@ -282,16 +279,11 @@ function Overview({ initiative }: { initiative: Initiative }) {
 
                <div className="flex items-center gap-3 text-sm">
                   <span className="text-muted-foreground text-xs w-24">Resources</span>
-                  <button className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors">
-                     <Plus className="size-4" />
-                     Add document or link…
-                  </button>
                </div>
 
-               <button className="flex items-center justify-center gap-2 rounded-lg border py-4 text-sm text-muted-foreground hover:bg-accent/40 transition-colors">
-                  <FilePenLine className="size-4" />
-                  Write first initiative update
-               </button>
+               <p className="rounded-lg border border-dashed py-4 text-center text-sm text-muted-foreground">
+                  Initiative updates are not supported in this build yet.
+               </p>
 
                <div className="flex flex-col gap-2">
                   <h2 className="text-sm font-medium">Description</h2>

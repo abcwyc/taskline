@@ -3,8 +3,10 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { useTeamsStore } from '@/store/teams-store';
-import { Plus, SlidersHorizontal } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useParams } from 'next/navigation';
+import { useState } from 'react';
+import { InviteDialog } from '@/components/common/forms/invite-dialog';
 
 /**
  * Team Home — "Members" tab: members of the current team with
@@ -13,6 +15,7 @@ import { useParams } from 'next/navigation';
 export default function TeamMembers() {
    const teams = useTeamsStore((s) => s.teams);
    const { teamId } = useParams<{ orgId: string; teamId: string }>();
+   const [inviteOpen, setInviteOpen] = useState(false);
    const team = teams.find((t) => t.id === teamId) ?? teams[0];
 
    const members = [...team.members].sort((a, b) => a.name.localeCompare(b.name));
@@ -22,13 +25,11 @@ export default function TeamMembers() {
          <div className="flex items-center justify-between px-6 py-3">
             <span className="text-sm text-muted-foreground font-medium">Name ↓</span>
             <div className="flex items-center gap-2">
-               <Button size="xs" variant="secondary">
+               <Button size="xs" variant="secondary" onClick={() => setInviteOpen(true)}>
                   <Plus className="size-4 mr-1" />
                   Add a member
                </Button>
-               <Button size="xs" variant="ghost">
-                  <SlidersHorizontal className="size-4" />
-               </Button>
+               <InviteDialog open={inviteOpen} onOpenChange={setInviteOpen} />
             </div>
          </div>
 

@@ -5,8 +5,7 @@ import { Button } from '@/components/ui/button';
 import { StatusTriageIcon } from '@/mock-data/status';
 import { TriageItem } from '@/mock-data/triage';
 import { useTriageStore } from '@/store/triage-store';
-import { Box, Check, Clock, Sparkles, Star, Tag, UserRound, X } from 'lucide-react';
-import { RiDonutChartFill } from '@remixicon/react';
+import { Check, Clock, Sparkles, Star, X } from 'lucide-react';
 
 /* ------------------------------ building blocks ---------------------------- */
 
@@ -217,37 +216,11 @@ export function TriageDetails({ item }: { item: TriageItem }) {
                      </span>
                   </PropertyRow>
                   <PropertyRow>
-                     <button className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
-                        <span className="text-muted-foreground">---</span>
-                        Set priority
-                     </button>
+                     <span className="text-xs text-muted-foreground">
+                        Priority, assignee, labels and project are set on the issue after you accept
+                        this request.
+                     </span>
                   </PropertyRow>
-                  <PropertyRow>
-                     <button className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
-                        <UserRound className="size-4" />
-                        Assign
-                     </button>
-                  </PropertyRow>
-                  <PropertyRow>
-                     <button className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
-                        <RiDonutChartFill className="size-4" />
-                        Add to cycle
-                     </button>
-                  </PropertyRow>
-               </div>
-               <div className="flex flex-col gap-3">
-                  <span className="text-xs text-muted-foreground">Labels</span>
-                  <button className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                     <Tag className="size-4" />
-                     Add label
-                  </button>
-               </div>
-               <div className="flex flex-col gap-3">
-                  <span className="text-xs text-muted-foreground">Project</span>
-                  <button className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                     <Box className="size-4" />
-                     Add to project
-                  </button>
                </div>
             </aside>
          </div>

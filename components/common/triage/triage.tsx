@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { TriageItem } from '@/mock-data/triage';
 import { useTriageStore } from '@/store/triage-store';
+import { useCreateIssueStore } from '@/store/create-issue-store';
 import { cn } from '@/lib/utils';
 import { Inbox, Plus, TriangleAlert } from 'lucide-react';
 import { TriageDetails } from './triage-details';
@@ -56,13 +57,14 @@ function TriageRow({ item, selected }: { item: TriageItem; selected: boolean }) 
 /* -------------------------------- empty state ------------------------------ */
 
 function EmptyState({ count }: { count: number }) {
+   const openModal = useCreateIssueStore((s) => s.openModal);
    return (
       <div className="flex-1 h-full hidden lg:flex flex-col items-center justify-center gap-3">
          <Inbox className="size-10 text-muted-foreground/40" strokeWidth={1.2} />
          <span className="text-sm text-muted-foreground">
             {count} issue{count === 1 ? '' : 's'} to triage
          </span>
-         <Button variant="outline" size="sm" className="gap-1.5">
+         <Button variant="outline" size="sm" className="gap-1.5" onClick={() => openModal()}>
             <Plus className="size-4" />
             Create triage issue
          </Button>

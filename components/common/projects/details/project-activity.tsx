@@ -31,7 +31,7 @@ import { useIssuesStore } from '@/store/issues-store';
 import { useProjectsStore } from '@/store/projects-store';
 import { useProjectDetail, useProjectDetailsStore } from '@/store/project-details-store';
 import { format, parseISO } from 'date-fns';
-import { Paperclip, Sparkles, Trash2 } from 'lucide-react';
+import { Paperclip, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { ProjectSidePanel } from './project-side-panel';
 import { useLanguage } from '@/components/providers/language-provider';
@@ -267,11 +267,7 @@ export default function ProjectActivity({ projectId }: ProjectActivityProps) {
                      </div>
                   )}
 
-                  <div className="mt-3 flex items-center justify-between">
-                     <Button variant="outline" size="xs" className="gap-1.5">
-                        <Sparkles className="size-3.5" />
-                        {t('Write with Agent')}
-                     </Button>
+                  <div className="mt-3 flex items-center justify-end">
                      <div className="flex items-center gap-2">
                         <Button
                            variant="ghost"

@@ -455,9 +455,6 @@ export default function ProjectsTimeline({ groups }: ProjectsTimelineProps) {
                            <span className="text-xs text-muted-foreground">
                               {group.projects.length}
                            </span>
-                           <button className="ml-auto text-muted-foreground hover:text-foreground transition-colors">
-                              <Plus className="size-3.5" />
-                           </button>
                         </div>
                         <div className="py-1">
                            {group.projects.map((project) => (

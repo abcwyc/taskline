@@ -11,11 +11,10 @@ import {
    CalendarPlus,
    ChevronRight,
    Compass,
-   Plus,
    Slack,
    Star,
    Tag,
-   UserPlus,
+   User,
    X,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -129,9 +128,6 @@ export function ProjectPeekPanel({ projectId, onClose }: ProjectPeekPanelProps) 
          <Card>
             <div className="flex items-center justify-between mb-1.5">
                <h3 className="text-sm font-medium">{t('Properties')}</h3>
-               <button className="text-muted-foreground hover:text-foreground transition-colors">
-                  <Plus className="size-3.5" />
-               </button>
             </div>
             <div className="flex flex-col">
                <PropertyRow label={t('Status')}>
@@ -166,12 +162,7 @@ export function ProjectPeekPanel({ projectId, onClose }: ProjectPeekPanelProps) 
                            ? `${members.length} 位成员`
                            : `${members.length} ${members.length === 1 ? 'member' : 'members'}`}
                      </span>
-                  ) : (
-                     <button className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors">
-                        <UserPlus className="size-3.5" />
-                        {t('Add members')}
-                     </button>
-                  )}
+                  ) : null}
                </PropertyRow>
                <PropertyRow label={t('Dates')}>
                   <span className="inline-flex items-center gap-1">
@@ -238,9 +229,6 @@ export function ProjectPeekPanel({ projectId, onClose }: ProjectPeekPanelProps) 
          <Card>
             <div className="flex items-center justify-between mb-2">
                <h3 className="text-sm font-medium">{t('Milestones')}</h3>
-               <button className="text-muted-foreground hover:text-foreground transition-colors">
-                  <Plus className="size-3.5" />
-               </button>
             </div>
             {detail.milestones.length === 0 ? (
                <p className="text-xs text-muted-foreground">

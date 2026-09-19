@@ -12,10 +12,15 @@ import type { IssueDetail } from '@/mock-data/issue-details';
 import { InboxItem } from '@/mock-data/inbox';
 import { useIssuesStore } from '@/store/issues-store';
 import { useNotificationsStore } from '@/store/notifications-store';
+import { useIssueDetailsStore } from '@/store/issue-details-store';
+import { useAttachmentsStore } from '@/store/attachments-store';
+import { useMeStore } from '@/store/me-store';
+import { toast } from 'sonner';
 import { formatDistanceToNowStrict } from 'date-fns';
-import { ArrowUpRight, Check, Paperclip, Send } from 'lucide-react';
+import { ArrowUpRight, Check, Loader2, Paperclip, Send } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { useRef, useState } from 'react';
 import { NotificationBox } from './icons/motification-box';
 
 interface IssuePreviewProps {
@@ -45,6 +50,36 @@ export default function IssuePreview({ notification, onMarkAsRead }: IssuePrevie
       ? (issues.find((c) => c.identifier === notification.identifier) ?? notification)
       : undefined;
    const detailMaybe = useIssueDetail(liveIssue);
+   const commentTarget = notification?.identifier;
+   const postComment = useIssueDetailsStore((s) => s.postComment);
+   const uploadAttachment = useAttachmentsStore((s) => s.upload);
+   const me = useMeStore((s) => s.me);
+   const [commentDraft, setCommentDraft] = useState('');
+   const [posting, setPosting] = useState(false);
+   const fileRef = useRef<HTMLInputElement>(null);
+
+   const canComment = Boolean(me && commentTarget);
+
+   const submitComment = () => {
+      const text = commentDraft.trim();
+      if (!text || !canComment || !commentTarget) return;
+      setPosting(true);
+      try {
+         postComment(displayIssue.identifier, text);
+         setCommentDraft('');
+      } finally {
+         setPosting(false);
+      }
+   };
+
+   const onAttach = async (files: FileList | null) => {
+      if (!files?.length || !canComment || !commentTarget) return;
+      for (const file of Array.from(files)) {
+         await uploadAttachment(commentTarget, file);
+      }
+      toast.success(`Attached ${files.length} file${files.length > 1 ? 's' : ''}`);
+      if (fileRef.current) fileRef.current.value = '';
+   };
 
    if (!notification) {
       const unreadCount = getUnreadCount();
@@ -166,16 +201,50 @@ export default function IssuePreview({ notification, onMarkAsRead }: IssuePrevie
                   {/* Comment composer */}
                   <div className="relative w-full flex flex-col mt-10">
                      <Textarea
+                        value={commentDraft}
+                        onChange={(e) => setCommentDraft(e.target.value)}
+                        onKeyDown={(e) => {
+                           if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                              e.preventDefault();
+                              submitComment();
+                           }
+                        }}
+                        disabled={!canComment}
                         className="w-full rounded-lg border px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent pb-14 resize-none"
-                        placeholder="Leave a comment..."
+                        placeholder={
+                           canComment ? 'Leave a comment... (⌘↵ to submit)' : 'Sign in to comment'
+                        }
                         rows={3}
                      />
                      <div className="absolute right-3 bottom-3 flex items-center gap-3">
-                        <Button size="icon" variant="ghost">
+                        <input
+                           ref={fileRef}
+                           type="file"
+                           multiple
+                           className="hidden"
+                           onChange={(e) => void onAttach(e.target.files)}
+                        />
+                        <Button
+                           size="icon"
+                           variant="ghost"
+                           aria-label="Attach files"
+                           disabled={!canComment}
+                           onClick={() => fileRef.current?.click()}
+                        >
                            <Paperclip className="w-4 h-4" />
                         </Button>
-                        <Button size="icon" variant="secondary">
-                           <Send className="w-4 h-4" />
+                        <Button
+                           size="icon"
+                           variant="secondary"
+                           aria-label="Send comment"
+                           disabled={!canComment || !commentDraft.trim() || posting}
+                           onClick={submitComment}
+                        >
+                           {posting ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                           ) : (
+                              <Send className="w-4 h-4" />
+                           )}
                         </Button>
                      </div>
                   </div>

@@ -24,6 +24,8 @@ import {
    DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { Issue } from '@/mock-data/issues';
 import { useCyclesStore } from '@/store/cycles-store';
 import { ProjectDetail, ProjectMilestone } from '@/mock-data/project-details';
@@ -40,7 +42,6 @@ import {
    Compass,
    Pencil,
    Plus,
-   Slack,
    Tag,
    Trash2,
    UserPlus,
@@ -151,6 +152,7 @@ function PropertyRow({ label, children }: { label: string; children: React.React
  */
 export function ProjectPropertiesPanel({ project, detail, issues }: ProjectPropertiesPanelProps) {
    const { locale, t } = useLanguage();
+   const { orgId } = useParams<{ orgId: string }>();
    const formatDay = (iso?: string) => formatProjectDate(locale, iso);
    const teams = useTeamsStore((s) => s.teams);
    const cycles = useCyclesStore((s) => s.cycles);
@@ -341,12 +343,6 @@ export function ProjectPropertiesPanel({ project, detail, issues }: ProjectPrope
                   <span className="inline-flex items-center gap-1.5">
                      {team?.icon} {team?.name ?? project.teamId}
                   </span>
-               </PropertyRow>
-               <PropertyRow label="Slack">
-                  <button className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors">
-                     <Slack className="size-3.5" />
-                     {t('Connect channel')}
-                  </button>
                </PropertyRow>
                <PropertyRow label={t('Initiatives')}>
                   {project.initiative ? (
@@ -657,9 +653,12 @@ export function ProjectPropertiesPanel({ project, detail, issues }: ProjectPrope
          <div className="px-5 py-4">
             <div className="flex items-center justify-between mb-2">
                <h3 className="text-sm font-medium">{t('Activity')}</h3>
-               <button className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+               <Link
+                  href={`/${orgId}/project/${project.id}/activity`}
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+               >
                   {t('See all')}
-               </button>
+               </Link>
             </div>
             <div className="flex flex-col gap-3">
                {detail.activity.map((event) => (

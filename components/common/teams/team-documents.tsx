@@ -122,9 +122,6 @@ export default function TeamDocuments() {
                   <FolderPlus className="size-4 md:mr-1" />
                   <span className="hidden md:inline">New folder</span>
                </Button>
-               <Button size="xs" variant="ghost">
-                  <SlidersHorizontal className="size-4" />
-               </Button>
             </div>
          </div>
 

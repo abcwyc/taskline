@@ -357,10 +357,9 @@ export function ReviewOverview({ review }: { review: Review }) {
             </div>
             <div className="flex flex-col gap-2">
                <span className="text-sm font-medium">Reviewers</span>
-               <button className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors self-start">
-                  <UserPlus className="size-4" />
-                  Add reviewers
-               </button>
+               <span className="text-xs text-muted-foreground">
+                  All workspace members can review.
+               </span>
             </div>
             <div className="flex flex-col gap-2">
                <span className="text-sm font-medium">Checks</span>

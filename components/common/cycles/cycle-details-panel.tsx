@@ -237,11 +237,6 @@ export function CycleDetailsPanel({ cycle, issues }: CycleDetailsPanelProps) {
                <CyclePlayIcon />
                <h2 className="text-lg font-semibold">{cycle.name}</h2>
             </div>
-
-            <button className="flex items-center gap-1.5 mt-3 text-sm text-muted-foreground hover:text-foreground transition-colors">
-               <Plus className="size-4" />
-               Add document or link...
-            </button>
          </div>
 
          {/* Progress */}

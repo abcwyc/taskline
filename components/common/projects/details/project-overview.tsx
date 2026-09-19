@@ -6,7 +6,7 @@ import { useIssuesStore } from '@/store/issues-store';
 import { useProjectsStore } from '@/store/projects-store';
 import { useProjectDetail } from '@/store/project-details-store';
 import { useTeamsStore } from '@/store/teams-store';
-import { ArrowRight, ChevronDown, FileText, PenLine, Plus } from 'lucide-react';
+import { ArrowRight, ChevronDown, FileText, PenLine } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useMemo, useRef } from 'react';
@@ -106,9 +106,6 @@ export default function ProjectOverview({ projectId }: ProjectOverviewProps) {
                            </span>
                            <span className="inline-flex items-center gap-1.5">
                               📄 {project.initiative}
-                              <button className="text-muted-foreground hover:text-foreground transition-colors">
-                                 <Plus className="size-3.5" />
-                              </button>
                            </span>
                         </div>
                      )}
@@ -129,9 +126,6 @@ export default function ProjectOverview({ projectId }: ProjectOverviewProps) {
                                  <ChevronDown className="size-3 text-muted-foreground" />
                               </span>
                            ))}
-                           <button className="text-muted-foreground hover:text-foreground transition-colors">
-                              <Plus className="size-3.5" />
-                           </button>
                         </div>
                      </div>
 
@@ -151,9 +145,6 @@ export default function ProjectOverview({ projectId }: ProjectOverviewProps) {
                                     {resource.label}
                                  </a>
                               ))}
-                              <button className="text-muted-foreground hover:text-foreground transition-colors">
-                                 <Plus className="size-3.5" />
-                              </button>
                            </div>
                         </div>
                      )}

@@ -3,6 +3,10 @@
 import { CyclePlayIcon } from '@/components/common/cycles/cycle-line';
 import { AssigneeUser } from '../assignee-user';
 import { LabelBadge } from '../label-badge';
+import { LabelSelector } from '@/components/layout/sidebar/create-new-issue/label-selector';
+import type { LabelInterface } from '@/mock-data/labels';
+import { useIssuesStore } from '@/store/issues-store';
+import { useLabelsStore } from '@/store/labels-store';
 import { PrioritySelector } from '../priority-selector';
 import { StatusSelector } from '../status-selector';
 import { Button } from '@/components/ui/button';
@@ -311,10 +315,10 @@ export function IssuePropertiesPanel({ issue, detail }: IssuePropertiesPanelProp
 
          <Section title="Labels">
             <div className="flex items-center flex-wrap gap-1.5">
-               <LabelBadge label={issue.labels} />
-               <Button variant="ghost" size="icon" className="size-6 rounded-full border">
-                  <Plus className="size-3.5" />
-               </Button>
+               {issue.labels.map((label) => (
+                  <LabelBadge key={label.id} label={[label]} />
+               ))}
+               <IssueLabelSelector issue={issue} />
             </div>
          </Section>
 
@@ -439,5 +443,29 @@ export function IssuePropertiesPanel({ issue, detail }: IssuePropertiesPanelProp
             </div>
          </Section>
       </div>
+   );
+}
+
+/** Round "+" that opens the shared label picker and persists via the issues store. */
+function IssueLabelSelector({ issue }: { issue: Issue }) {
+   const addIssueLabel = useIssuesStore((s) => s.addIssueLabel);
+   const removeIssueLabel = useIssuesStore((s) => s.removeIssueLabel);
+   const labels = useLabelsStore((s) => s.labels);
+
+   return (
+      <LabelSelector
+         selectedLabels={issue.labels}
+         onChange={(next: LabelInterface[]) => {
+            const current = new Set(issue.labels.map((l) => l.id));
+            for (const label of next) {
+               if (!current.has(label.id)) addIssueLabel(issue.id, label);
+            }
+            const nextIds = new Set(next.map((l) => l.id));
+            for (const label of issue.labels) {
+               if (!nextIds.has(label.id)) removeIssueLabel(issue.id, label.id);
+            }
+            void labels;
+         }}
+      />
    );
 }

@@ -235,11 +235,7 @@ export function InsightsPanel({ issues }: InsightsPanelProps) {
             </table>
          </div>
 
-         <div className="shrink-0 border-t px-4 py-3">
-            <button className="text-xs text-indigo-500 dark:text-indigo-400 hover:underline">
-               Set default for everyone
-            </button>
-         </div>
+         <div className="shrink-0 border-t px-4 py-3"></div>
       </div>
    );
 }

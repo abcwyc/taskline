@@ -144,9 +144,6 @@ export default function Header({ member }: { member: User }) {
                      <AvatarFallback>{member.name[0]}</AvatarFallback>
                   </Avatar>
                   <span className="font-medium truncate">{member.name}</span>
-                  <Button variant="ghost" size="icon" className="size-6 text-muted-foreground">
-                     <Star className="size-3.5" />
-                  </Button>
                </div>
             </div>
             <div className="flex items-center gap-2">

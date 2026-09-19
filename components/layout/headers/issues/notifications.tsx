@@ -1,6 +1,8 @@
 'use client';
 
 import { Bell } from 'lucide-react';
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -8,6 +10,7 @@ import { useState } from 'react';
 import { RiSlackLine } from '@remixicon/react';
 
 export default function Notifications() {
+   const { orgId } = useParams<{ orgId: string }>();
    const [notifications, setNotifications] = useState({
       teamIssueAdded: false,
       issueCompleted: false,
