@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 
 import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
+import { resolveApiKey } from './api-keys.server';
 
 /**
  * Per-request context (which workspace + who). Route handlers call
@@ -22,7 +23,17 @@ export interface RequestContext {
 export class UnauthorizedError extends Error {}
 export class ForbiddenError extends Error {}
 
-export async function getRequestContext(): Promise<RequestContext> {
+export async function getRequestContext(req?: Request): Promise<RequestContext> {
+   // Personal API key: Authorization: Bearer circle_… (acts as its creator).
+   if (req) {
+      const header = req.headers.get('authorization');
+      if (header?.startsWith('Bearer ')) {
+         const apiKey = await resolveApiKey(header.slice(7).trim());
+         if (!apiKey) throw new UnauthorizedError('invalid api key');
+         return apiKey;
+      }
+   }
+
    const session = await auth();
    const userId = session?.user?.id;
    if (!userId) throw new UnauthorizedError('not authenticated');
@@ -46,9 +57,9 @@ export async function getRequestContext(): Promise<RequestContext> {
 }
 
 /** Route-handler helper: returns the context, or a 401 `NextResponse` to return. */
-export async function requireContext(): Promise<RequestContext | NextResponse> {
+export async function requireContext(req?: Request): Promise<RequestContext | NextResponse> {
    try {
-      return await getRequestContext();
+      return await getRequestContext(req);
    } catch (err) {
       if (err instanceof UnauthorizedError) {
          return NextResponse.json({ error: err.message }, { status: 401 });

@@ -4,15 +4,17 @@ import { CapacityRing } from '@/components/common/cycles/capacity-ring';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Project } from '@/mock-data/projects';
 import { useProjectsDisplayStore } from '@/store/projects-display-store';
-import { format, parseISO } from 'date-fns';
 import { Calendar } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { ProjectGroup } from './projects';
+import { useLanguage } from '@/components/providers/language-provider';
+import { formatProjectDate, projectHealthLabel } from '@/lib/project-localization';
 
 function ProjectCard({ project }: { project: Project }) {
    const { orgId } = useParams<{ orgId: string }>();
    const { displayProperties } = useProjectsDisplayStore();
+   const { locale } = useLanguage();
 
    return (
       <div className="rounded-md border bg-container p-3 hover:bg-accent/30 transition-colors">
@@ -34,9 +36,14 @@ function ProjectCard({ project }: { project: Project }) {
                   className="size-2 rounded-full shrink-0"
                   style={{ backgroundColor: project.health.color }}
                />
-               {project.health.name}
+               {projectHealthLabel(locale, project.health.id, project.health.name)}
                {project.healthUpdatedAgoDays !== undefined && (
-                  <span>· {project.healthUpdatedAgoDays}d</span>
+                  <span>
+                     ·{' '}
+                     {locale === 'zh-CN'
+                        ? `${project.healthUpdatedAgoDays} 天前`
+                        : `${project.healthUpdatedAgoDays}d`}
+                  </span>
                )}
             </div>
          )}
@@ -69,7 +76,7 @@ function ProjectCard({ project }: { project: Project }) {
             {displayProperties.targetDate && project.targetDate && (
                <span className="inline-flex items-center gap-1">
                   <Calendar className="size-3" />
-                  {format(parseISO(project.targetDate), 'MMM d')}
+                  {formatProjectDate(locale, project.targetDate)}
                </span>
             )}
             {displayProperties.lead && (
@@ -85,6 +92,7 @@ function ProjectCard({ project }: { project: Project }) {
 
 /** Projects "Board" view: one column per group (team by default). */
 export default function ProjectsBoard({ groups }: { groups: ProjectGroup[] }) {
+   const { t } = useLanguage();
    return (
       <div className="w-full h-full overflow-x-auto">
          <div className="flex h-full gap-3 px-4 py-3 min-w-max">
@@ -101,7 +109,7 @@ export default function ProjectsBoard({ groups }: { groups: ProjectGroup[] }) {
                      ))}
                      {group.projects.length === 0 && (
                         <div className="text-xs text-muted-foreground border border-dashed rounded-md p-4 text-center">
-                           No projects
+                           {t('No projects')}
                         </div>
                      )}
                   </div>

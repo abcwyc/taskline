@@ -4,6 +4,17 @@ import { ContentBlocks } from '@/components/common/issues/details/content-blocks
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
+   AlertDialog,
+   AlertDialogAction,
+   AlertDialogCancel,
+   AlertDialogContent,
+   AlertDialogDescription,
+   AlertDialogFooter,
+   AlertDialogHeader,
+   AlertDialogTitle,
+   AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import {
    DropdownMenu,
    DropdownMenuContent,
    DropdownMenuItem,
@@ -20,29 +31,42 @@ import { useIssuesStore } from '@/store/issues-store';
 import { useProjectsStore } from '@/store/projects-store';
 import { useProjectDetail, useProjectDetailsStore } from '@/store/project-details-store';
 import { format, parseISO } from 'date-fns';
-import { Paperclip, Sparkles } from 'lucide-react';
+import { Paperclip, Sparkles, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { ProjectSidePanel } from './project-side-panel';
+import { useLanguage } from '@/components/providers/language-provider';
+import { formatProjectDate, projectPriorityLabel } from '@/lib/project-localization';
+import type { AppLocale } from '@/lib/i18n';
 
 interface ProjectActivityProps {
    projectId: string;
 }
 
+const updateHealthLabel = (locale: AppLocale, health: ProjectUpdateHealth) => {
+   if (locale === 'en') return projectUpdateHealthLabel[health];
+   return { 'on-track': '进展顺利', 'at-risk': '存在风险', 'off-track': '偏离计划' }[health];
+};
+
 function HealthBadge({ health }: { health: ProjectUpdateHealth }) {
+   const { locale } = useLanguage();
    return (
       <span className="inline-flex items-center gap-1.5 text-xs font-medium rounded-full border px-2 py-0.5">
          <span
             className="size-2 rounded-full"
             style={{ backgroundColor: projectUpdateHealthColor[health] }}
          />
-         {projectUpdateHealthLabel[health]}
+         {updateHealthLabel(locale, health)}
       </span>
    );
 }
 
-function UpdateCard({ update }: { update: ProjectUpdate }) {
+function UpdateCard({ update, projectId }: { update: ProjectUpdate; projectId: string }) {
+   const { locale, t } = useLanguage();
+   const deleteUpdate = useProjectDetailsStore((s) => s.deleteUpdate);
+   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+
    return (
-      <div className="border rounded-lg p-4">
+      <div className="group relative border rounded-lg p-4">
          <div className="flex items-center gap-2 text-sm">
             <Avatar className="size-5">
                <AvatarImage src={update.author.avatarUrl} alt={update.author.name} />
@@ -50,10 +74,42 @@ function UpdateCard({ update }: { update: ProjectUpdate }) {
             </Avatar>
             <span className="font-medium">{update.author.name}</span>
             <span className="text-xs text-muted-foreground">
-               {format(parseISO(update.date), 'MMM d')}
+               {formatProjectDate(locale, update.date)}
             </span>
-            <span className="ml-auto">
+            <span className="ml-auto flex items-center gap-1.5">
                <HealthBadge health={update.health} />
+               <span className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                  <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
+                     <AlertDialogTrigger asChild>
+                        <button
+                           className="text-muted-foreground hover:text-destructive transition-colors"
+                           aria-label={t('Delete update')}
+                           title={t('Delete update')}
+                        >
+                           <Trash2 className="size-3.5" />
+                        </button>
+                     </AlertDialogTrigger>
+                     <AlertDialogContent>
+                        <AlertDialogHeader>
+                           <AlertDialogTitle>{t('Delete update')}</AlertDialogTitle>
+                           <AlertDialogDescription>
+                              {t(
+                                 'This update will be permanently removed from the project. This action cannot be undone.'
+                              )}
+                           </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                           <AlertDialogCancel>{t('Cancel')}</AlertDialogCancel>
+                           <AlertDialogAction
+                              className="bg-destructive text-white hover:bg-destructive/90"
+                              onClick={() => deleteUpdate(projectId, update.id)}
+                           >
+                              {t('Delete')}
+                           </AlertDialogAction>
+                        </AlertDialogFooter>
+                     </AlertDialogContent>
+                  </AlertDialog>
+               </span>
             </span>
          </div>
          <div className="mt-2 text-sm leading-relaxed">
@@ -65,6 +121,7 @@ function UpdateCard({ update }: { update: ProjectUpdate }) {
 
 /** Project "Activity" tab: update composer + monthly timeline. */
 export default function ProjectActivity({ projectId }: ProjectActivityProps) {
+   const { locale, t } = useLanguage();
    const project = useProjectsStore((s) => s.getProjectById(projectId));
    const detail = useProjectDetail(projectId);
    const { issues: allIssues } = useIssuesStore();
@@ -82,11 +139,14 @@ export default function ProjectActivity({ projectId }: ProjectActivityProps) {
    const updatesByMonth = useMemo(() => {
       const groups = new Map<string, ProjectUpdate[]>();
       for (const update of updates) {
-         const month = format(parseISO(update.date), 'MMMM');
+         const month =
+            locale === 'zh-CN'
+               ? `${parseISO(update.date).getMonth() + 1}月`
+               : format(parseISO(update.date), 'MMMM');
          groups.set(month, [...(groups.get(month) ?? []), update]);
       }
       return [...groups.entries()];
-   }, [updates]);
+   }, [updates, locale]);
 
    const completedPercent =
       issues.length > 0
@@ -104,7 +164,7 @@ export default function ProjectActivity({ projectId }: ProjectActivityProps) {
    };
 
    if (!project) {
-      return <div className="p-10 text-sm text-muted-foreground">Loading project…</div>;
+      return <div className="p-10 text-sm text-muted-foreground">{t('Loading project…')}</div>;
    }
 
    return (
@@ -127,7 +187,7 @@ export default function ProjectActivity({ projectId }: ProjectActivityProps) {
                                     : 'text-muted-foreground hover:text-foreground'
                               )}
                            >
-                              {value}
+                              {value === 'comment' ? t('Comment') : t('Update')}
                            </button>
                         ))}
                      </div>
@@ -146,7 +206,7 @@ export default function ProjectActivity({ projectId }: ProjectActivityProps) {
                                              backgroundColor: projectUpdateHealthColor[value],
                                           }}
                                        />
-                                       {projectUpdateHealthLabel[value]}
+                                       {updateHealthLabel(locale, value)}
                                     </DropdownMenuItem>
                                  )
                               )}
@@ -159,7 +219,7 @@ export default function ProjectActivity({ projectId }: ProjectActivityProps) {
                      value={text}
                      onChange={(event) => setText(event.target.value)}
                      placeholder={
-                        mode === 'update' ? 'Write a project update…' : 'Leave a comment…'
+                        mode === 'update' ? t('Write a project update…') : t('Leave a comment…')
                      }
                      className="mt-3 w-full min-h-24 resize-y bg-transparent text-sm outline-none placeholder:text-muted-foreground"
                   />
@@ -167,31 +227,39 @@ export default function ProjectActivity({ projectId }: ProjectActivityProps) {
                   {mode === 'update' && (
                      <div className="mt-1 border-l-2 pl-4 py-1 flex flex-col gap-1.5 text-xs text-muted-foreground">
                         <div className="flex gap-6">
-                           <span className="w-20">Priority</span>
+                           <span className="w-20">{t('Priority')}</span>
                            <span>
-                              No priority →{' '}
-                              <span className="text-foreground">{project.priority.name}</span>
+                              {t('No priority')} →{' '}
+                              <span className="text-foreground">
+                                 {projectPriorityLabel(
+                                    locale,
+                                    project.priority.id,
+                                    project.priority.name
+                                 )}
+                              </span>
                            </span>
                         </div>
                         <div className="flex gap-6">
-                           <span className="w-20">Lead</span>
+                           <span className="w-20">{t('Lead')}</span>
                            <span>
-                              <span className="text-foreground">{project.lead.name}</span> assigned
+                              {locale === 'zh-CN' && '已指派 '}
+                              <span className="text-foreground">{project.lead.name}</span>
+                              {locale === 'en' && ' assigned'}
                            </span>
                         </div>
                         <div className="flex gap-6">
-                           <span className="w-20">Target date</span>
+                           <span className="w-20">{t('Target date')}</span>
                            <span>
-                              set to{' '}
+                              {t('set to')}{' '}
                               <span className="text-foreground">
                                  {project.targetDate
-                                    ? format(parseISO(project.targetDate), 'MMM do')
+                                    ? formatProjectDate(locale, project.targetDate)
                                     : '—'}
                               </span>
                            </span>
                         </div>
                         <div className="flex gap-6">
-                           <span className="w-20">Progress</span>
+                           <span className="w-20">{t('Progress')}</span>
                            <span>
                               0% → <span className="text-foreground">{completedPercent}%</span>
                            </span>
@@ -202,7 +270,7 @@ export default function ProjectActivity({ projectId }: ProjectActivityProps) {
                   <div className="mt-3 flex items-center justify-between">
                      <Button variant="outline" size="xs" className="gap-1.5">
                         <Sparkles className="size-3.5" />
-                        Write with Agent
+                        {t('Write with Agent')}
                      </Button>
                      <div className="flex items-center gap-2">
                         <Button
@@ -213,7 +281,7 @@ export default function ProjectActivity({ projectId }: ProjectActivityProps) {
                            <Paperclip className="size-4" />
                         </Button>
                         <Button size="xs" onClick={handlePost} disabled={text.trim() === ''}>
-                           Post {mode === 'update' ? 'update' : 'comment'}
+                           {mode === 'update' ? t('Post update') : t('Post comment')}
                         </Button>
                      </div>
                   </div>
@@ -222,7 +290,7 @@ export default function ProjectActivity({ projectId }: ProjectActivityProps) {
                {/* Timeline */}
                {updatesByMonth.length === 0 ? (
                   <p className="mt-10 text-sm text-muted-foreground text-center">
-                     No updates yet — post the first one to keep the team in the loop.
+                     {t('No updates yet — post the first one to keep the team in the loop.')}
                   </p>
                ) : (
                   updatesByMonth.map(([month, monthUpdates]) => (
@@ -230,7 +298,7 @@ export default function ProjectActivity({ projectId }: ProjectActivityProps) {
                         <h3 className="text-lg font-semibold mb-3">{month}</h3>
                         <div className="flex flex-col gap-3">
                            {monthUpdates.map((update) => (
-                              <UpdateCard key={update.id} update={update} />
+                              <UpdateCard key={update.id} update={update} projectId={projectId} />
                            ))}
                         </div>
                      </div>

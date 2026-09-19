@@ -219,10 +219,12 @@ export interface LabelDTO {
    id: string; // label key, e.g. "bug"
    name: string;
    color: string; // CSS color keyword
+   description: string | null;
+   createdAt: string; // ISO date
 }
 
-export type LabelCreateBody = Partial<Pick<LabelDTO, 'id' | 'name' | 'color'>>;
-export type LabelUpdateBody = Partial<Pick<LabelDTO, 'name' | 'color'>>;
+export type LabelCreateBody = Partial<Pick<LabelDTO, 'id' | 'name' | 'color' | 'description'>>;
+export type LabelUpdateBody = Partial<Pick<LabelDTO, 'name' | 'color' | 'description'>>;
 
 /* -------------------------------------------------------------------------- */
 /*                                  Cycles                                    */
@@ -280,6 +282,7 @@ export interface IssueCommentDTO {
    authorId: string;
    body: RichBlocks;
    reactions: { emoji: string; count: number }[];
+   editedAt: string | null; // ISO — set when edited after creation
    createdAt: string;
 }
 
@@ -299,6 +302,12 @@ export interface PrLinkDTO {
    status: string; // "open" | "merged" | "draft"
 }
 
+export interface RelationEntryDTO {
+   id: string; // IssueRelation row id — used to remove the link
+   type: string; // "blocks" | "blocked-by" | "related" | "duplicate"
+   targetIdentifier: string;
+}
+
 export interface IssueDetailDTO {
    identifier: string;
    description: RichBlocks;
@@ -307,6 +316,8 @@ export interface IssueDetailDTO {
    subIssueIds: string[]; // identifiers
    relatedIds: string[];
    blockedByIds: string[];
+   blocksIds: string[]; // issues this one blocks
+   relationEntries: RelationEntryDTO[];
    prLinks: PrLinkDTO[];
    milestone: string | null;
    subscribed: boolean;
@@ -315,6 +326,41 @@ export interface IssueDetailDTO {
 export interface PostCommentBody {
    text: string;
 }
+
+/* -------------------------------------------------------------------------- */
+/*                              Issue templates                                */
+/* -------------------------------------------------------------------------- */
+
+export interface IssueTemplateDTO {
+   id: string;
+   name: string;
+   description: string;
+   title: string; // prefilled issue title
+   body: string; // prefilled issue description
+   icon: string; // emoji
+   teamId: string | null;
+}
+
+/* -------------------------------------------------------------------------- */
+/*                             Workflow states                                */
+/* -------------------------------------------------------------------------- */
+
+/** `id` is the WorkflowState `key` — the id used across the client UI. */
+export interface WorkflowStateDTO {
+   id: string;
+   name: string;
+   color: string; // hex
+   category: string; // triage | backlog | unstarted | started | completed | canceled
+   iconKey: string; // circle | pie | check | gear | triage | x | duplicate
+   inUse: boolean; // referenced by issues or projects — blocks deletion
+}
+
+export type WorkflowStateCreateBody = Partial<
+   Pick<WorkflowStateDTO, 'name' | 'color' | 'category' | 'iconKey'>
+> & { key?: string };
+export type WorkflowStateUpdateBody = Partial<
+   Pick<WorkflowStateDTO, 'name' | 'color' | 'category' | 'iconKey'>
+>;
 
 export interface SearchResults {
    issues: { identifier: string; title: string; statusId: string }[];
@@ -337,6 +383,26 @@ export const PR_STATUS_ENUM_TO_KEY: Record<string, string> = {
    OPEN: 'open',
    MERGED: 'merged',
    DRAFT: 'draft',
+};
+
+export const PR_STATUS_KEY_TO_ENUM: Record<string, string> = {
+   open: 'OPEN',
+   merged: 'MERGED',
+   draft: 'DRAFT',
+};
+
+export const RELATION_ENUM_TO_KEY: Record<string, string> = {
+   BLOCKS: 'blocks',
+   BLOCKED_BY: 'blocked-by',
+   RELATED: 'related',
+   DUPLICATE: 'duplicate',
+};
+
+export const RELATION_KEY_TO_ENUM: Record<string, string> = {
+   'blocks': 'BLOCKS',
+   'blocked-by': 'BLOCKED_BY',
+   'related': 'RELATED',
+   'duplicate': 'DUPLICATE',
 };
 
 /* -------------------------------------------------------------------------- */
@@ -507,6 +573,13 @@ export interface ProjectUpdateDTO {
    health: string; // "on-track" | "at-risk" | "off-track"
    blocks: RichBlocks;
 }
+
+/** Entry of the workspace-wide updates feed (GET /api/updates). */
+export type WorkspaceUpdateDTO = ProjectUpdateDTO & {
+   projectId: string;
+   projectName: string;
+   teamId: string;
+};
 
 export interface ProjectActivityDTO {
    id: string;

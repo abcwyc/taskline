@@ -7,7 +7,12 @@ import type {
 import type { User } from '@/mock-data/users';
 import { useMembersStore } from '@/store/members-store';
 
-import { PostProjectUpdateBody, ProjectDetailDTO, ProjectUpdateDTO } from './types';
+import {
+   PostProjectUpdateBody,
+   ProjectDetailDTO,
+   ProjectUpdateDTO,
+   WorkspaceUpdateDTO,
+} from './types';
 
 /**
  * Client-side project-details API. DTO adapters rehydrate the User objects
@@ -100,4 +105,45 @@ export async function setMilestoneCompleted(
       `${BASE}/${encodeURIComponent(projectId)}/milestones/${encodeURIComponent(milestoneId)}`,
       { method: 'PATCH', body: JSON.stringify({ completed }) }
    );
+}
+
+export async function createMilestone(
+   projectId: string,
+   name: string,
+   targetDate?: string | null
+): Promise<ProjectDetail['milestones'][number]> {
+   return http<ProjectDetail['milestones'][number]>(
+      `${BASE}/${encodeURIComponent(projectId)}/milestones`,
+      { method: 'POST', body: JSON.stringify({ name, targetDate: targetDate ?? null }) }
+   );
+}
+
+export async function updateMilestone(
+   projectId: string,
+   milestoneId: string,
+   patch: { name?: string; targetDate?: string | null; completed?: boolean; order?: number }
+): Promise<ProjectDetail['milestones'][number]> {
+   return http<ProjectDetail['milestones'][number]>(
+      `${BASE}/${encodeURIComponent(projectId)}/milestones/${encodeURIComponent(milestoneId)}`,
+      { method: 'PATCH', body: JSON.stringify(patch) }
+   );
+}
+
+export async function deleteMilestone(projectId: string, milestoneId: string): Promise<void> {
+   await http<void>(
+      `${BASE}/${encodeURIComponent(projectId)}/milestones/${encodeURIComponent(milestoneId)}`,
+      { method: 'DELETE' }
+   );
+}
+
+export async function deleteProjectUpdate(projectId: string, updateId: string): Promise<void> {
+   await http<void>(
+      `${BASE}/${encodeURIComponent(projectId)}/updates/${encodeURIComponent(updateId)}`,
+      { method: 'DELETE' }
+   );
+}
+
+/** Workspace-wide project-updates feed (newest first, up to 100). */
+export async function fetchWorkspaceUpdates(): Promise<WorkspaceUpdateDTO[]> {
+   return http<WorkspaceUpdateDTO[]>('/api/updates');
 }

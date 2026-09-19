@@ -17,6 +17,7 @@ import { ProjectsDisplayOptions } from './projects-display-options';
 import ProjectsInsightsPanel from './projects-insights-panel';
 import ProjectsList from './projects-list';
 import ProjectsTimeline from './projects-timeline';
+import { useLanguage } from '@/components/providers/language-provider';
 
 export interface ProjectGroup {
    id: string;
@@ -42,6 +43,7 @@ const CLOSED_CATEGORIES = new Set(['completed', 'canceled']);
  * options, views, insights) is scoped to that team's projects.
  */
 export default function Projects({ teamId }: { teamId?: string }) {
+   const { t } = useLanguage();
    const teams = useTeamsStore((s) => s.teams);
    const allProjects = useProjectsStore((s) => s.projects);
    const { filters } = useProjectsFilterStore();
@@ -88,7 +90,7 @@ export default function Projects({ teamId }: { teamId?: string }) {
 
    const groups = useMemo<ProjectGroup[]>(() => {
       if (grouping === 'none') {
-         return [{ id: 'all', name: 'All projects', projects: displayed }];
+         return [{ id: 'all', name: t('All projects'), projects: displayed }];
       }
       return teams
          .map((team) => ({
@@ -98,7 +100,7 @@ export default function Projects({ teamId }: { teamId?: string }) {
             projects: displayed.filter((project) => project.teamId === team.id),
          }))
          .filter((group) => showEmptyGroups || group.projects.length > 0);
-   }, [teams, displayed, grouping, showEmptyGroups]);
+   }, [teams, displayed, grouping, showEmptyGroups, t]);
 
    return (
       <div className="w-full h-full flex flex-col overflow-hidden">
@@ -119,7 +121,7 @@ export default function Projects({ teamId }: { teamId?: string }) {
                               : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-accent/50'
                         )}
                      >
-                        {item.label}
+                        {t(item.label)}
                      </button>
                   );
                })}
@@ -131,7 +133,7 @@ export default function Projects({ teamId }: { teamId?: string }) {
                   size="xs"
                   variant={openPanel === 'insights' ? 'secondary' : 'ghost'}
                   onClick={() => togglePanel('insights')}
-                  aria-label="Toggle projects insights panel"
+                  aria-label={t('Toggle projects insights panel')}
                >
                   <BarChart3 className="size-4" />
                </Button>

@@ -13,6 +13,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { status as allStatus, Status } from '@/mock-data/status';
 import { CheckIcon } from 'lucide-react';
 import { useId, useState } from 'react';
+import { useLanguage } from '@/components/providers/language-provider';
+import { projectStatusLabel } from '@/lib/project-localization';
 
 interface StatusWithPercentProps {
    status: Status;
@@ -28,6 +30,7 @@ export function StatusWithPercent({
    const id = useId();
    const [open, setOpen] = useState<boolean>(false);
    const [value, setValue] = useState<string>(status.id);
+   const { locale, t } = useLanguage();
 
    const handleStatusChange = (statusId: string) => {
       setValue(statusId);
@@ -62,9 +65,9 @@ export function StatusWithPercent({
          </PopoverTrigger>
          <PopoverContent className="border-input w-48 p-0" align="start">
             <Command>
-               <CommandInput placeholder="Set status..." />
+               <CommandInput placeholder={t('Set status…')} />
                <CommandList>
-                  <CommandEmpty>No status found.</CommandEmpty>
+                  <CommandEmpty>{t('No status found.')}</CommandEmpty>
                   <CommandGroup>
                      {allStatus.map((item) => {
                         const Icon = item.icon;
@@ -77,7 +80,9 @@ export function StatusWithPercent({
                            >
                               <div className="flex items-center gap-2">
                                  <Icon />
-                                 <span className="text-xs">{item.name}</span>
+                                 <span className="text-xs">
+                                    {projectStatusLabel(locale, item.id, item.name)}
+                                 </span>
                               </div>
                               {value === item.id && <CheckIcon size={14} className="ml-auto" />}
                            </CommandItem>

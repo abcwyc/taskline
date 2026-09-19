@@ -13,6 +13,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { priorities, Priority } from '@/mock-data/priorities';
 import { CheckIcon } from 'lucide-react';
 import { useId, useState } from 'react';
+import { useLanguage } from '@/components/providers/language-provider';
+import { projectPriorityLabel } from '@/lib/project-localization';
 
 interface PrioritySelectorProps {
    priority: Priority;
@@ -23,6 +25,7 @@ export function PrioritySelector({ priority, onPriorityChange }: PrioritySelecto
    const id = useId();
    const [open, setOpen] = useState<boolean>(false);
    const [value, setValue] = useState<string>(priority.id);
+   const { locale, t } = useLanguage();
 
    const handlePriorityChange = (priorityId: string) => {
       setValue(priorityId);
@@ -57,9 +60,9 @@ export function PrioritySelector({ priority, onPriorityChange }: PrioritySelecto
             </PopoverTrigger>
             <PopoverContent className="border-input w-48 p-0" align="start">
                <Command>
-                  <CommandInput placeholder="Set priority..." />
+                  <CommandInput placeholder={t('Set priority…')} />
                   <CommandList>
-                     <CommandEmpty>No priority found.</CommandEmpty>
+                     <CommandEmpty>{t('No priority found.')}</CommandEmpty>
                      <CommandGroup>
                         {priorities.map((item) => (
                            <CommandItem
@@ -70,7 +73,9 @@ export function PrioritySelector({ priority, onPriorityChange }: PrioritySelecto
                            >
                               <div className="flex items-center gap-2">
                                  <item.icon className="text-muted-foreground size-4" />
-                                 <span className="text-xs">{item.name}</span>
+                                 <span className="text-xs">
+                                    {projectPriorityLabel(locale, item.id, item.name)}
+                                 </span>
                               </div>
                               {value === item.id && <CheckIcon size={14} className="ml-auto" />}
                            </CommandItem>

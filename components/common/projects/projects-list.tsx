@@ -3,31 +3,35 @@
 import { useProjectsDisplayStore } from '@/store/projects-display-store';
 import ProjectLine from './project-line';
 import { ProjectGroup } from './projects';
+import { useLanguage } from '@/components/providers/language-provider';
 
 /** Projects "List" view: grouped table (team sections by default). */
 export default function ProjectsList({ groups }: { groups: ProjectGroup[] }) {
    const { grouping, displayProperties } = useProjectsDisplayStore();
+   const { t } = useLanguage();
 
    return (
       <div className="w-full h-full overflow-y-auto">
          <div className="bg-container px-6 py-1.5 text-sm flex items-center text-muted-foreground border-b sticky top-0 z-10">
-            <div className="flex-1 min-w-0">Name</div>
+            <div className="flex-1 min-w-0">{t('Name')}</div>
             {displayProperties.health && (
-               <div className="hidden sm:block w-[120px] shrink-0 pl-2">Health</div>
+               <div className="hidden sm:block w-[120px] shrink-0 pl-2">{t('Health')}</div>
             )}
             {displayProperties.priority && (
-               <div className="hidden md:block w-[70px] shrink-0 pl-2">Priority</div>
+               <div className="hidden md:block w-[70px] shrink-0 pl-2">{t('Priority')}</div>
             )}
             {displayProperties.lead && (
-               <div className="hidden xl:block w-[130px] shrink-0 pl-2">Lead</div>
+               <div className="hidden xl:block w-[130px] shrink-0 pl-2">{t('Lead')}</div>
             )}
             {displayProperties.targetDate && (
-               <div className="hidden xl:block w-[110px] shrink-0 pl-2.5">Target date</div>
+               <div className="hidden xl:block w-[110px] shrink-0 pl-2.5">{t('Target date')}</div>
             )}
             {displayProperties.issues && (
-               <div className="hidden xl:block w-[60px] shrink-0 pl-2.5">Issues</div>
+               <div className="hidden xl:block w-[60px] shrink-0 pl-2.5">{t('Issues')}</div>
             )}
-            {displayProperties.status && <div className="w-[90px] shrink-0 pl-2">Status</div>}
+            {displayProperties.status && (
+               <div className="w-[90px] shrink-0 pl-2">{t('Status')}</div>
+            )}
          </div>
 
          {groups.map((group) => (
@@ -44,7 +48,7 @@ export default function ProjectsList({ groups }: { groups: ProjectGroup[] }) {
                ))}
                {group.projects.length === 0 && (
                   <div className="px-6 py-3 text-xs text-muted-foreground border-b border-border/40">
-                     No projects
+                     {t('No projects')}
                   </div>
                )}
             </div>

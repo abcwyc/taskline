@@ -1,6 +1,12 @@
 import { formatDistanceToNowStrict } from 'date-fns';
 
-import type { ActivityItem, ContentBlock, IssueDetail } from '@/mock-data/issue-details';
+import type {
+   ActivityItem,
+   ContentBlock,
+   IssueDetail,
+   PrLink,
+   RelationEntry,
+} from '@/mock-data/issue-details';
 import type { User } from '@/mock-data/users';
 import { useMembersStore } from '@/store/members-store';
 
@@ -40,6 +46,7 @@ function commentToItem(c: IssueCommentDTO): Extract<ActivityItem, { kind: 'comme
       timeAgo: ago(c.createdAt),
       body: (c.body as ContentBlock[]) ?? [],
       ...(c.reactions.length ? { reactions: c.reactions } : {}),
+      ...(c.editedAt ? { editedAt: ago(c.editedAt) } : {}),
    };
 }
 
@@ -71,9 +78,12 @@ export function dtoToIssueDetail(dto: IssueDetailDTO): IssueDetail {
       activity,
       relatedIds: dto.relatedIds,
       blockedByIds: dto.blockedByIds,
+      blocksIds: dto.blocksIds,
+      relationEntries: dto.relationEntries as RelationEntry[],
       prLinks: dto.prLinks.map((p) => ({
          id: p.id,
          title: p.title,
+         url: p.url,
          status: p.status as 'open' | 'merged' | 'draft',
       })),
       ...(dto.milestone ? { milestone: dto.milestone } : {}),
@@ -109,4 +119,68 @@ export async function postIssueComment(
       { method: 'POST', body: JSON.stringify(body) }
    );
    return commentToItem(dto);
+}
+
+/* --------------------- comments: edit / delete ---------------------------- */
+
+export async function updateIssueComment(
+   idOrIdentifier: string,
+   commentId: string,
+   text: string
+): Promise<Extract<ActivityItem, { kind: 'comment' }>> {
+   const dto = await http<IssueCommentDTO>(
+      `${BASE}/${encodeURIComponent(idOrIdentifier)}/comments/${encodeURIComponent(commentId)}`,
+      { method: 'PATCH', body: JSON.stringify({ text }) }
+   );
+   return commentToItem(dto);
+}
+
+export async function deleteIssueComment(idOrIdentifier: string, commentId: string): Promise<void> {
+   await http<void>(
+      `${BASE}/${encodeURIComponent(idOrIdentifier)}/comments/${encodeURIComponent(commentId)}`,
+      { method: 'DELETE' }
+   );
+}
+
+/* ----------------------------- relations ---------------------------------- */
+
+export async function addIssueRelation(
+   idOrIdentifier: string,
+   relatedId: string,
+   type: RelationEntry['type']
+): Promise<RelationEntry> {
+   return http<RelationEntry>(`${BASE}/${encodeURIComponent(idOrIdentifier)}/relations`, {
+      method: 'POST',
+      body: JSON.stringify({ relatedId, type }),
+   });
+}
+
+export async function removeIssueRelation(
+   idOrIdentifier: string,
+   relationId: string
+): Promise<void> {
+   await http<void>(
+      `${BASE}/${encodeURIComponent(idOrIdentifier)}/relations/${encodeURIComponent(relationId)}`,
+      { method: 'DELETE' }
+   );
+}
+
+/* ------------------------------ PR links ---------------------------------- */
+
+export async function addPrLink(
+   idOrIdentifier: string,
+   title: string,
+   url: string
+): Promise<PrLink> {
+   return http<PrLink>(`${BASE}/${encodeURIComponent(idOrIdentifier)}/pr-links`, {
+      method: 'POST',
+      body: JSON.stringify({ title, url }),
+   });
+}
+
+export async function removeIssuePrLink(idOrIdentifier: string, prLinkId: string): Promise<void> {
+   await http<void>(
+      `${BASE}/${encodeURIComponent(idOrIdentifier)}/pr-links/${encodeURIComponent(prLinkId)}`,
+      { method: 'DELETE' }
+   );
 }

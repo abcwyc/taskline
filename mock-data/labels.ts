@@ -2,6 +2,9 @@ export interface LabelInterface {
    id: string;
    name: string;
    color: string;
+   /** Optional label metadata surfaced on the settings page. */
+   description?: string | null;
+   createdAt?: string;
 }
 
 export const labels: LabelInterface[] = [

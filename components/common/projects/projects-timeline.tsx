@@ -11,11 +11,12 @@ import {
 import { cn } from '@/lib/utils';
 import { Project } from '@/mock-data/projects';
 import { useProjectsDisplayStore } from '@/store/projects-display-store';
-import { format, parseISO } from 'date-fns';
 import { ArrowLeft, ArrowRight, Check, ChevronDown, Plus } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ProjectPeekPanel } from './project-peek-panel';
 import { ProjectGroup } from './projects';
+import { useLanguage } from '@/components/providers/language-provider';
+import { formatProjectDate } from '@/lib/project-localization';
 
 interface ProjectsTimelineProps {
    groups: ProjectGroup[];
@@ -114,12 +115,6 @@ const barBounds = (project: Project, monthWidth: number) => {
    return { left, right };
 };
 
-const dateRangeLabel = (project: Project) => {
-   const startLabel = format(parseISO(project.startDate), 'MMM d');
-   if (!project.targetDate || project.targetDate === project.startDate) return startLabel;
-   return `${startLabel} - ${format(parseISO(project.targetDate), 'MMM d')}`;
-};
-
 interface Viewport {
    left: number;
    width: number;
@@ -136,12 +131,14 @@ function OutOfViewIndicator({
    listOffset,
    monthWidth,
    onJump,
+   locale,
 }: {
    project: Project;
    viewport: Viewport;
    listOffset: number;
    monthWidth: number;
    onJump: (contentX: number) => void;
+   locale: 'en' | 'zh-CN';
 }) {
    const { left, right } = barBounds(project, monthWidth);
    const visibleLeft = viewport.left + listOffset;
@@ -150,7 +147,10 @@ function OutOfViewIndicator({
    if (right >= visibleLeft + 4 && left <= visibleRight - 4) return null;
 
    const isPast = right < visibleLeft + 4;
-   const label = dateRangeLabel(project);
+   const label =
+      !project.targetDate || project.targetDate === project.startDate
+         ? formatProjectDate(locale, project.startDate)
+         : `${formatProjectDate(locale, project.startDate)} - ${formatProjectDate(locale, project.targetDate)}`;
 
    return (
       <button
@@ -218,6 +218,7 @@ function TimelineBar({
  * (Year / Quarter / Month / Week, with Y/Q/M/W shortcuts) changes the zoom.
  */
 export default function ProjectsTimeline({ groups }: ProjectsTimelineProps) {
+   const { locale, t } = useLanguage();
    const { showProjectList, showWeekNumbers, displayProperties } = useProjectsDisplayStore();
    const [todayIso, setTodayIso] = useState<string | null>(null);
    const [viewport, setViewport] = useState<Viewport | null>(null);
@@ -230,7 +231,7 @@ export default function ProjectsTimeline({ groups }: ProjectsTimelineProps) {
    const totalWidth = totalWidthOf(monthWidth);
    const listOffset = showProjectList ? LIST_WIDTH : 0;
    const todayOffset = todayIso !== null ? offsetFor(todayIso, monthWidth) : null;
-   const todayLabel = todayIso !== null ? format(parseISO(todayIso), 'MMM d').toUpperCase() : null;
+   const todayLabel = todayIso !== null ? formatProjectDate(locale, todayIso) : null;
    /** The line would sit on the sticky project list → hide it (the pill stays on the scale). */
    const todayOverlapsList =
       viewport !== null && todayOffset !== null && todayOffset < viewport.left + listOffset + 28;
@@ -344,11 +345,11 @@ export default function ProjectsTimeline({ groups }: ProjectsTimelineProps) {
                onClick={scrollToToday}
                className="h-7 px-2.5 rounded-md border bg-container text-xs font-medium hover:bg-accent transition-colors shadow-xs"
             >
-               Today
+               {t('Today')}
             </button>
             <DropdownMenu>
                <DropdownMenuTrigger className="h-7 px-2.5 rounded-md border bg-container text-xs font-medium hover:bg-accent transition-colors shadow-xs inline-flex items-center gap-1 outline-none">
-                  {ZOOM_LEVELS.find((level) => level.id === zoom)!.label}
+                  {t(ZOOM_LEVELS.find((level) => level.id === zoom)!.label)}
                   <ChevronDown className="size-3 text-muted-foreground" />
                </DropdownMenuTrigger>
                <DropdownMenuContent align="end" className="w-40">
@@ -358,7 +359,7 @@ export default function ProjectsTimeline({ groups }: ProjectsTimelineProps) {
                         onClick={() => setZoomLevel(level.id)}
                         className="flex items-center gap-2 text-sm"
                      >
-                        <span className="flex-1">{level.label}</span>
+                        <span className="flex-1">{t(level.label)}</span>
                         {zoom === level.id && <Check className="size-3.5" />}
                         <span className="text-xs text-muted-foreground">{level.shortcut}</span>
                      </DropdownMenuItem>
@@ -378,7 +379,9 @@ export default function ProjectsTimeline({ groups }: ProjectsTimelineProps) {
                            style={{ width: monthWidth }}
                            className="shrink-0 px-2 pt-1.5 pb-0.5 text-[11px] font-medium text-muted-foreground uppercase tracking-wide whitespace-nowrap overflow-hidden"
                         >
-                           {month.label}
+                           {locale === 'zh-CN'
+                              ? `${month.key.endsWith('-01') ? `${month.key.slice(0, 4)}年` : ''}${Number(month.key.slice(5))}月`
+                              : month.label}
                         </div>
                      ))}
                      {/* Weekly tick marks */}
@@ -403,7 +406,11 @@ export default function ProjectsTimeline({ groups }: ProjectsTimelineProps) {
                               className="absolute top-0 -translate-x-1/2 text-[10px] text-muted-foreground/80 whitespace-nowrap"
                               style={{ left }}
                            >
-                              {showWeekNumbers ? `W${date.week}` : date.day}
+                              {showWeekNumbers && locale === 'zh-CN'
+                                 ? `第 ${date.week} 周`
+                                 : showWeekNumbers
+                                   ? `W${date.week}`
+                                   : date.day}
                            </span>
                         );
                      })}
@@ -506,6 +513,7 @@ export default function ProjectsTimeline({ groups }: ProjectsTimelineProps) {
                                        listOffset={listOffset}
                                        monthWidth={monthWidth}
                                        onJump={jumpTo}
+                                       locale={locale}
                                     />
                                  )}
                               </div>

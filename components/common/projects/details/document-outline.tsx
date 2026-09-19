@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import { ContentBlock } from '@/mock-data/issue-details';
 import { AlignLeft } from 'lucide-react';
 import { RefObject, useEffect, useMemo, useState } from 'react';
+import { useLanguage } from '@/components/providers/language-provider';
 
 export interface OutlineItem {
    id: string;
@@ -36,6 +37,7 @@ export function DocumentOutline({
    scrollRef: RefObject<HTMLDivElement | null>;
 }) {
    const [activeId, setActiveId] = useState<string | null>(null);
+   const { t } = useLanguage();
 
    const ids = useMemo(() => items.map((item) => item.id), [items]);
 
@@ -73,7 +75,7 @@ export function DocumentOutline({
          <div className="absolute right-full mr-2 w-72 max-h-[65vh] overflow-y-auto rounded-lg border bg-container shadow-lg p-2 opacity-0 translate-x-1 pointer-events-none transition-all duration-150 group-hover:opacity-100 group-hover:translate-x-0 group-hover:pointer-events-auto">
             <div className="flex items-center gap-2 px-2 py-1.5 text-sm font-medium">
                <AlignLeft className="size-4 text-muted-foreground" />
-               Description
+               {t('Description')}
             </div>
             {items.map((item) => (
                <button

@@ -2,7 +2,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { ActivityItem } from '@/mock-data/issue-details';
+import { ActivityItem, ContentBlock } from '@/mock-data/issue-details';
 import { useAttachmentsStore } from '@/store/attachments-store';
 import { useIssueDetailsStore } from '@/store/issue-details-store';
 import { useMeStore } from '@/store/me-store';
@@ -14,9 +14,12 @@ import {
    Loader2,
    Paperclip,
    PenLine,
+   Pencil,
    RefreshCcw,
    Tag,
+   Trash2,
    Unlock,
+   X,
 } from 'lucide-react';
 import { ReactNode, useRef, useState } from 'react';
 import { ContentBlocks } from './content-blocks';
@@ -47,9 +50,61 @@ function EventRow({ item }: { item: Extract<ActivityItem, { kind: 'event' }> }) 
    );
 }
 
-function CommentCard({ item }: { item: Extract<ActivityItem, { kind: 'comment' }> }) {
+/** Plain-text projection of a comment body, for prefilling the edit textarea. */
+function commentBodyToText(blocks: ContentBlock[]): string {
+   return blocks
+      .filter(
+         (block): block is Extract<ContentBlock, { type: 'paragraph' }> =>
+            block.type === 'paragraph'
+      )
+      .map((block) => block.text)
+      .join('\n\n');
+}
+
+function CommentCard({
+   item,
+   issueIdentifier,
+}: {
+   item: Extract<ActivityItem, { kind: 'comment' }>;
+   issueIdentifier?: string;
+}) {
+   const meId = useMeStore((s) => s.me?.id);
+   const meRole = useMeStore((s) => s.me?.role);
+   const editComment = useIssueDetailsStore((s) => s.editComment);
+   const deleteComment = useIssueDetailsStore((s) => s.deleteComment);
+   const [editing, setEditing] = useState(false);
+   const [draft, setDraft] = useState('');
+   const [confirmingDelete, setConfirmingDelete] = useState(false);
+
+   const canModerate =
+      Boolean(issueIdentifier) && Boolean(meId) && (meId === item.actor.id || meRole === 'Admin');
+   const originalText = commentBodyToText(item.body);
+
+   const startEditing = () => {
+      setDraft(originalText);
+      setConfirmingDelete(false);
+      setEditing(true);
+   };
+
+   const saveEdit = () => {
+      const text = draft.trim();
+      if (!text || text === originalText || !issueIdentifier) return;
+      editComment(issueIdentifier, item.id, text);
+      setEditing(false);
+   };
+
+   const onEditKeyDown = (event: React.KeyboardEvent) => {
+      if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+         event.preventDefault();
+         saveEdit();
+      } else if (event.key === 'Escape') {
+         event.preventDefault();
+         setEditing(false);
+      }
+   };
+
    return (
-      <div className="my-2 rounded-lg border border-border/60 bg-container p-3.5">
+      <div className="group my-2 rounded-lg border border-border/60 bg-container p-3.5">
          <div className="flex items-center gap-2 mb-1.5">
             <Avatar className="size-5">
                <AvatarImage src={item.actor.avatarUrl} alt={item.actor.name} />
@@ -57,10 +112,81 @@ function CommentCard({ item }: { item: Extract<ActivityItem, { kind: 'comment' }
             </Avatar>
             <span className="text-sm font-medium">{item.actor.name}</span>
             <span className="text-xs text-muted-foreground">{item.timeAgo}</span>
+            {item.editedAt && <span className="text-xs text-muted-foreground/70">(edited)</span>}
+            {canModerate && !editing && (
+               <div className="ml-auto flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {confirmingDelete ? (
+                     <>
+                        <button
+                           type="button"
+                           onClick={() =>
+                              issueIdentifier && deleteComment(issueIdentifier, item.id)
+                           }
+                           className="text-xs px-1.5 py-0.5 rounded text-red-500 hover:bg-red-500/10"
+                        >
+                           Delete?
+                        </button>
+                        <button
+                           type="button"
+                           aria-label="Cancel delete"
+                           onClick={() => setConfirmingDelete(false)}
+                           className="text-muted-foreground hover:text-foreground"
+                        >
+                           <X className="size-3.5" />
+                        </button>
+                     </>
+                  ) : (
+                     <>
+                        <button
+                           type="button"
+                           aria-label="Edit comment"
+                           onClick={startEditing}
+                           className="text-muted-foreground hover:text-foreground"
+                        >
+                           <Pencil className="size-3.5" />
+                        </button>
+                        <button
+                           type="button"
+                           aria-label="Delete comment"
+                           onClick={() => setConfirmingDelete(true)}
+                           className="text-muted-foreground hover:text-red-500"
+                        >
+                           <Trash2 className="size-3.5" />
+                        </button>
+                     </>
+                  )}
+               </div>
+            )}
          </div>
-         <div className="text-sm [&_p]:my-1.5">
-            <ContentBlocks blocks={item.body} />
-         </div>
+         {editing ? (
+            <div className="flex flex-col gap-2">
+               <textarea
+                  value={draft}
+                  onChange={(event) => setDraft(event.target.value)}
+                  onKeyDown={onEditKeyDown}
+                  rows={3}
+                  autoFocus
+                  placeholder="Edit comment..."
+                  className="w-full resize-none rounded-md border border-border/60 bg-transparent p-2 text-sm outline-none focus:border-ring placeholder:text-muted-foreground"
+               />
+               <div className="flex items-center justify-end gap-2">
+                  <Button variant="ghost" size="xs" onClick={() => setEditing(false)}>
+                     Cancel
+                  </Button>
+                  <Button
+                     size="xs"
+                     onClick={saveEdit}
+                     disabled={!draft.trim() || draft.trim() === originalText}
+                  >
+                     Save
+                  </Button>
+               </div>
+            </div>
+         ) : (
+            <div className="text-sm [&_p]:my-1.5">
+               <ContentBlocks blocks={item.body} />
+            </div>
+         )}
          {item.reactions && item.reactions.length > 0 && (
             <div className="flex items-center gap-1.5 mt-1">
                {item.reactions.map((reaction) => (
@@ -143,7 +269,7 @@ export function ActivityFeed({
                item.kind === 'event' ? (
                   <EventRow key={item.id} item={item} />
                ) : (
-                  <CommentCard key={item.id} item={item} />
+                  <CommentCard key={item.id} item={item} issueIdentifier={issueIdentifier} />
                )
             )}
          </div>

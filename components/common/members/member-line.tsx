@@ -13,9 +13,11 @@ import { cn } from '@/lib/utils';
 import { User } from '@/mock-data/users';
 import { useMembersStore } from '@/store/members-store';
 import { format, parseISO } from 'date-fns';
-import { SquareUser, UserMinus } from 'lucide-react';
+import { KeyRound, SquareUser, UserMinus } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { useState } from 'react';
+import { ResetPasswordDialog } from './reset-password-dialog';
 
 const ROLES: User['role'][] = ['Admin', 'Member', 'Guest'];
 
@@ -49,6 +51,7 @@ export default function MemberLine({ user }: MemberLineProps) {
    const isAdmin = useIsAdmin();
    const isApplication = user.role === 'Application';
    const canRemove = isAdmin && !isApplication;
+   const [resetOpen, setResetOpen] = useState(false);
    // Like Linear, some accounts show their e-mail as the primary line.
    const showEmailAsName = !isApplication && hashString(user.id) % 4 === 0;
 
@@ -118,19 +121,33 @@ export default function MemberLine({ user }: MemberLineProps) {
          </div>
 
          {canRemove && (
-            <button
-               type="button"
-               aria-label={`Remove ${user.name}`}
-               className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-               onClick={(event) => {
-                  event.preventDefault();
-                  if (window.confirm(`Remove ${user.name} from this workspace?`)) {
-                     removeMember(user.id);
-                  }
-               }}
-            >
-               <UserMinus className="size-3.5" />
-            </button>
+            <div className="flex shrink-0 items-center gap-0.5">
+               <button
+                  type="button"
+                  aria-label={`Reset password for ${user.name}`}
+                  title="Reset password"
+                  className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+                  onClick={(event) => {
+                     event.preventDefault();
+                     setResetOpen(true);
+                  }}
+               >
+                  <KeyRound className="size-3.5" />
+               </button>
+               <button
+                  type="button"
+                  aria-label={`Remove ${user.name}`}
+                  className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                  onClick={(event) => {
+                     event.preventDefault();
+                     if (window.confirm(`Remove ${user.name} from this workspace?`)) {
+                        removeMember(user.id);
+                     }
+                  }}
+               >
+                  <UserMinus className="size-3.5" />
+               </button>
+            </div>
          )}
 
          {/* Last seen (Linear only shows currently-online members) */}
@@ -142,6 +159,11 @@ export default function MemberLine({ user }: MemberLineProps) {
                </>
             )}
          </div>
+
+         <ResetPasswordDialog
+            member={resetOpen ? { id: user.id, name: user.name, email: user.email } : null}
+            onClose={() => setResetOpen(false)}
+         />
       </Link>
    );
 }

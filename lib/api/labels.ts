@@ -17,11 +17,14 @@ export const dtoToLabel = (dto: LabelDTO): LabelInterface => ({
    id: dto.id,
    name: dto.name,
    color: dto.color,
+   description: dto.description,
+   ...(dto.createdAt ? { createdAt: dto.createdAt } : {}),
 });
 
 export const labelPatchToBody = (patch: Partial<LabelInterface>): LabelUpdateBody => ({
    ...(patch.name !== undefined ? { name: patch.name } : {}),
    ...(patch.color !== undefined ? { color: patch.color } : {}),
+   ...(patch.description !== undefined ? { description: patch.description } : {}),
 });
 
 export async function fetchLabels(): Promise<LabelInterface[]> {

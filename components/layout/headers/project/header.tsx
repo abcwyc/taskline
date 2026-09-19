@@ -16,6 +16,7 @@ import { BarChart3, ChevronRight, Link2, MoreHorizontal, PanelRight, Star } from
 import Link from 'next/link';
 import { useParams, usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { useLanguage } from '@/components/providers/language-provider';
 
 const PROJECT_TABS = [
    { label: 'Overview', segment: 'overview' },
@@ -26,6 +27,7 @@ const PROJECT_TABS = [
 function ProjectTabs({ projectId }: { projectId: string }) {
    const { orgId } = useParams<{ orgId: string }>();
    const pathname = usePathname();
+   const { t } = useLanguage();
 
    return (
       <div className="flex items-center gap-1">
@@ -44,7 +46,7 @@ function ProjectTabs({ projectId }: { projectId: string }) {
                         : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-accent/50'
                   )}
                >
-                  {tab.label}
+                  {t(tab.label)}
                </Link>
             );
          })}
@@ -54,6 +56,7 @@ function ProjectTabs({ projectId }: { projectId: string }) {
 
 function PanelToggles() {
    const { openPanel, togglePanel } = useRightPanelStore();
+   const { t } = useLanguage();
 
    return (
       <div className="flex items-center gap-1">
@@ -61,7 +64,7 @@ function PanelToggles() {
             size="xs"
             variant={openPanel === 'insights' ? 'secondary' : 'ghost'}
             onClick={() => togglePanel('insights')}
-            aria-label="Toggle insights panel"
+            aria-label={t('Toggle insights panel')}
          >
             <BarChart3 className="size-4" />
          </Button>
@@ -69,7 +72,7 @@ function PanelToggles() {
             size="xs"
             variant={openPanel === 'hidden' ? 'ghost' : 'secondary'}
             onClick={() => togglePanel('hidden')}
-            aria-label="Toggle side panel"
+            aria-label={t('Toggle side panel')}
          >
             <PanelRight className="size-4" />
          </Button>
@@ -83,6 +86,7 @@ export default function Header({ projectId }: { projectId: string }) {
    const storeProject = useProjectsStore((s) => s.getProjectById(projectId));
    const deleteProject = useProjectsStore((s) => s.deleteProject);
    const [editOpen, setEditOpen] = useState(false);
+   const { locale, t } = useLanguage();
    const project = storeProject;
    if (!project) return null;
 
@@ -96,7 +100,7 @@ export default function Header({ projectId }: { projectId: string }) {
                      href={`/${orgId}/projects`}
                      className="text-muted-foreground hover:text-foreground transition-colors"
                   >
-                     Projects
+                     {t('Projects')}
                   </Link>
                   <ChevronRight className="size-3.5 text-muted-foreground shrink-0" />
                   <span className="inline-flex size-5 bg-muted/50 items-center justify-center rounded shrink-0">
@@ -120,18 +124,22 @@ export default function Header({ projectId }: { projectId: string }) {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                      <DropdownMenuItem onClick={() => setEditOpen(true)}>
-                        Edit project
+                        {t('Edit project')}
                      </DropdownMenuItem>
                      <DropdownMenuItem
                         className="text-destructive"
                         onClick={() => {
-                           if (confirm(`Delete project "${project.name}"?`)) {
+                           const message =
+                              locale === 'zh-CN'
+                                 ? `确定删除项目“${project.name}”吗？`
+                                 : `Delete project "${project.name}"?`;
+                           if (confirm(message)) {
                               deleteProject(project.id);
                               router.push(`/${orgId}/projects`);
                            }
                         }}
                      >
-                        Delete project
+                        {t('Delete project')}
                      </DropdownMenuItem>
                   </DropdownMenuContent>
                </DropdownMenu>

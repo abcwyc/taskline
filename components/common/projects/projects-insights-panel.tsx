@@ -11,6 +11,8 @@ import { useProjectsFilterStore } from '@/store/projects-filter-store';
 import { useRightPanelStore } from '@/store/right-panel-store';
 import { X } from 'lucide-react';
 import { useMemo } from 'react';
+import { useLanguage } from '@/components/providers/language-provider';
+import { projectHealthLabel } from '@/lib/project-localization';
 
 interface ProjectsInsightsPanelProps {
    projects: Project[];
@@ -26,8 +28,9 @@ interface CountRow {
 }
 
 function CountList({ rows }: { rows: CountRow[] }) {
+   const { t } = useLanguage();
    if (rows.length === 0) {
-      return <p className="text-xs text-muted-foreground px-1 py-3">Nothing to show yet.</p>;
+      return <p className="text-xs text-muted-foreground px-1 py-3">{t('Nothing to show yet.')}</p>;
    }
    return (
       <div className="flex flex-col">
@@ -50,7 +53,7 @@ function CountList({ rows }: { rows: CountRow[] }) {
                   <div className="flex items-center gap-2 shrink-0">
                      {row.onClick && (
                         <span className="text-xs px-1.5 py-0.5 rounded bg-background/80 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                           {row.active ? 'Clear filter' : 'Filter'}
+                           {row.active ? t('Clear filter') : t('Filter')}
                         </span>
                      )}
                      <span className="text-sm text-muted-foreground">{row.count}</span>
@@ -64,6 +67,7 @@ function CountList({ rows }: { rows: CountRow[] }) {
 
 /** Right panel of the Projects page: counters by health / team / lead. */
 export default function ProjectsInsightsPanel({ projects }: ProjectsInsightsPanelProps) {
+   const { locale, t } = useLanguage();
    const teams = useTeamsStore((s) => s.teams);
    const users = useMembersStore((s) => s.members);
    const { closePanel } = useRightPanelStore();
@@ -73,7 +77,10 @@ export default function ProjectsInsightsPanel({ projects }: ProjectsInsightsPane
       () =>
          healthList.map((entry) => ({
             key: entry.id,
-            label: entry.id === 'no-update' ? 'No update expected' : entry.name,
+            label:
+               entry.id === 'no-update'
+                  ? t('No update expected')
+                  : projectHealthLabel(locale, entry.id, entry.name),
             leading: (
                <span
                   className="size-2.5 rounded-full shrink-0"
@@ -84,7 +91,7 @@ export default function ProjectsInsightsPanel({ projects }: ProjectsInsightsPane
             onClick: () => toggleFilter('health', entry.id),
             active: filters.health.length === 1 && filters.health[0] === entry.id,
          })),
-      [projects, filters.health, toggleFilter]
+      [projects, filters.health, toggleFilter, locale, t]
    );
 
    const teamRows = useMemo<CountRow[]>(
@@ -125,7 +132,7 @@ export default function ProjectsInsightsPanel({ projects }: ProjectsInsightsPane
          <div className="flex items-center justify-between px-4 pt-4 pb-2 shrink-0">
             <div className="flex items-baseline gap-1.5">
                <span className="text-xl font-semibold">{projects.length}</span>
-               <span className="text-sm text-muted-foreground">projects</span>
+               <span className="text-sm text-muted-foreground">{t('projects')}</span>
             </div>
             <Button variant="ghost" size="icon" className="size-7" onClick={closePanel}>
                <X className="size-4" />
@@ -136,13 +143,13 @@ export default function ProjectsInsightsPanel({ projects }: ProjectsInsightsPane
             <Tabs defaultValue="health">
                <TabsList className="h-8 bg-transparent gap-1 p-0">
                   <TabsTrigger value="health" className="text-xs px-2.5 rounded-full">
-                     Health
+                     {t('Health')}
                   </TabsTrigger>
                   <TabsTrigger value="teams" className="text-xs px-2.5 rounded-full">
-                     Teams
+                     {t('Teams')}
                   </TabsTrigger>
                   <TabsTrigger value="leads" className="text-xs px-2.5 rounded-full">
-                     Leads
+                     {t('Leads')}
                   </TabsTrigger>
                </TabsList>
                <TabsContent value="health">

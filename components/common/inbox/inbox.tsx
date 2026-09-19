@@ -16,6 +16,17 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import {
+   AlertDialog,
+   AlertDialogAction,
+   AlertDialogCancel,
+   AlertDialogContent,
+   AlertDialogDescription,
+   AlertDialogFooter,
+   AlertDialogHeader,
+   AlertDialogTitle,
+   AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import {
    MoreHorizontal,
    SlidersHorizontal,
    Trash2,
@@ -37,6 +48,9 @@ export default function Inbox() {
       markAsRead,
       markAllAsRead,
       getUnreadNotifications,
+      getReadNotifications,
+      deleteNotification,
+      clearAll,
    } = useNotificationsStore();
 
    const isMobile = useIsMobile();
@@ -46,12 +60,12 @@ export default function Inbox() {
    const [ordering, setOrdering] = useState('newest');
    const [showId, setShowId] = useState(true);
    const [showStatusIcon, setShowStatusIcon] = useState(true);
+   const [isClearAllOpen, setIsClearAllOpen] = useState(false);
 
    // Filter and sort notifications based on settings
    const filteredNotifications = notifications
       .filter((notification) => {
          if (!showRead && notification.read) return false;
-         // Add snoozed filter logic here when implemented
          return true;
       })
       .sort((a, b) => {
@@ -66,15 +80,17 @@ export default function Inbox() {
       });
 
    const handleDeleteAllNotifications = () => {
-      console.log('Delete all notifications');
+      setIsClearAllOpen(true);
    };
 
    const handleDeleteReadNotifications = () => {
-      console.log('Delete read notifications');
+      getReadNotifications().forEach((notification) => deleteNotification(notification.id));
    };
 
    const handleDeleteCompletedIssues = () => {
-      console.log('Delete notifications for completed issues');
+      notifications
+         .filter((notification) => notification.status.category === 'completed')
+         .forEach((notification) => deleteNotification(notification.id));
    };
 
    const listPane = (
@@ -115,6 +131,37 @@ export default function Inbox() {
                >
                   <CheckCheck className="w-4 h-4" />
                </Button>
+               <AlertDialog open={isClearAllOpen} onOpenChange={setIsClearAllOpen}>
+                  <AlertDialogTrigger asChild>
+                     <Button
+                        variant="ghost"
+                        size="xs"
+                        title="Clear all"
+                        disabled={notifications.length === 0}
+                     >
+                        <Trash2 className="w-4 h-4" />
+                        <span className="sr-only">Clear all</span>
+                     </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                     <AlertDialogHeader>
+                        <AlertDialogTitle>Clear all notifications</AlertDialogTitle>
+                        <AlertDialogDescription>
+                           This will permanently remove every notification from your inbox. This
+                           action cannot be undone.
+                        </AlertDialogDescription>
+                     </AlertDialogHeader>
+                     <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                           onClick={clearAll}
+                           className="bg-destructive text-white hover:bg-destructive/90"
+                        >
+                           Clear all
+                        </AlertDialogAction>
+                     </AlertDialogFooter>
+                  </AlertDialogContent>
+               </AlertDialog>
                <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                      <Button variant="ghost" size="xs">

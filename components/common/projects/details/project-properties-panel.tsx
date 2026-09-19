@@ -3,17 +3,55 @@
 import { CapacityRing } from '@/components/common/cycles/capacity-ring';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+   AlertDialog,
+   AlertDialogAction,
+   AlertDialogCancel,
+   AlertDialogContent,
+   AlertDialogDescription,
+   AlertDialogFooter,
+   AlertDialogHeader,
+   AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
+import {
+   Dialog,
+   DialogClose,
+   DialogContent,
+   DialogDescription,
+   DialogFooter,
+   DialogHeader,
+   DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { Issue } from '@/mock-data/issues';
 import { useCyclesStore } from '@/store/cycles-store';
-import { ProjectDetail } from '@/mock-data/project-details';
+import { ProjectDetail, ProjectMilestone } from '@/mock-data/project-details';
 import { Project } from '@/mock-data/projects';
+import { useProjectDetailsStore } from '@/store/project-details-store';
 import { useTeamsStore } from '@/store/teams-store';
 import { PanelFilterTarget, usePanelFilter } from '@/components/common/issues/use-panel-filter';
 import { cn } from '@/lib/utils';
-import { format, parseISO } from 'date-fns';
 import { ProjectProgressChart } from './project-progress-chart';
-import { ArrowRight, Calendar, Check, Compass, Plus, Slack, Tag, UserPlus } from 'lucide-react';
-import { useMemo } from 'react';
+import {
+   ArrowRight,
+   Calendar,
+   Check,
+   Compass,
+   Pencil,
+   Plus,
+   Slack,
+   Tag,
+   Trash2,
+   UserPlus,
+} from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { useLanguage } from '@/components/providers/language-provider';
+import {
+   formatProjectDate,
+   projectPriorityLabel,
+   projectStatusLabel,
+} from '@/lib/project-localization';
 
 interface ProjectPropertiesPanelProps {
    project: Project;
@@ -22,8 +60,6 @@ interface ProjectPropertiesPanelProps {
 }
 
 const isCompleted = (issue: Issue) => issue.status.category === 'completed';
-
-const formatDay = (iso?: string) => (iso ? format(parseISO(iso), 'MMM do') : '—');
 
 interface BreakdownRow {
    key: string;
@@ -62,8 +98,9 @@ function BreakdownList({
    rows: BreakdownRow[];
    panelFilter: ReturnType<typeof usePanelFilter>;
 }) {
+   const { locale, t } = useLanguage();
    if (rows.length === 0) {
-      return <p className="text-xs text-muted-foreground px-1 py-3">Nothing to show yet.</p>;
+      return <p className="text-xs text-muted-foreground px-1 py-3">{t('Nothing to show yet.')}</p>;
    }
    return (
       <div className="flex flex-col">
@@ -87,7 +124,9 @@ function BreakdownList({
                   <div className="flex items-center gap-2 shrink-0 text-sm text-muted-foreground">
                      <CapacityRing value={row.completedPercent} color="#6771c5" />
                      <span className="whitespace-nowrap">
-                        {row.completedPercent}% of {row.total}
+                        {locale === 'zh-CN'
+                           ? `${row.total} 项中已完成 ${row.completedPercent}%`
+                           : `${row.completedPercent}% of ${row.total}`}
                      </span>
                   </div>
                </button>
@@ -111,10 +150,55 @@ function PropertyRow({ label, children }: { label: string; children: React.React
  * progress breakdowns and a compact activity feed.
  */
 export function ProjectPropertiesPanel({ project, detail, issues }: ProjectPropertiesPanelProps) {
+   const { locale, t } = useLanguage();
+   const formatDay = (iso?: string) => formatProjectDate(locale, iso);
    const teams = useTeamsStore((s) => s.teams);
    const cycles = useCyclesStore((s) => s.cycles);
    const panelFilter = usePanelFilter();
+   const toggleMilestone = useProjectDetailsStore((s) => s.toggleMilestone);
+   const addMilestone = useProjectDetailsStore((s) => s.addMilestone);
+   const renameMilestone = useProjectDetailsStore((s) => s.renameMilestone);
+   const setMilestoneDate = useProjectDetailsStore((s) => s.setMilestoneDate);
+   const removeMilestone = useProjectDetailsStore((s) => s.removeMilestone);
    const completed = issues.filter(isCompleted).length;
+
+   // Milestone editing state
+   const [isAddMilestoneOpen, setIsAddMilestoneOpen] = useState(false);
+   const [newMilestoneName, setNewMilestoneName] = useState('');
+   const [newMilestoneDate, setNewMilestoneDate] = useState('');
+   const [renamingMilestoneId, setRenamingMilestoneId] = useState<string | null>(null);
+   const [renameValue, setRenameValue] = useState('');
+   const [editingDateMilestoneId, setEditingDateMilestoneId] = useState<string | null>(null);
+   const [milestoneToDelete, setMilestoneToDelete] = useState<ProjectMilestone | null>(null);
+
+   const openAddMilestoneDialog = () => {
+      setNewMilestoneName('');
+      setNewMilestoneDate('');
+      setIsAddMilestoneOpen(true);
+   };
+
+   const handleAddMilestone = () => {
+      const name = newMilestoneName.trim();
+      if (!name) return;
+      addMilestone(project.id, name, newMilestoneDate || null);
+      setIsAddMilestoneOpen(false);
+      setNewMilestoneName('');
+      setNewMilestoneDate('');
+   };
+
+   const startRenameMilestone = (milestone: ProjectMilestone) => {
+      setRenamingMilestoneId(milestone.id);
+      setRenameValue(milestone.name);
+   };
+
+   const commitRenameMilestone = (milestone: ProjectMilestone) => {
+      if (renamingMilestoneId !== milestone.id) return;
+      const name = renameValue.trim();
+      if (name && name !== milestone.name) {
+         renameMilestone(project.id, milestone.id, name);
+      }
+      setRenamingMilestoneId(null);
+   };
 
    const team = teams.find((candidate) => candidate.id === project.teamId);
 
@@ -154,12 +238,12 @@ export function ProjectPropertiesPanel({ project, detail, issues }: ProjectPrope
                     }
                   : {
                        key: 'no-assignee',
-                       label: 'No assignee',
+                       label: t('No assignee'),
                        leading: null,
                        target: { columnId: 'assignee', value: 'unassigned' },
                     }
          ),
-      [issues]
+      [issues, t]
    );
 
    const labelRows = useMemo(
@@ -169,7 +253,7 @@ export function ProjectPropertiesPanel({ project, detail, issues }: ProjectPrope
             (issue) => issue.labels[0]?.id,
             (key, sample) => ({
                key: String(key),
-               label: sample.labels[0]?.name ?? 'Unlabeled',
+               label: sample.labels[0]?.name ?? t('Unlabeled'),
                leading: (
                   <span
                      className="size-2.5 rounded-full shrink-0"
@@ -179,7 +263,7 @@ export function ProjectPropertiesPanel({ project, detail, issues }: ProjectPrope
                target: { columnId: 'labels', value: String(key) },
             })
          ),
-      [issues]
+      [issues, t]
    );
 
    const cycleRows = useMemo(
@@ -189,36 +273,38 @@ export function ProjectPropertiesPanel({ project, detail, issues }: ProjectPrope
             (issue) => (issue.cycleId === '' ? undefined : issue.cycleId),
             (key) => ({
                key: String(key),
-               label: cycles.find((c) => c.id === String(key))?.name ?? `Cycle ${key}`,
+               label: cycles.find((c) => c.id === String(key))?.name ?? `${t('Cycle')} ${key}`,
                leading: null,
                target: { columnId: 'cycle', value: String(key) },
             })
          ),
-      [issues, cycles]
+      [issues, cycles, t]
    );
 
    return (
       <div className="flex flex-col h-full w-full overflow-y-auto">
          {/* Properties */}
          <div className="px-5 pt-4 pb-4 border-b">
-            <h3 className="text-sm font-medium mb-2.5">Properties</h3>
+            <h3 className="text-sm font-medium mb-2.5">{t('Properties')}</h3>
             <div className="flex flex-col gap-1">
-               <PropertyRow label="Status">
+               <PropertyRow label={t('Status')}>
                   <project.status.icon />
-                  <span>{project.status.name}</span>
+                  <span>{projectStatusLabel(locale, project.status.id, project.status.name)}</span>
                </PropertyRow>
-               <PropertyRow label="Priority">
+               <PropertyRow label={t('Priority')}>
                   <project.priority.icon className="size-3.5 text-muted-foreground" />
-                  <span>{project.priority.name}</span>
+                  <span>
+                     {projectPriorityLabel(locale, project.priority.id, project.priority.name)}
+                  </span>
                </PropertyRow>
-               <PropertyRow label="Lead">
+               <PropertyRow label={t('Lead')}>
                   <Avatar className="size-5">
                      <AvatarImage src={project.lead.avatarUrl} alt={project.lead.name} />
                      <AvatarFallback>{project.lead.name[0]}</AvatarFallback>
                   </Avatar>
                   <span className="truncate max-w-36">{project.lead.name}</span>
                </PropertyRow>
-               <PropertyRow label="Members">
+               <PropertyRow label={t('Members')}>
                   {members.length > 0 ? (
                      <span className="inline-flex items-center gap-1.5">
                         <span className="flex -space-x-1.5">
@@ -229,16 +315,18 @@ export function ProjectPropertiesPanel({ project, detail, issues }: ProjectPrope
                               </Avatar>
                            ))}
                         </span>
-                        {members.length} {members.length === 1 ? 'member' : 'members'}
+                        {locale === 'zh-CN'
+                           ? `${members.length} 位成员`
+                           : `${members.length} ${members.length === 1 ? 'member' : 'members'}`}
                      </span>
                   ) : (
                      <button className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors">
                         <UserPlus className="size-3.5" />
-                        Add members
+                        {t('Add members')}
                      </button>
                   )}
                </PropertyRow>
-               <PropertyRow label="Dates">
+               <PropertyRow label={t('Dates')}>
                   <span className="inline-flex items-center gap-1">
                      <Calendar className="size-3.5 text-muted-foreground" />
                      {formatDay(project.startDate)}
@@ -246,10 +334,10 @@ export function ProjectPropertiesPanel({ project, detail, issues }: ProjectPrope
                   <ArrowRight className="size-3 text-muted-foreground" />
                   <span className="inline-flex items-center gap-1">
                      <Calendar className="size-3.5 text-muted-foreground" />
-                     {project.targetDate ? formatDay(project.targetDate) : 'Target'}
+                     {project.targetDate ? formatDay(project.targetDate) : t('Target')}
                   </span>
                </PropertyRow>
-               <PropertyRow label="Teams">
+               <PropertyRow label={t('Teams')}>
                   <span className="inline-flex items-center gap-1.5">
                      {team?.icon} {team?.name ?? project.teamId}
                   </span>
@@ -257,25 +345,25 @@ export function ProjectPropertiesPanel({ project, detail, issues }: ProjectPrope
                <PropertyRow label="Slack">
                   <button className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors">
                      <Slack className="size-3.5" />
-                     Connect channel
+                     {t('Connect channel')}
                   </button>
                </PropertyRow>
-               <PropertyRow label="Initiatives">
+               <PropertyRow label={t('Initiatives')}>
                   {project.initiative ? (
                      <span className="truncate max-w-44">{project.initiative}</span>
                   ) : (
                      <span className="inline-flex items-center gap-1.5 text-muted-foreground">
                         <Compass className="size-3.5" />
-                        No initiative
+                        {t('No initiative')}
                      </span>
                   )}
                </PropertyRow>
-               <PropertyRow label="Labels">
+               <PropertyRow label={t('Labels')}>
                   <div className="flex items-center gap-1.5">
                      {project.labels.length === 0 && (
                         <span className="inline-flex items-center gap-1.5 text-muted-foreground">
                            <Tag className="size-3.5" />
-                           Add label
+                           {t('Add label')}
                         </span>
                      )}
                      {project.labels.map((label) => (
@@ -301,74 +389,233 @@ export function ProjectPropertiesPanel({ project, detail, issues }: ProjectPrope
          {/* Milestones */}
          <div className="px-5 py-4 border-b">
             <div className="flex items-center justify-between mb-2">
-               <h3 className="text-sm font-medium">Milestones</h3>
-               <button className="text-muted-foreground hover:text-foreground transition-colors">
+               <h3 className="text-sm font-medium">{t('Milestones')}</h3>
+               <button
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  onClick={openAddMilestoneDialog}
+                  aria-label={t('Add milestone')}
+                  title={t('Add milestone')}
+               >
                   <Plus className="size-3.5" />
                </button>
             </div>
             {detail.milestones.length === 0 ? (
                <p className="text-xs text-muted-foreground">
-                  Add milestones to organize work within your project and break it into more
-                  granular stages. <span className="text-foreground/70 underline">Learn more</span>
+                  {t(
+                     'Add milestones to organize work within your project and break it into more granular stages.'
+                  )}{' '}
+                  <span className="text-foreground/70 underline">{t('Learn more')}</span>
                </p>
             ) : (
                <div className="flex flex-col gap-1.5">
                   {detail.milestones.map((milestone) => (
                      <div
                         key={milestone.id}
-                        className="flex items-center justify-between gap-2 text-sm"
+                        className="group flex items-center justify-between gap-2 text-sm"
                      >
                         <span className="flex items-center gap-2 min-w-0">
-                           <span
-                              className={
+                           <button
+                              type="button"
+                              onClick={() =>
+                                 toggleMilestone(project.id, milestone.id, !milestone.completed)
+                              }
+                              className={cn(
+                                 'size-4 rounded-full shrink-0 transition-colors',
                                  milestone.completed
-                                    ? 'size-4 rounded-full bg-violet-500 flex items-center justify-center shrink-0'
-                                    : 'size-4 rounded-full border border-muted-foreground/40 shrink-0'
+                                    ? 'bg-violet-500 flex items-center justify-center'
+                                    : 'border border-muted-foreground/40 hover:border-violet-500'
+                              )}
+                              aria-label={
+                                 milestone.completed
+                                    ? t('Mark milestone as not done')
+                                    : t('Mark milestone as done')
                               }
                            >
                               {milestone.completed && <Check className="size-2.5 text-white" />}
-                           </span>
-                           <span
-                              className={
-                                 milestone.completed
-                                    ? 'truncate line-through text-muted-foreground'
-                                    : 'truncate'
-                              }
-                           >
-                              {milestone.name}
-                           </span>
+                           </button>
+                           {renamingMilestoneId === milestone.id ? (
+                              <Input
+                                 autoFocus
+                                 value={renameValue}
+                                 onChange={(event) => setRenameValue(event.target.value)}
+                                 onFocus={(event) => event.target.select()}
+                                 onKeyDown={(event) => {
+                                    if (event.key === 'Enter') commitRenameMilestone(milestone);
+                                    if (event.key === 'Escape') setRenamingMilestoneId(null);
+                                 }}
+                                 onBlur={() => commitRenameMilestone(milestone)}
+                                 className="h-6 px-1.5 text-sm"
+                              />
+                           ) : (
+                              <span
+                                 className={cn(
+                                    'truncate',
+                                    milestone.completed && 'line-through text-muted-foreground'
+                                 )}
+                              >
+                                 {milestone.name}
+                              </span>
+                           )}
                         </span>
-                        <span className="text-xs text-muted-foreground whitespace-nowrap">
-                           {formatDay(milestone.targetDate)}
+
+                        <span className="flex items-center gap-1.5 shrink-0">
+                           {editingDateMilestoneId === milestone.id ? (
+                              <input
+                                 type="date"
+                                 autoFocus
+                                 defaultValue={milestone.targetDate ?? ''}
+                                 onChange={(event) => {
+                                    setMilestoneDate(
+                                       project.id,
+                                       milestone.id,
+                                       event.target.value || null
+                                    );
+                                    setEditingDateMilestoneId(null);
+                                 }}
+                                 onBlur={() => setEditingDateMilestoneId(null)}
+                                 onKeyDown={(event) => {
+                                    if (event.key === 'Escape') setEditingDateMilestoneId(null);
+                                 }}
+                                 className="h-6 rounded-md border border-input bg-transparent px-1.5 text-xs outline-none focus-visible:border-ring"
+                                 aria-label={t('Milestone target date')}
+                              />
+                           ) : (
+                              <span className="text-xs text-muted-foreground whitespace-nowrap group-hover:hidden">
+                                 {formatDay(milestone.targetDate)}
+                              </span>
+                           )}
+
+                           <span className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button
+                                 className="text-muted-foreground hover:text-foreground transition-colors"
+                                 onClick={() => startRenameMilestone(milestone)}
+                                 aria-label={t('Rename milestone')}
+                                 title={t('Rename')}
+                              >
+                                 <Pencil className="size-3.5" />
+                              </button>
+                              <button
+                                 className="text-muted-foreground hover:text-foreground transition-colors"
+                                 onClick={() => setEditingDateMilestoneId(milestone.id)}
+                                 aria-label={t('Edit milestone date')}
+                                 title={t('Edit date')}
+                              >
+                                 <Calendar className="size-3.5" />
+                              </button>
+                              <button
+                                 className="text-muted-foreground hover:text-destructive transition-colors"
+                                 onClick={() => setMilestoneToDelete(milestone)}
+                                 aria-label={t('Delete milestone')}
+                                 title={t('Delete')}
+                              >
+                                 <Trash2 className="size-3.5" />
+                              </button>
+                           </span>
                         </span>
                      </div>
                   ))}
                </div>
             )}
+
+            {/* Add milestone dialog */}
+            <Dialog open={isAddMilestoneOpen} onOpenChange={setIsAddMilestoneOpen}>
+               <DialogContent className="sm:max-w-sm">
+                  <DialogHeader>
+                     <DialogTitle>{t('Add milestone')}</DialogTitle>
+                     <DialogDescription>
+                        {t('Break the project into smaller, trackable stages.')}
+                     </DialogDescription>
+                  </DialogHeader>
+                  <div className="flex flex-col gap-3">
+                     <Input
+                        autoFocus
+                        value={newMilestoneName}
+                        onChange={(event) => setNewMilestoneName(event.target.value)}
+                        onKeyDown={(event) => {
+                           if (event.key === 'Enter') handleAddMilestone();
+                        }}
+                        placeholder={t('Milestone name')}
+                     />
+                     <Input
+                        type="date"
+                        value={newMilestoneDate}
+                        onChange={(event) => setNewMilestoneDate(event.target.value)}
+                        aria-label={t('Target date')}
+                     />
+                  </div>
+                  <DialogFooter>
+                     <DialogClose asChild>
+                        <Button variant="outline" size="xs">
+                           {t('Cancel')}
+                        </Button>
+                     </DialogClose>
+                     <Button
+                        size="xs"
+                        onClick={handleAddMilestone}
+                        disabled={!newMilestoneName.trim()}
+                     >
+                        {t('Add milestone')}
+                     </Button>
+                  </DialogFooter>
+               </DialogContent>
+            </Dialog>
+
+            {/* Delete milestone confirmation */}
+            <AlertDialog
+               open={milestoneToDelete !== null}
+               onOpenChange={(open) => {
+                  if (!open) setMilestoneToDelete(null);
+               }}
+            >
+               <AlertDialogContent>
+                  <AlertDialogHeader>
+                     <AlertDialogTitle>{t('Delete milestone')}</AlertDialogTitle>
+                     <AlertDialogDescription>
+                        {t(
+                           'This milestone will be permanently removed from the project. This action cannot be undone.'
+                        )}
+                     </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                     <AlertDialogCancel>{t('Cancel')}</AlertDialogCancel>
+                     <AlertDialogAction
+                        className="bg-destructive text-white hover:bg-destructive/90"
+                        onClick={() => {
+                           if (milestoneToDelete) {
+                              removeMilestone(project.id, milestoneToDelete.id);
+                           }
+                           setMilestoneToDelete(null);
+                        }}
+                     >
+                        {t('Delete')}
+                     </AlertDialogAction>
+                  </AlertDialogFooter>
+               </AlertDialogContent>
+            </AlertDialog>
          </div>
 
          {/* Progress */}
          <div className="px-5 py-4 border-b">
-            <h3 className="text-sm font-medium mb-3">Progress</h3>
+            <h3 className="text-sm font-medium mb-3">{t('Progress')}</h3>
             <div className="grid grid-cols-3 gap-2 mb-2">
                <div className="flex flex-col gap-0.5">
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                      <span className="size-2 rounded-[2px] bg-[#8f9299]" />
-                     Scope
+                     {t('Scope')}
                   </div>
                   <span className="text-sm font-medium">{issues.length}</span>
                </div>
                <div className="flex flex-col gap-0.5">
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                      <span className="size-2 rounded-[2px] bg-[#facc15]" />
-                     Started
+                     {t('Started')}
                   </div>
                   <span className="text-sm font-medium">{started}</span>
                </div>
                <div className="flex flex-col gap-0.5">
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                      <span className="size-2 rounded-[2px] bg-[#6771c5]" />
-                     Completed
+                     {t('Completed')}
                   </div>
                   <span className="text-sm font-medium">{completed}</span>
                </div>
@@ -385,13 +632,13 @@ export function ProjectPropertiesPanel({ project, detail, issues }: ProjectPrope
             <Tabs defaultValue="assignees">
                <TabsList className="h-8 bg-transparent gap-1 p-0">
                   <TabsTrigger value="assignees" className="text-xs px-2.5 rounded-full">
-                     Assignees
+                     {t('Assignees')}
                   </TabsTrigger>
                   <TabsTrigger value="labels" className="text-xs px-2.5 rounded-full">
-                     Labels
+                     {t('Labels')}
                   </TabsTrigger>
                   <TabsTrigger value="cycles" className="text-xs px-2.5 rounded-full">
-                     Cycles
+                     {t('Cycles')}
                   </TabsTrigger>
                </TabsList>
                <TabsContent value="assignees">
@@ -409,9 +656,9 @@ export function ProjectPropertiesPanel({ project, detail, issues }: ProjectPrope
          {/* Activity */}
          <div className="px-5 py-4">
             <div className="flex items-center justify-between mb-2">
-               <h3 className="text-sm font-medium">Activity</h3>
+               <h3 className="text-sm font-medium">{t('Activity')}</h3>
                <button className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-                  See all
+                  {t('See all')}
                </button>
             </div>
             <div className="flex flex-col gap-3">

@@ -10,6 +10,8 @@ import { useLabelsStore } from '@/store/labels-store';
 import { useMeStore } from '@/store/me-store';
 import { useMembersStore } from '@/store/members-store';
 import { useNotificationsStore } from '@/store/notifications-store';
+import { hydrateWorkflowStates } from '@/lib/api/workflow-states';
+import { useReviewsStore } from '@/store/reviews-store';
 import { useProjectsStore } from '@/store/projects-store';
 import { useTeamsStore } from '@/store/teams-store';
 import { useViewsStore } from '@/store/views-store';
@@ -31,6 +33,7 @@ export function WorkspaceProvider({
    const hydrateIssues = useIssuesStore((state) => state.hydrate);
    const hydrateInitiatives = useInitiativesStore((state) => state.hydrate);
    const hydrateNotifications = useNotificationsStore((state) => state.hydrate);
+   const hydrateReviews = useReviewsStore((state) => state.hydrate);
    const pathname = usePathname();
    const [attempt, setAttempt] = useState(0);
    const [ready, setReady] = useState(false);
@@ -49,12 +52,15 @@ export function WorkspaceProvider({
          try {
             if (firstLoad) {
                await Promise.all([hydrateMe(), hydrateMembers(), hydrateLabels()]);
+               // Custom workflow statuses must land before issues/projects render.
+               await hydrateWorkflowStates().catch(() => undefined);
                await hydrateProjects();
                await Promise.all([hydrateTeams(), hydrateIssues()]);
             }
             if (needsCycles) await hydrateCycles();
             if (needsViews) await hydrateViews();
             if (needsInitiatives) await hydrateInitiatives();
+            if (pathname.includes('review')) await hydrateReviews();
             if (firstLoad) await hydrateNotifications();
             if (active && firstLoad) {
                readyRef.current = true;
@@ -82,6 +88,7 @@ export function WorkspaceProvider({
       hydrateIssues,
       hydrateInitiatives,
       hydrateNotifications,
+      hydrateReviews,
    ]);
 
    useEffect(() => {

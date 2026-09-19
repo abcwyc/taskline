@@ -23,12 +23,15 @@ import {
    HeartPulse,
    ListFilter,
 } from 'lucide-react';
+import { useLanguage } from '@/components/providers/language-provider';
+import { projectHealthLabel, projectPriorityLabel } from '@/lib/project-localization';
 
 type FilterType = 'health' | 'priority' | 'sort';
 
 export function Filter() {
    const [open, setOpen] = useState(false);
    const [active, setActive] = useState<FilterType | null>(null);
+   const { locale, t } = useLanguage();
 
    const { filters, sort, toggleFilter, clearFilters, getActiveFiltersCount, setSort } =
       useProjectsFilterStore();
@@ -38,7 +41,7 @@ export function Filter() {
          <PopoverTrigger asChild>
             <Button size="xs" variant="ghost" className="relative">
                <ListFilter className="size-4" />
-               <span className="hidden sm:inline ml-1">Filter</span>
+               <span className="hidden sm:inline ml-1">{t('Filter')}</span>
                {getActiveFiltersCount() > 0 && (
                   <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[10px] rounded-full size-4 flex items-center justify-center">
                      {getActiveFiltersCount()}
@@ -57,7 +60,7 @@ export function Filter() {
                         >
                            <span className="flex items-center gap-2">
                               <HeartPulse className="size-4 text-muted-foreground" />
-                              Health
+                              {t('Health')}
                            </span>
                            <div className="flex items-center">
                               {filters.health.length > 0 && (
@@ -74,7 +77,7 @@ export function Filter() {
                         >
                            <span className="flex items-center gap-2">
                               <BarChart3 className="size-4 text-muted-foreground" />
-                              Priority
+                              {t('Priority')}
                            </span>
                            <div className="flex items-center">
                               {filters.priority.length > 0 && (
@@ -91,7 +94,7 @@ export function Filter() {
                         >
                            <span className="flex items-center gap-2">
                               <ArrowUpDown className="size-4 text-muted-foreground" />
-                              Sort by
+                              {t('Sort by')}
                            </span>
                            <ChevronRight className="size-4" />
                         </CommandItem>
@@ -104,7 +107,7 @@ export function Filter() {
                                  onSelect={() => clearFilters()}
                                  className="cursor-pointer"
                               >
-                                 Clear all filters
+                                 {t('Clear all filters')}
                               </CommandItem>
                            </CommandGroup>
                         </>
@@ -122,11 +125,11 @@ export function Filter() {
                      >
                         <ChevronRight className="size-4 rotate-180" />
                      </Button>
-                     <span className="ml-2 font-medium">Health</span>
+                     <span className="ml-2 font-medium">{t('Health')}</span>
                   </div>
-                  <CommandInput placeholder="Search health..." />
+                  <CommandInput placeholder={t('Search health…')} />
                   <CommandList>
-                     <CommandEmpty>No health found.</CommandEmpty>
+                     <CommandEmpty>{t('No health found.')}</CommandEmpty>
                      <CommandGroup>
                         {allHealth.map((h) => (
                            <CommandItem
@@ -140,7 +143,7 @@ export function Filter() {
                                     className="size-3 rounded-full"
                                     style={{ backgroundColor: h.color }}
                                  />
-                                 {h.name}
+                                 {projectHealthLabel(locale, h.id, h.name)}
                               </div>
                               {filters.health.includes(h.id) && <CheckIcon size={16} />}
                            </CommandItem>
@@ -159,11 +162,11 @@ export function Filter() {
                      >
                         <ChevronRight className="size-4 rotate-180" />
                      </Button>
-                     <span className="ml-2 font-medium">Priority</span>
+                     <span className="ml-2 font-medium">{t('Priority')}</span>
                   </div>
-                  <CommandInput placeholder="Search priorities..." />
+                  <CommandInput placeholder={t('Search priorities…')} />
                   <CommandList>
-                     <CommandEmpty>No priorities found.</CommandEmpty>
+                     <CommandEmpty>{t('No priorities found.')}</CommandEmpty>
                      <CommandGroup>
                         {priorities.map((p) => (
                            <CommandItem
@@ -174,7 +177,7 @@ export function Filter() {
                            >
                               <div className="flex items-center gap-2">
                                  <p.icon className="text-muted-foreground size-4" />
-                                 {p.name}
+                                 {projectPriorityLabel(locale, p.id, p.name)}
                               </div>
                               {filters.priority.includes(p.id) && <CheckIcon size={16} />}
                            </CommandItem>
@@ -193,10 +196,10 @@ export function Filter() {
                      >
                         <ChevronRight className="size-4 rotate-180" />
                      </Button>
-                     <span className="ml-2 font-medium">Sort by</span>
+                     <span className="ml-2 font-medium">{t('Sort by')}</span>
                   </div>
                   <CommandList>
-                     <CommandGroup heading="Title">
+                     <CommandGroup heading={t('Title')}>
                         <CommandItem
                            onSelect={() => setSort('title-asc')}
                            className="flex items-center justify-between"
@@ -211,36 +214,36 @@ export function Filter() {
                         </CommandItem>
                      </CommandGroup>
                      <CommandSeparator />
-                     <CommandGroup heading="Targeted Date">
+                     <CommandGroup heading={t('Target date')}>
                         <CommandItem
                            onSelect={() => setSort('date-asc')}
                            className="flex items-center justify-between"
                         >
-                           Oldest to Newest
+                           {t('Oldest to Newest')}
                            {sort === 'date-asc' && <CheckIcon size={16} />}
                         </CommandItem>
                         <CommandItem
                            onSelect={() => setSort('date-desc')}
                            className="flex items-center justify-between"
                         >
-                           Newest to Oldest
+                           {t('Newest to Oldest')}
                            {sort === 'date-desc' && <CheckIcon size={16} />}
                         </CommandItem>
                      </CommandGroup>
                      <CommandSeparator />
-                     <CommandGroup heading="Status">
+                     <CommandGroup heading={t('Status')}>
                         <CommandItem
                            onSelect={() => setSort('status-asc')}
                            className="flex items-center justify-between"
                         >
-                           Lowest to Highest
+                           {t('Lowest to Highest')}
                            {sort === 'status-asc' && <CheckIcon size={16} />}
                         </CommandItem>
                         <CommandItem
                            onSelect={() => setSort('status-desc')}
                            className="flex items-center justify-between"
                         >
-                           Highest to Lowest
+                           {t('Highest to Lowest')}
                            {sort === 'status-desc' && <CheckIcon size={16} />}
                         </CommandItem>
                      </CommandGroup>

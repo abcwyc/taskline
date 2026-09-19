@@ -6,6 +6,7 @@ import { db } from '@/lib/db';
 import {
    PostProjectUpdateBody,
    ProjectDetailDTO,
+   ProjectMilestoneDTO,
    ProjectUpdateDTO,
    PU_HEALTH_ENUM_TO_KEY,
    PU_HEALTH_KEY_TO_ENUM,
@@ -159,4 +160,118 @@ export async function setMilestoneCompleted(
    if (!milestone) return false;
    await db.projectMilestone.update({ where: { id: milestone.id }, data: { completed } });
    return true;
+}
+
+/* --------------------- milestones: full CRUD ------------------------------ */
+
+export async function createMilestone(
+   orgId: string,
+   projectId: string,
+   body: { name: string; targetDate?: string | null }
+): Promise<ProjectMilestoneDTO | null> {
+   const project = await db.project.findFirst({
+      where: { orgId, id: projectId },
+      select: { id: true },
+   });
+   if (!project) return null;
+   if (!body?.name?.trim()) throw new PublicError('milestone name is required');
+
+   const last = await db.projectMilestone.findFirst({
+      where: { projectId },
+      orderBy: { order: 'desc' },
+      select: { order: true },
+   });
+   const row = await db.projectMilestone.create({
+      data: {
+         projectId,
+         name: body.name.trim(),
+         targetDate: body.targetDate ? new Date(body.targetDate) : null,
+         order: (last?.order ?? 0) + 1,
+      },
+   });
+   return {
+      id: row.id,
+      name: row.name,
+      targetDate: row.targetDate ? row.targetDate.toISOString().slice(0, 10) : null,
+      completed: row.completed,
+   };
+}
+
+export async function updateMilestone(
+   orgId: string,
+   projectId: string,
+   milestoneId: string,
+   body: { name?: string; targetDate?: string | null; completed?: boolean; order?: number }
+): Promise<ProjectMilestoneDTO | null> {
+   const milestone = await db.projectMilestone.findFirst({
+      where: { id: milestoneId, projectId, project: { orgId } },
+   });
+   if (!milestone) return null;
+   if (body.name !== undefined && !body.name.trim())
+      throw new PublicError('milestone name is required');
+
+   const row = await db.projectMilestone.update({
+      where: { id: milestone.id },
+      data: {
+         ...(body.name !== undefined ? { name: body.name.trim() } : {}),
+         ...(body.targetDate !== undefined
+            ? { targetDate: body.targetDate ? new Date(body.targetDate) : null }
+            : {}),
+         ...(body.completed !== undefined ? { completed: body.completed } : {}),
+         ...(body.order !== undefined ? { order: body.order } : {}),
+      },
+   });
+   return {
+      id: row.id,
+      name: row.name,
+      targetDate: row.targetDate ? row.targetDate.toISOString().slice(0, 10) : null,
+      completed: row.completed,
+   };
+}
+
+export async function deleteMilestone(
+   orgId: string,
+   projectId: string,
+   milestoneId: string
+): Promise<boolean> {
+   const milestone = await db.projectMilestone.findFirst({
+      where: { id: milestoneId, projectId, project: { orgId } },
+      select: { id: true },
+   });
+   if (!milestone) return false;
+   await db.projectMilestone.delete({ where: { id: milestone.id } });
+   return true;
+}
+
+export async function deleteProjectUpdate(
+   orgId: string,
+   projectId: string,
+   updateId: string
+): Promise<boolean> {
+   const update = await db.projectUpdate.findFirst({
+      where: { id: updateId, projectId, project: { orgId } },
+      select: { id: true },
+   });
+   if (!update) return false;
+   await db.projectUpdate.delete({ where: { id: update.id } });
+   return true;
+}
+
+/* --------------------- workspace-wide updates feed ------------------------- */
+
+export async function listWorkspaceUpdates(
+   orgId: string
+): Promise<(ProjectUpdateDTO & { projectId: string; projectName: string; teamId: string })[]> {
+   const rows = await db.projectUpdate.findMany({
+      where: { project: { orgId } },
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+      include: { project: { select: { id: true, name: true, teamId: true } } },
+   });
+   return rows.map((r) => ({
+      ...serializeUpdate(r),
+      projectId: r.project.id,
+      projectName: r.project.name,
+      teamId: r.project.teamId,
+   }));
 }

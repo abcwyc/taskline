@@ -1,5 +1,7 @@
 import 'server-only';
 
+import { PublicError } from './http';
+
 import { db } from '@/lib/db';
 import { createIssue } from './issues.server';
 import { IssueDTO, TriageItemDTO } from './types';
@@ -88,4 +90,61 @@ export async function acceptTriage(
       data: { status: 'ACCEPTED', promotedIssue: { connect: { id: issue.id } } },
    });
    return issue;
+}
+
+/** User-submitted ask / customer request → team intake queue (TriageItem). */
+export async function createTriageItem(
+   orgId: string,
+   body: { title: string; description: string; teamId: string },
+   reporterId: string
+): Promise<TriageItemDTO> {
+   const team = await db.team.findFirst({
+      where: { orgId, id: body.teamId },
+      select: { id: true, key: true },
+   });
+   if (!team) throw new PublicError('team not found in this workspace');
+   if (!body.title?.trim()) throw new PublicError('title is required');
+
+   const last = await db.triageItem.findFirst({
+      where: { orgId },
+      orderBy: { identifier: 'desc' },
+      select: { identifier: true },
+   });
+   const lastNum = last ? Number(last.identifier.split('-')[1] ?? 0) : 0;
+   const identifier = `REQ-${(Number.isFinite(lastNum) ? lastNum : 0) + 1}`;
+
+   const row = await db.triageItem.create({
+      data: {
+         orgId,
+         teamId: team.id,
+         identifier,
+         title: body.title.trim(),
+         reporterKind: 'user',
+         reporterUserId: reporterId,
+         receivedAt: new Date(),
+         sections: [{ heading: 'Details', body: body.description ?? '' }],
+         intelligence: {},
+         status: 'PENDING',
+      },
+      include: { team: { select: { key: true } }, reporterUser: { select: { id: true } } },
+   });
+   return serialize(row as Row);
+}
+
+/** Requests submitted by a specific user (their "asks"). */
+export async function listTriageByReporter(
+   orgId: string,
+   reporterUserId: string,
+   includeAllStatuses = true
+): Promise<TriageItemDTO[]> {
+   const rows = await db.triageItem.findMany({
+      where: {
+         orgId,
+         reporterUserId,
+         ...(includeAllStatuses ? {} : { status: 'PENDING' }),
+      },
+      include: { team: { select: { key: true } }, reporterUser: { select: { id: true } } },
+      orderBy: { receivedAt: 'desc' },
+   });
+   return rows.map((r) => serialize(r as Row));
 }

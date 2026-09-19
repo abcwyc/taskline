@@ -6,22 +6,26 @@ import { useIssuesStore } from '@/store/issues-store';
 import { useProjectsStore } from '@/store/projects-store';
 import { useProjectDetail } from '@/store/project-details-store';
 import { useTeamsStore } from '@/store/teams-store';
-import { format, parseISO } from 'date-fns';
 import { ArrowRight, ChevronDown, FileText, PenLine, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useMemo, useRef } from 'react';
 import { DocumentOutline, getOutlineItems } from './document-outline';
 import { ProjectSidePanel } from './project-side-panel';
+import { useLanguage } from '@/components/providers/language-provider';
+import {
+   formatProjectDate,
+   projectPriorityLabel,
+   projectStatusLabel,
+} from '@/lib/project-localization';
 
 interface ProjectOverviewProps {
    projectId: string;
 }
 
-const formatDay = (iso?: string) => (iso ? format(parseISO(iso), 'MMM do') : '—');
-
 /** Project "Overview" tab: description column + properties side panel. */
 export default function ProjectOverview({ projectId }: ProjectOverviewProps) {
+   const { locale, t } = useLanguage();
    const teams = useTeamsStore((s) => s.teams);
    const project = useProjectsStore((s) => s.getProjectById(projectId));
    const detail = useProjectDetail(projectId);
@@ -37,7 +41,7 @@ export default function ProjectOverview({ projectId }: ProjectOverviewProps) {
    const outlineItems = useMemo(() => getOutlineItems(detail.description), [detail.description]);
 
    if (!project) {
-      return <div className="p-10 text-sm text-muted-foreground">Loading project…</div>;
+      return <div className="p-10 text-sm text-muted-foreground">{t('Loading project…')}</div>;
    }
 
    return (
@@ -56,15 +60,21 @@ export default function ProjectOverview({ projectId }: ProjectOverviewProps) {
                   {/* Inline properties */}
                   <div className="mt-6 flex flex-col gap-2.5 text-sm">
                      <div className="flex items-center gap-3">
-                        <span className="w-24 text-muted-foreground shrink-0">Properties</span>
+                        <span className="w-24 text-muted-foreground shrink-0">
+                           {t('Properties')}
+                        </span>
                         <div className="flex items-center gap-3 flex-wrap">
                            <span className="inline-flex items-center gap-1.5">
                               <project.status.icon />
-                              {project.status.name}
+                              {projectStatusLabel(locale, project.status.id, project.status.name)}
                            </span>
                            <span className="inline-flex items-center gap-1.5">
                               <project.priority.icon className="size-3.5 text-muted-foreground" />
-                              {project.priority.name}
+                              {projectPriorityLabel(
+                                 locale,
+                                 project.priority.id,
+                                 project.priority.name
+                              )}
                            </span>
                            <span className="inline-flex items-center gap-1.5">
                               <Avatar className="size-4">
@@ -77,9 +87,9 @@ export default function ProjectOverview({ projectId }: ProjectOverviewProps) {
                               {project.lead.name}
                            </span>
                            <span className="inline-flex items-center gap-1.5 text-muted-foreground">
-                              {formatDay(project.startDate)}
+                              {formatProjectDate(locale, project.startDate)}
                               <ArrowRight className="size-3" />
-                              {formatDay(project.targetDate)}
+                              {formatProjectDate(locale, project.targetDate)}
                            </span>
                            {team && (
                               <span className="inline-flex items-center gap-1.5">
@@ -91,7 +101,9 @@ export default function ProjectOverview({ projectId }: ProjectOverviewProps) {
 
                      {project.initiative && (
                         <div className="flex items-center gap-3">
-                           <span className="w-24 text-muted-foreground shrink-0">Initiatives</span>
+                           <span className="w-24 text-muted-foreground shrink-0">
+                              {t('Initiatives')}
+                           </span>
                            <span className="inline-flex items-center gap-1.5">
                               📄 {project.initiative}
                               <button className="text-muted-foreground hover:text-foreground transition-colors">
@@ -102,7 +114,7 @@ export default function ProjectOverview({ projectId }: ProjectOverviewProps) {
                      )}
 
                      <div className="flex items-center gap-3">
-                        <span className="w-24 text-muted-foreground shrink-0">Labels</span>
+                        <span className="w-24 text-muted-foreground shrink-0">{t('Labels')}</span>
                         <div className="flex items-center gap-1.5">
                            {project.labels.map((label) => (
                               <span
@@ -125,7 +137,9 @@ export default function ProjectOverview({ projectId }: ProjectOverviewProps) {
 
                      {detail.resources.length > 0 && (
                         <div className="flex items-center gap-3">
-                           <span className="w-24 text-muted-foreground shrink-0">Resources</span>
+                           <span className="w-24 text-muted-foreground shrink-0">
+                              {t('Resources')}
+                           </span>
                            <div className="flex items-center gap-2 flex-wrap">
                               {detail.resources.map((resource) => (
                                  <a
@@ -151,13 +165,15 @@ export default function ProjectOverview({ projectId }: ProjectOverviewProps) {
                      className="mt-8 flex items-center justify-center gap-2 border rounded-lg py-4 text-sm text-muted-foreground hover:text-foreground hover:bg-accent/30 transition-colors"
                   >
                      <PenLine className="size-4" />
-                     Write {detail.updates.length === 0 ? 'first ' : ''}project update
+                     {detail.updates.length === 0
+                        ? t('Write first project update')
+                        : t('Write project update')}
                   </Link>
 
                   {/* Description */}
                   <div className="mt-10">
                      <div className="flex items-center gap-1 text-sm font-medium text-muted-foreground mb-2">
-                        Description
+                        {t('Description')}
                         <ChevronDown className="size-3.5" />
                      </div>
                      <div className="text-[15px] leading-relaxed">

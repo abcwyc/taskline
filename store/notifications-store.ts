@@ -2,9 +2,12 @@ import type { InboxItem, NotificationType } from '@/mock-data/inbox';
 import { create } from 'zustand';
 
 import {
+   clearAllNotifications,
+   deleteNotification as apiDeleteNotification,
    fetchNotifications,
    markAllNotificationsRead,
    markNotificationRead,
+   snoozeNotification as apiSnoozeNotification,
 } from '@/lib/api/notifications';
 
 interface NotificationsState {
@@ -19,6 +22,9 @@ interface NotificationsState {
    markAsRead: (id: string) => void;
    markAllAsRead: () => void;
    markAsUnread: (id: string) => void;
+   deleteNotification: (id: string) => void;
+   snoozeNotification: (id: string, hours: number) => void;
+   clearAll: () => void;
 
    getUnreadNotifications: () => InboxItem[];
    getReadNotifications: () => InboxItem[];
@@ -82,6 +88,41 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
                : state.selectedNotification,
       }));
       markNotificationRead(id, false).catch((e) => console.error(e));
+   },
+
+   deleteNotification: (id) => {
+      const snapshot = get().notifications;
+      set((state) => ({
+         notifications: state.notifications.filter((n) => n.id !== id),
+         selectedNotification:
+            state.selectedNotification?.id === id ? undefined : state.selectedNotification,
+      }));
+      apiDeleteNotification(id).catch((err) => {
+         set({ notifications: snapshot });
+         console.error(err);
+      });
+   },
+
+   snoozeNotification: (id, hours) => {
+      const snapshot = get().notifications;
+      set((state) => ({
+         notifications: state.notifications.filter((n) => n.id !== id),
+         selectedNotification:
+            state.selectedNotification?.id === id ? undefined : state.selectedNotification,
+      }));
+      apiSnoozeNotification(id, hours).catch((err) => {
+         set({ notifications: snapshot });
+         console.error(err);
+      });
+   },
+
+   clearAll: () => {
+      const snapshot = get().notifications;
+      set({ notifications: [], selectedNotification: undefined });
+      clearAllNotifications().catch((err) => {
+         set({ notifications: snapshot });
+         console.error(err);
+      });
    },
 
    getUnreadNotifications: () => get().notifications.filter((n) => !n.read),

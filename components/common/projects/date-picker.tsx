@@ -1,11 +1,13 @@
 'use client';
 
 import * as React from 'react';
-import { format } from 'date-fns';
+import { enUS, zhCN } from 'date-fns/locale';
 import { Calendar as CalendarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { useLanguage } from '@/components/providers/language-provider';
+import { formatProjectDate } from '@/lib/project-localization';
 
 interface DatePickerProps {
    date: Date | undefined;
@@ -15,6 +17,7 @@ interface DatePickerProps {
 export function DatePicker({ date, onDateChange }: DatePickerProps) {
    const [selectedDate, setSelectedDate] = React.useState<Date | undefined>(date);
    const [open, setOpen] = React.useState<boolean>(false);
+   const { locale, t } = useLanguage();
 
    const handleDateSelect = (date: Date | undefined) => {
       setSelectedDate(date);
@@ -35,11 +38,11 @@ export function DatePicker({ date, onDateChange }: DatePickerProps) {
                <CalendarIcon className="h-4 w-4 md:mr-0.5" />
                {selectedDate ? (
                   <span className="text-xs hidden xl:inline mt-[1px]">
-                     {format(selectedDate, 'MMM dd, yyyy')}
+                     {formatProjectDate(locale, selectedDate.toISOString(), true)}
                   </span>
                ) : (
                   <span className="text-xs text-muted-foreground hidden xl:inline mt-[1px]">
-                     No date
+                     {t('No date')}
                   </span>
                )}
             </Button>
@@ -47,6 +50,7 @@ export function DatePicker({ date, onDateChange }: DatePickerProps) {
          <PopoverContent className="w-auto p-0" align="start">
             <Calendar
                mode="single"
+               locale={locale === 'zh-CN' ? zhCN : enUS}
                selected={selectedDate}
                onSelect={handleDateSelect}
                initialFocus

@@ -1,7 +1,8 @@
 'use client';
 
-import { format, parseISO } from 'date-fns';
 import { Area, ComposedChart, Line, ResponsiveContainer, XAxis } from 'recharts';
+import { useLanguage } from '@/components/providers/language-provider';
+import { formatProjectDate } from '@/lib/project-localization';
 
 interface ProjectProgressChartProps {
    startDate: string;
@@ -40,6 +41,7 @@ export function ProjectProgressChart({
    started,
    completed,
 }: ProjectProgressChartProps) {
+   const { locale } = useLanguage();
    const data = buildPoints(scope, started, completed);
 
    return (
@@ -80,8 +82,8 @@ export function ProjectProgressChart({
             </ComposedChart>
          </ResponsiveContainer>
          <div className="flex justify-between text-[11px] text-muted-foreground mt-0.5">
-            <span>{format(parseISO(startDate), 'MMM d')}</span>
-            <span>{format(parseISO(endDate), 'MMM d')}</span>
+            <span>{formatProjectDate(locale, startDate)}</span>
+            <span>{formatProjectDate(locale, endDate)}</span>
          </div>
       </div>
    );

@@ -50,7 +50,7 @@ export async function assertOrgScope(
    );
    one('statusId' in refs, refs.statusId, () =>
       client.workflowState.findFirst({
-         where: { id: refs.statusId!, orgId },
+         where: { OR: [{ id: refs.statusId! }, { key: refs.statusId! }], orgId },
          select: { id: true },
       })
    );

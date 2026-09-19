@@ -1,6 +1,8 @@
 'use client';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useMemo } from 'react';
+
 import { Team } from '@/mock-data/teams';
 import { useCyclesStore } from '@/store/cycles-store';
 import { useTeamsDisplayStore } from '@/store/teams-display-store';
@@ -22,7 +24,11 @@ const UPDATED_DATES = ['Jul 12', 'Jul 20', 'Jul 27', 'Jul 30', 'Aug 1', 'Aug 3']
 
 export default function TeamLine({ team }: TeamLineProps) {
    const { displayProperties } = useTeamsDisplayStore();
-   const cycles = useCyclesStore((s) => s.getCyclesByTeam(team.id));
+   const allCycles = useCyclesStore((s) => s.cycles);
+   const cycles = useMemo(
+      () => allCycles.filter((c) => c.teamId === team.id),
+      [allCycles, team.id]
+   );
    const uniqueProjects = new Set(team.projects.map((project) => project.id)).size;
    const owner = team.members[0];
    const hash = hashString(team.id);

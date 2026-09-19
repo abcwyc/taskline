@@ -61,3 +61,19 @@ export async function markNotificationRead(id: string, read: boolean): Promise<v
 export async function markAllNotificationsRead(): Promise<void> {
    await http<void>(BASE, { method: 'PATCH', body: JSON.stringify({ allRead: true }) });
 }
+
+export async function deleteNotification(id: string): Promise<void> {
+   await http<void>(`${BASE}/${encodeURIComponent(id)}`, { method: 'DELETE' });
+}
+
+export async function snoozeNotification(id: string, hours: number): Promise<void> {
+   const until = new Date(Date.now() + hours * 3_600_000).toISOString();
+   await http<void>(`${BASE}/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ snoozedUntil: until }),
+   });
+}
+
+export async function clearAllNotifications(): Promise<void> {
+   await http<void>(BASE, { method: 'DELETE' });
+}

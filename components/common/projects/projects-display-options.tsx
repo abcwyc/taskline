@@ -27,6 +27,7 @@ import {
    List,
    SlidersHorizontal,
 } from 'lucide-react';
+import { useLanguage } from '@/components/providers/language-provider';
 
 const VIEW_TYPES: { value: ProjectsViewType; label: string; icon: React.ElementType }[] = [
    { value: 'list', label: 'List', icon: List },
@@ -56,6 +57,7 @@ function OptionRow({ label, children }: { label: React.ReactNode; children: Reac
 
 /** Linear-style Display popover for the Projects page (List/Board/Timeline). */
 export function ProjectsDisplayOptions() {
+   const { t } = useLanguage();
    const [tab] = useQueryState(
       'tab',
       parseAsStringLiteral(['all', 'active'] as const).withDefault('all')
@@ -84,7 +86,7 @@ export function ProjectsDisplayOptions() {
    return (
       <Popover>
          <PopoverTrigger asChild>
-            <Button size="xs" variant="ghost" aria-label="Display options">
+            <Button size="xs" variant="ghost" aria-label={t('Display options')}>
                <SlidersHorizontal className="size-4" />
             </Button>
          </PopoverTrigger>
@@ -105,7 +107,7 @@ export function ProjectsDisplayOptions() {
                         )}
                      >
                         <view.icon className="size-4" />
-                        {view.label}
+                        {t(view.label)}
                      </button>
                   ))}
                </div>
@@ -116,7 +118,7 @@ export function ProjectsDisplayOptions() {
                      label={
                         <span className="flex items-center gap-2">
                            <ArrowUpDown className="size-4 text-muted-foreground" />
-                           Grouping
+                           {t('Grouping')}
                         </span>
                      }
                   >
@@ -130,7 +132,7 @@ export function ProjectsDisplayOptions() {
                         <SelectContent>
                            {GROUPINGS.map((option) => (
                               <SelectItem key={option.value} value={option.value}>
-                                 {option.label}
+                                 {t(option.label)}
                               </SelectItem>
                            ))}
                         </SelectContent>
@@ -140,7 +142,7 @@ export function ProjectsDisplayOptions() {
                      label={
                         <span className="flex items-center gap-2">
                            <ArrowUpNarrowWide className="size-4 text-muted-foreground" />
-                           Ordering
+                           {t('Ordering')}
                         </span>
                      }
                   >
@@ -154,7 +156,7 @@ export function ProjectsDisplayOptions() {
                         <SelectContent>
                            {ORDERINGS.map((option) => (
                               <SelectItem key={option.value} value={option.value}>
-                                 {option.label}
+                                 {t(option.label)}
                               </SelectItem>
                            ))}
                         </SelectContent>
@@ -164,7 +166,7 @@ export function ProjectsDisplayOptions() {
 
                <div className="border-t -mx-3" />
 
-               <OptionRow label="Show closed projects">
+               <OptionRow label={t('Show closed projects')}>
                   <Select
                      value={closedProjects}
                      onValueChange={(value) => setClosedProjects(value as 'all' | 'hide')}
@@ -173,8 +175,8 @@ export function ProjectsDisplayOptions() {
                         <SelectValue />
                      </SelectTrigger>
                      <SelectContent>
-                        <SelectItem value="all">All</SelectItem>
-                        <SelectItem value="hide">Hide closed</SelectItem>
+                        <SelectItem value="all">{t('All')}</SelectItem>
+                        <SelectItem value="hide">{t('Hide closed')}</SelectItem>
                      </SelectContent>
                   </Select>
                </OptionRow>
@@ -185,23 +187,23 @@ export function ProjectsDisplayOptions() {
                <div className="flex flex-col gap-1.5">
                   <span className="text-sm font-medium">
                      {viewType === 'timeline'
-                        ? 'Timeline options'
+                        ? t('Timeline options')
                         : viewType === 'board'
-                          ? 'Board options'
-                          : 'List options'}
+                          ? t('Board options')
+                          : t('List options')}
                   </span>
                   {viewType === 'timeline' && (
                      <>
-                        <OptionRow label="Show project list">
+                        <OptionRow label={t('Show project list')}>
                            <Switch checked={showProjectList} onCheckedChange={setShowProjectList} />
                         </OptionRow>
-                        <OptionRow label="Show week numbers">
+                        <OptionRow label={t('Show week numbers')}>
                            <Switch checked={showWeekNumbers} onCheckedChange={setShowWeekNumbers} />
                         </OptionRow>
                      </>
                   )}
                   <OptionRow
-                     label={viewType === 'board' ? 'Show empty columns' : 'Show empty groups'}
+                     label={viewType === 'board' ? t('Show empty columns') : t('Show empty groups')}
                   >
                      <Switch checked={showEmptyGroups} onCheckedChange={setShowEmptyGroups} />
                   </OptionRow>
@@ -209,7 +211,7 @@ export function ProjectsDisplayOptions() {
 
                {/* Display properties */}
                <div className="flex flex-col gap-2">
-                  <span className="text-sm text-muted-foreground">Display properties</span>
+                  <span className="text-sm text-muted-foreground">{t('Display properties')}</span>
                   <div className="flex flex-wrap gap-1.5">
                      {PROJECT_DISPLAY_PROPERTIES.map((property) => {
                         const enabled = displayProperties[property.key];
@@ -225,7 +227,7 @@ export function ProjectsDisplayOptions() {
                                     : 'border-border/60 text-muted-foreground hover:text-foreground'
                               )}
                            >
-                              {property.label}
+                              {t(property.label)}
                            </button>
                         );
                      })}
@@ -239,10 +241,10 @@ export function ProjectsDisplayOptions() {
                   onClick={resetDisplaySettings}
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                >
-                  Reset
+                  {t('Reset')}
                </button>
                <button className="text-sm text-indigo-500 dark:text-indigo-400 hover:underline">
-                  Set default for everyone
+                  {t('Set default for everyone')}
                </button>
             </div>
          </PopoverContent>

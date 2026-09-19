@@ -2,6 +2,7 @@ import 'server-only';
 import type { Prisma, PrismaClient } from '@prisma/client';
 
 import { db } from '@/lib/db';
+import { sendNotificationEmails } from './email';
 
 /**
  * Issue activity log + inbox notifications.
@@ -75,14 +76,46 @@ async function notify(
    }
 ): Promise<void> {
    if (opts.to.length === 0) return;
+   const to = await filterByPreferences(client, opts.to, opts.type);
+   if (to.length === 0) return;
    await client.notification.createMany({
-      data: opts.to.map((userId) => ({
+      data: to.map((userId) => ({
          userId,
          actorId: opts.actorId,
          issueId: opts.issueId,
          type: opts.type,
          content: opts.content,
       })),
+   });
+   void sendNotificationEmails(to, `Circle: ${opts.type}`, opts.content);
+}
+
+/** Map a notification type to the preference that gates it (null = always). */
+const PREF_BY_TYPE: Record<string, keyof import('./preferences').Preferences | null> = {
+   comment: 'notifyComments',
+   edited: 'notifyComments',
+   created: 'notifyComments',
+   upload: 'notifyComments',
+   mention: 'notifyMentions',
+   assignment: 'notifyAssignments',
+   status: 'notifyStatusChanges',
+   reopened: 'notifyStatusChanges',
+   closed: 'notifyStatusChanges',
+};
+
+async function filterByPreferences(client: Db, to: string[], type: string): Promise<string[]> {
+   const prefKey = PREF_BY_TYPE[type] ?? null;
+   if (!prefKey) return to;
+   const users = await client.user.findMany({
+      where: { id: { in: to } },
+      select: { id: true, preferences: true },
+   });
+   const byId = new Map(users.map((u) => [u.id, u.preferences]));
+   return to.filter((id) => {
+      const raw = byId.get(id);
+      if (!raw || typeof raw !== 'object') return true; // defaults are all-on
+      const value = (raw as Record<string, unknown>)[prefKey];
+      return typeof value === 'boolean' ? value : true;
    });
 }
 
@@ -168,12 +201,12 @@ export async function onIssueUpdated(
    // status
    if (patch.statusId !== undefined && patch.statusId !== before.statusId) {
       const [from, to] = await Promise.all([
-         client.workflowState.findUnique({
-            where: { id: before.statusId },
+         client.workflowState.findFirst({
+            where: { OR: [{ id: before.statusId }, { key: before.statusId }] },
             select: { name: true, category: true },
          }),
-         client.workflowState.findUnique({
-            where: { id: patch.statusId },
+         client.workflowState.findFirst({
+            where: { OR: [{ id: patch.statusId }, { key: patch.statusId }] },
             select: { name: true, category: true },
          }),
       ]);

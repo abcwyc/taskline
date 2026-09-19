@@ -11,9 +11,13 @@ import type { User } from '@/mock-data/users';
 import { useMeStore } from '@/store/me-store';
 import { useMembersStore } from '@/store/members-store';
 import {
+   createMilestone as apiCreateMilestone,
+   deleteMilestone as apiDeleteMilestone,
+   deleteProjectUpdate as apiDeleteUpdate,
    fetchProjectDetail,
    postProjectUpdate as apiPostUpdate,
    setMilestoneCompleted as apiSetMilestone,
+   updateMilestone as apiUpdateMilestone,
 } from '@/lib/api/project-details';
 
 /**
@@ -39,7 +43,38 @@ interface ProjectDetailsState {
    getDetail: (projectId: string) => ProjectDetail;
 
    postUpdate: (projectId: string, health: ProjectUpdateHealth, text: string) => void;
+   deleteUpdate: (projectId: string, updateId: string) => void;
    toggleMilestone: (projectId: string, milestoneId: string, completed: boolean) => void;
+   addMilestone: (projectId: string, name: string, targetDate?: string | null) => void;
+   renameMilestone: (projectId: string, milestoneId: string, name: string) => void;
+   setMilestoneDate: (projectId: string, milestoneId: string, targetDate: string | null) => void;
+   removeMilestone: (projectId: string, milestoneId: string) => void;
+}
+
+function patchMilestone(
+   get: () => { detailsById: Record<string, ProjectDetail> },
+   set: (
+      fn: (s: {
+         detailsById: Record<string, ProjectDetail>;
+      }) => Partial<{ detailsById: Record<string, ProjectDetail> }>
+   ) => void,
+   projectId: string,
+   milestoneId: string,
+   patch: Partial<ProjectDetail['milestones'][number]>
+) {
+   const current = get().detailsById[projectId];
+   if (!current) return;
+   set((s) => ({
+      detailsById: {
+         ...s.detailsById,
+         [projectId]: {
+            ...current,
+            milestones: current.milestones.map((m) =>
+               m.id === milestoneId ? { ...m, ...patch } : m
+            ),
+         },
+      },
+   }));
 }
 
 export const useProjectDetailsStore = create<ProjectDetailsState>((set, get) => ({
@@ -130,6 +165,21 @@ export const useProjectDetailsStore = create<ProjectDetailsState>((set, get) => 
          });
    },
 
+   deleteUpdate: (projectId, updateId) => {
+      const current = get().getDetail(projectId);
+      set((s) => ({
+         detailsById: {
+            ...s.detailsById,
+            [projectId]: { ...current, updates: current.updates.filter((u) => u.id !== updateId) },
+         },
+      }));
+      apiDeleteUpdate(projectId, updateId).catch((err) => {
+         set((s) => ({ detailsById: { ...s.detailsById, [projectId]: current } }));
+         toast.error('Failed to delete update');
+         console.error(err);
+      });
+   },
+
    toggleMilestone: (projectId, milestoneId, completed) => {
       const current = get().getDetail(projectId);
       const next: ProjectDetail = {
@@ -143,6 +193,62 @@ export const useProjectDetailsStore = create<ProjectDetailsState>((set, get) => 
       apiSetMilestone(projectId, milestoneId, completed).catch((err) => {
          set((s) => ({ detailsById: { ...s.detailsById, [projectId]: current } }));
          toast.error('Failed to update milestone');
+         console.error(err);
+      });
+   },
+
+   addMilestone: (projectId, name, targetDate) => {
+      apiCreateMilestone(projectId, name, targetDate)
+         .then((saved) =>
+            set((s) => {
+               const d = s.detailsById[projectId];
+               if (!d) return {};
+               return {
+                  detailsById: {
+                     ...s.detailsById,
+                     [projectId]: { ...d, milestones: [...d.milestones, saved] },
+                  },
+               };
+            })
+         )
+         .catch((err) => {
+            toast.error('Failed to add milestone');
+            console.error(err);
+         });
+   },
+
+   renameMilestone: (projectId, milestoneId, name) => {
+      patchMilestone(get, set, projectId, milestoneId, { name });
+      apiUpdateMilestone(projectId, milestoneId, { name }).catch((err) => {
+         toast.error('Failed to rename milestone');
+         console.error(err);
+      });
+   },
+
+   setMilestoneDate: (projectId, milestoneId, targetDate) => {
+      patchMilestone(get, set, projectId, milestoneId, {
+         ...(targetDate ? { targetDate } : {}),
+      });
+      apiUpdateMilestone(projectId, milestoneId, { targetDate }).catch((err) => {
+         toast.error('Failed to update the milestone date');
+         console.error(err);
+      });
+   },
+
+   removeMilestone: (projectId, milestoneId) => {
+      const current = get().getDetail(projectId);
+      set((s) => ({
+         detailsById: {
+            ...s.detailsById,
+            [projectId]: {
+               ...current,
+               milestones: current.milestones.filter((m) => m.id !== milestoneId),
+            },
+         },
+      }));
+      apiDeleteMilestone(projectId, milestoneId).catch((err) => {
+         set((s) => ({ detailsById: { ...s.detailsById, [projectId]: current } }));
+         toast.error('Failed to delete milestone');
          console.error(err);
       });
    },

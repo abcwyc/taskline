@@ -2,10 +2,18 @@
 
 import { InboxItem } from '@/mock-data/inbox';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+   DropdownMenu,
+   DropdownMenuContent,
+   DropdownMenuItem,
+   DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { getNotificationIcon } from '@/lib/notification-utils';
 import { renderStatusIcon } from '@/lib/status-utils';
+import { useNotificationsStore } from '@/store/notifications-store';
 import { formatDistanceToNowStrict } from 'date-fns';
+import { AlarmClock, Trash2 } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface IssueLineProps {
@@ -25,6 +33,9 @@ export default function IssueLine({
    showId = true,
    showStatusIcon = true,
 }: IssueLineProps) {
+   const deleteNotification = useNotificationsStore((s) => s.deleteNotification);
+   const snoozeNotification = useNotificationsStore((s) => s.snoozeNotification);
+
    return (
       <motion.div
          {...(layoutId && { layoutId: `notification-line-${notification.id}` })}
@@ -33,7 +44,7 @@ export default function IssueLine({
       >
          <div
             className={cn(
-               'w-full flex items-center gap-3 px-3 py-2.5 hover:bg-sidebar/80 dark:hover:bg-sidebar/50 transition-colors cursor-pointer rounded-lg',
+               'w-full flex items-center gap-3 px-3 py-2.5 hover:bg-sidebar/80 dark:hover:bg-sidebar/50 transition-colors cursor-pointer rounded-lg group',
                isSelected && 'bg-accent/80 dark:bg-accent/50'
             )}
          >
@@ -92,11 +103,48 @@ export default function IssueLine({
                   <p className="text-sm text-muted-foreground line-clamp-1">
                      {notification.content}
                   </p>
-                  <span className="text-xs text-muted-foreground shrink-0">
+                  <span className="text-xs text-muted-foreground shrink-0 group-hover:hidden">
                      {formatDistanceToNowStrict(new Date(notification.timestamp), {
                         addSuffix: true,
                      })}
                   </span>
+                  <div
+                     className="hidden group-hover:flex items-center gap-0.5 shrink-0"
+                     onClick={(event) => event.stopPropagation()}
+                  >
+                     <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                           <button
+                              className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                              aria-label="Snooze notification"
+                              title="Snooze"
+                           >
+                              <AlarmClock className="size-3.5" />
+                           </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                           <DropdownMenuItem onClick={() => snoozeNotification(notification.id, 1)}>
+                              Snooze 1 hour
+                           </DropdownMenuItem>
+                           <DropdownMenuItem onClick={() => snoozeNotification(notification.id, 3)}>
+                              Snooze 3 hours
+                           </DropdownMenuItem>
+                           <DropdownMenuItem
+                              onClick={() => snoozeNotification(notification.id, 16)}
+                           >
+                              Snooze until tomorrow
+                           </DropdownMenuItem>
+                        </DropdownMenuContent>
+                     </DropdownMenu>
+                     <button
+                        className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                        onClick={() => deleteNotification(notification.id)}
+                        aria-label="Delete notification"
+                        title="Delete"
+                     >
+                        <Trash2 className="size-3.5" />
+                     </button>
+                  </div>
                </div>
             </div>
          </div>

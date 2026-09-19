@@ -33,7 +33,10 @@ const toPriority = (key?: string | null): Priority =>
  * parse → call one of these → `NextResponse.json`. Copy this file per entity.
  */
 
-const issueInclude = { labels: { select: { labelId: true } } } satisfies Prisma.IssueInclude;
+const issueInclude = {
+   labels: { select: { labelId: true } },
+   state: { select: { key: true } },
+} satisfies Prisma.IssueInclude;
 type IssueRow = Prisma.IssueGetPayload<{ include: typeof issueInclude }>;
 
 /* ------------------------------- serialize -------------------------------- */
@@ -46,7 +49,7 @@ export function serializeIssue(row: IssueRow): IssueDTO {
       identifier: row.identifier,
       title: row.title,
       description,
-      statusId: row.stateId,
+      statusId: row.state.key, // public key — matches the client status registry
       priorityId: PRIORITY_ENUM_TO_KEY[row.priority] ?? 'no-priority',
       assigneeId: row.assigneeId,
       createdById: row.createdById,
@@ -70,7 +73,13 @@ export async function listIssues(orgId: string, query: ListIssuesQuery = {}): Pr
    if (query.projectId) where.projectId = query.projectId;
    if (query.assigneeId === 'unassigned') where.assigneeId = null;
    else if (query.assigneeId) where.assigneeId = query.assigneeId;
-   if (query.statusId) where.stateId = query.statusId;
+   if (query.statusId) {
+      const state = await db.workflowState.findFirst({
+         where: { orgId, OR: [{ id: query.statusId }, { key: query.statusId }] },
+         select: { id: true },
+      });
+      where.stateId = state?.id ?? query.statusId;
+   }
    if (query.q) {
       where.OR = [
          { title: { contains: query.q, mode: 'insensitive' } },
@@ -102,6 +111,20 @@ const connectOrUndef = (id: string | null | undefined) => (id ? { connect: { id 
 /** update: connect when set, disconnect when explicitly null, omit when undefined */
 const relation = (id: string | null | undefined) =>
    id ? { connect: { id } } : id === null ? { disconnect: true as const } : undefined;
+
+/** WorkflowStates accept either their row id or their public `key` ("to-do"). */
+async function resolveStateId(
+   client: Prisma.TransactionClient,
+   orgId: string,
+   statusId: string
+): Promise<string> {
+   const row = await client.workflowState.findFirst({
+      where: { orgId, OR: [{ id: statusId }, { key: statusId }] },
+      select: { id: true },
+   });
+   if (!row) throw new PublicError(`unknown status: ${statusId}`, 400);
+   return row.id;
+}
 
 function labelWrite(labelIds: string[] | undefined): Prisma.IssueUpdateInput['labels'] {
    if (labelIds === undefined) return undefined;
@@ -172,6 +195,24 @@ export async function createIssue(
       }
       if (!teamId) throw new PublicError('no team to attach the issue to');
 
+      // Default state: the org's first backlog/unstarted status, else its first status.
+      let stateId = body.statusId ? await resolveStateId(tx, orgId, body.statusId) : undefined;
+      if (!stateId) {
+         const fallbackState = await tx.workflowState.findFirst({
+            where: { orgId, category: { in: ['TRIAGE', 'BACKLOG', 'UNSTARTED'] } },
+            orderBy: { workflowOrder: 'asc' },
+         });
+         stateId =
+            fallbackState?.id ??
+            (
+               await tx.workflowState.findFirst({
+                  where: { orgId },
+                  orderBy: { workflowOrder: 'asc' },
+               })
+            )?.id;
+      }
+      if (!stateId) throw new PublicError('no workflow status to attach the issue to');
+
       const created = await tx.issue.create({
          data: {
             org: { connect: { id: orgId } },
@@ -180,7 +221,7 @@ export async function createIssue(
             identifier: `${org.issuePrefix}-${sequenceNumber}`,
             title: body.title?.trim() || 'Untitled',
             description: storeBlocks(textToBlocks(body.description ?? '')),
-            state: { connect: { id: body.statusId ?? 'to-do' } },
+            state: { connect: { id: stateId } },
             priority: toPriority(body.priorityId),
             assignee: connectOrUndef(body.assigneeId),
             creator: connectOrUndef(actorId),
@@ -233,7 +274,9 @@ export async function updateIssue(
    if (body.description !== undefined) {
       data.description = storeBlocks(textToBlocks(body.description));
    }
-   if (body.statusId !== undefined) data.state = { connect: { id: body.statusId } };
+   if (body.statusId !== undefined && body.statusId !== '') {
+      data.state = { connect: { id: await resolveStateId(db, orgId, body.statusId) } };
+   }
    if (body.priorityId !== undefined) data.priority = toPriority(body.priorityId);
    if (body.assigneeId !== undefined) data.assignee = relation(body.assigneeId);
    if (body.projectId !== undefined) data.project = relation(body.projectId);
@@ -246,8 +289,10 @@ export async function updateIssue(
    if (labels) data.labels = labels;
 
    // keep completedAt in sync with the state's category
-   if (body.statusId !== undefined && body.statusId !== existing.stateId) {
-      const next = await db.workflowState.findUnique({ where: { id: body.statusId } });
+   if (body.statusId !== undefined && body.statusId !== '' && body.statusId !== existing.stateId) {
+      const next = await db.workflowState.findFirst({
+         where: { OR: [{ id: body.statusId }, { key: body.statusId }] },
+      });
       data.completedAt = next?.category === 'COMPLETED' ? new Date() : null;
    }
 

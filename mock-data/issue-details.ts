@@ -44,12 +44,21 @@ export type ActivityItem =
         timeAgo: string;
         body: ContentBlock[];
         reactions?: CommentReaction[];
+        /** ISO — set when the comment was edited after creation */
+        editedAt?: string;
      };
 
 export interface PrLink {
    id: string;
    title: string;
    status: 'open' | 'merged' | 'draft';
+   url?: string;
+}
+
+export interface RelationEntry {
+   id: string;
+   type: 'blocks' | 'blocked-by' | 'related' | 'duplicate';
+   targetIdentifier: string;
 }
 
 export interface IssueDetail {
@@ -59,6 +68,8 @@ export interface IssueDetail {
    subIssueIds?: string[];
    relatedIds?: string[];
    blockedByIds?: string[];
+   blocksIds?: string[];
+   relationEntries?: RelationEntry[];
    prLinks?: PrLink[];
    milestone?: string;
    subscribed?: boolean;

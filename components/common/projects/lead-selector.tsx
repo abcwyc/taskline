@@ -15,6 +15,7 @@ import { useMembersStore } from '@/store/members-store';
 import { CheckIcon } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useId, useState } from 'react';
+import { useLanguage } from '@/components/providers/language-provider';
 
 interface LeadSelectorProps {
    lead: User;
@@ -26,6 +27,7 @@ export function LeadSelector({ lead, onLeadChange }: LeadSelectorProps) {
    const id = useId();
    const [open, setOpen] = useState<boolean>(false);
    const [value, setValue] = useState<string>(lead.id);
+   const { t } = useLanguage();
 
    const handleLeadChange = (userId: string) => {
       setValue(userId);
@@ -70,9 +72,9 @@ export function LeadSelector({ lead, onLeadChange }: LeadSelectorProps) {
             </PopoverTrigger>
             <PopoverContent className="border-input w-48 p-0" align="start">
                <Command>
-                  <CommandInput placeholder="Set lead..." />
+                  <CommandInput placeholder={t('Set lead…')} />
                   <CommandList>
-                     <CommandEmpty>No user found.</CommandEmpty>
+                     <CommandEmpty>{t('No user found.')}</CommandEmpty>
                      <CommandGroup>
                         {users.map((user) => (
                            <CommandItem

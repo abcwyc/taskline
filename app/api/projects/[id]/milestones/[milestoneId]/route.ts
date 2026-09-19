@@ -1,31 +1,45 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { isContext, requireWrite } from '@/lib/api/context';
-import { setMilestoneCompleted } from '@/lib/api/project-details.server';
+import { errorResponse, parseBody } from '@/lib/api/http';
+import { deleteMilestone, updateMilestone } from '@/lib/api/project-details.server';
+import { milestoneUpdate } from '@/lib/api/schemas';
 
 export const dynamic = 'force-dynamic';
 
-// PATCH /api/projects/:id/milestones/:milestoneId   { completed: boolean }
+// PATCH /api/projects/:id/milestones/:milestoneId   { name?, targetDate?, completed?, order? }
 export async function PATCH(
    req: NextRequest,
    { params }: { params: Promise<{ id: string; milestoneId: string }> }
 ) {
    const ctx = await requireWrite();
    if (!isContext(ctx)) return ctx;
-   const { orgId } = ctx;
    const { id, milestoneId } = await params;
 
-   let body: { completed?: unknown };
    try {
-      body = await req.json();
-   } catch {
-      return NextResponse.json({ error: 'invalid json' }, { status: 400 });
+      const body = await parseBody(req, milestoneUpdate);
+      const updated = await updateMilestone(ctx.orgId, id, milestoneId, body);
+      if (!updated) return NextResponse.json({ error: 'not found' }, { status: 404 });
+      return NextResponse.json(updated);
+   } catch (err) {
+      return errorResponse(err);
    }
-   if (typeof body.completed !== 'boolean') {
-      return NextResponse.json({ error: 'completed must be a boolean' }, { status: 400 });
-   }
+}
 
-   const ok = await setMilestoneCompleted(orgId, id, milestoneId, body.completed);
-   if (!ok) return NextResponse.json({ error: 'not found' }, { status: 404 });
-   return new NextResponse(null, { status: 204 });
+// DELETE /api/projects/:id/milestones/:milestoneId
+export async function DELETE(
+   _req: NextRequest,
+   { params }: { params: Promise<{ id: string; milestoneId: string }> }
+) {
+   const ctx = await requireWrite();
+   if (!isContext(ctx)) return ctx;
+   const { id, milestoneId } = await params;
+
+   try {
+      const ok = await deleteMilestone(ctx.orgId, id, milestoneId);
+      if (!ok) return NextResponse.json({ error: 'not found' }, { status: 404 });
+      return new NextResponse(null, { status: 204 });
+   } catch (err) {
+      return errorResponse(err);
+   }
 }

@@ -8,6 +8,11 @@ import {
    fetchDocumentFolders as apiFetch,
    updateDocument as apiUpdate,
 } from '@/lib/api/documents';
+import {
+   createFolder as apiCreateFolder,
+   deleteFolder as apiDeleteFolder,
+   updateFolder as apiUpdateFolder,
+} from '@/lib/api/folders';
 import type { DocumentCreateBody } from '@/lib/api/types';
 
 interface DocumentsState {
@@ -22,6 +27,10 @@ interface DocumentsState {
    renameDocument: (id: string, name: string) => void;
    togglePin: (id: string, pinned: boolean) => void;
    deleteDocument: (id: string) => void;
+
+   createFolder: (name: string, icon?: string) => Promise<void>;
+   renameFolder: (id: string, name: string) => void;
+   deleteFolder: (id: string) => void;
 }
 
 const patchDoc = (
@@ -92,6 +101,40 @@ export const useDocumentsStore = create<DocumentsState>((set, get) => ({
       apiDelete(id).catch((err) => {
          set({ folders: snapshot });
          toast.error('Failed to delete');
+         console.error(err);
+      });
+   },
+
+   createFolder: async (name, icon) => {
+      try {
+         const folder = await apiCreateFolder({ name, icon });
+         set((s) => ({ folders: [...s.folders, folder] }));
+      } catch (err) {
+         toast.error('Failed to create folder');
+         console.error(err);
+      }
+   },
+
+   renameFolder: (id, name) => {
+      const snapshot = get().folders;
+      set({ folders: snapshot.map((f) => (f.id === id ? { ...f, name } : f)) });
+      apiUpdateFolder(id, { name }).catch((err) => {
+         set({ folders: snapshot });
+         toast.error('Failed to rename folder');
+         console.error(err);
+      });
+   },
+
+   deleteFolder: (id) => {
+      const snapshot = get().folders;
+      set({ folders: snapshot.filter((f) => f.id !== id) });
+      apiDeleteFolder(id).catch((err) => {
+         set({ folders: snapshot });
+         toast.error(
+            (err as Error).message.includes('409')
+               ? 'Folder must be empty before deleting'
+               : 'Failed to delete folder'
+         );
          console.error(err);
       });
    },

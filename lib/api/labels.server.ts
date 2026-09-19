@@ -5,10 +5,18 @@ import { LabelCreateBody, LabelDTO, LabelUpdateBody } from './types';
 
 /** Server-side data access for workspace labels. */
 
-const serialize = (row: { key: string; name: string; color: string }): LabelDTO => ({
+const serialize = (row: {
+   key: string;
+   name: string;
+   color: string;
+   description: string | null;
+   createdAt: Date;
+}): LabelDTO => ({
    id: row.key,
    name: row.name,
    color: row.color,
+   description: row.description,
+   createdAt: row.createdAt.toISOString().slice(0, 10),
 });
 
 export async function listLabels(orgId: string): Promise<LabelDTO[]> {
@@ -32,6 +40,7 @@ export async function createLabel(orgId: string, body: LabelCreateBody): Promise
          key,
          name: body.name?.trim() || key,
          color: body.color || 'gray',
+         description: body.description ?? null,
       },
    });
    return serialize(row);
@@ -49,6 +58,7 @@ export async function updateLabel(
       data: {
          ...(body.name !== undefined ? { name: body.name } : {}),
          ...(body.color !== undefined ? { color: body.color } : {}),
+         ...(body.description !== undefined ? { description: body.description } : {}),
       },
    });
    return serialize(row);

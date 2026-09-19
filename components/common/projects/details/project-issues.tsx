@@ -9,6 +9,7 @@ import { useIssuesStore } from '@/store/issues-store';
 import { useProjectsStore } from '@/store/projects-store';
 import { useProjectDetail } from '@/store/project-details-store';
 import { useMemo } from 'react';
+import { useLanguage } from '@/components/providers/language-provider';
 import { ProjectSidePanel } from './project-side-panel';
 
 interface ProjectIssuesProps {
@@ -17,6 +18,7 @@ interface ProjectIssuesProps {
 
 /** Project "Issues" tab: the project's issues grouped by status. */
 export default function ProjectIssues({ projectId }: ProjectIssuesProps) {
+   const { t } = useLanguage();
    const project = useProjectsStore((s) => s.getProjectById(projectId));
    const detail = useProjectDetail(projectId);
    const { issues: allIssues } = useIssuesStore();
@@ -32,7 +34,7 @@ export default function ProjectIssues({ projectId }: ProjectIssuesProps) {
    const displayedIssues = useMemo(() => applyIssueFilters(issues, filters), [issues, filters]);
 
    if (!project) {
-      return <div className="p-10 text-sm text-muted-foreground">Loading project…</div>;
+      return <div className="p-10 text-sm text-muted-foreground">{t('Loading project…')}</div>;
    }
 
    return (

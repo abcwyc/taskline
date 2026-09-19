@@ -7,6 +7,8 @@ import { Project } from '@/mock-data/projects';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/components/providers/language-provider';
+import { projectHealthDescription, projectHealthLabel } from '@/lib/project-localization';
 
 interface HealthPopoverProps {
    project: Project;
@@ -28,6 +30,7 @@ export function HealthPopover({ project }: HealthPopoverProps) {
    };
 
    const isMobile = useIsMobile();
+   const { locale, t } = useLanguage();
 
    return (
       <Popover>
@@ -39,7 +42,7 @@ export function HealthPopover({ project }: HealthPopoverProps) {
             >
                {getHealthIcon(project.health.id)}
                <span className="text-xs mt-[1px] ml-0.5 hidden xl:inline">
-                  {project.health.name}
+                  {projectHealthLabel(locale, project.health.id, project.health.name)}
                </span>
             </Button>
          </PopoverTrigger>
@@ -56,7 +59,7 @@ export function HealthPopover({ project }: HealthPopoverProps) {
                </div>
                <div className="flex items-center gap-2">
                   <Button variant="ghost" size="sm" className="h-7 px-2 text-xs">
-                     Subscribe
+                     {t('Subscribe')}
                   </Button>
                   <Button
                      variant="outline"
@@ -64,7 +67,7 @@ export function HealthPopover({ project }: HealthPopoverProps) {
                      className="h-7 px-2 text-xs flex items-center gap-1"
                   >
                      <Bell className="size-3" />
-                     New update
+                     {t('New update')}
                   </Button>
                </div>
             </div>
@@ -72,7 +75,9 @@ export function HealthPopover({ project }: HealthPopoverProps) {
                <div className="flex items-center justify-start gap-3">
                   <div className="flex items-center gap-2">
                      {getHealthIcon(project.health.id)}
-                     <span className="text-sm">{project.health.name}</span>
+                     <span className="text-sm">
+                        {projectHealthLabel(locale, project.health.id, project.health.name)}
+                     </span>
                   </div>
                   <div className="flex items-center gap-2">
                      <Avatar className="size-5">
@@ -82,13 +87,19 @@ export function HealthPopover({ project }: HealthPopoverProps) {
                      <span className="text-xs text-muted-foreground">{project.lead.name}</span>
                      <span className="text-xs text-muted-foreground">·</span>
                      <span className="text-xs text-muted-foreground">
-                        {new Date(project.startDate).toLocaleDateString()}
+                        {new Date(project.startDate).toLocaleDateString(locale)}
                      </span>
                   </div>
                </div>
 
                <div>
-                  <p className="text-sm text-muted-foreground">{project.health.description}</p>
+                  <p className="text-sm text-muted-foreground">
+                     {projectHealthDescription(
+                        locale,
+                        project.health.id,
+                        project.health.description
+                     )}
+                  </p>
                </div>
             </div>
          </PopoverContent>

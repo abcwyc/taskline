@@ -1,5 +1,11 @@
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTrigger } from '@/components/ui/dialog';
+import {
+   Dialog,
+   DialogContent,
+   DialogHeader,
+   DialogTitle,
+   DialogTrigger,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Heart } from 'lucide-react';
@@ -21,8 +27,8 @@ import { PrioritySelector } from './priority-selector';
 import { AssigneeSelector } from './assignee-selector';
 import { ProjectSelector } from './project-selector';
 import { LabelSelector } from './label-selector';
+import { TemplatePicker } from './template-picker';
 import { ranks } from '@/mock-data/issues';
-import { DialogTitle } from '@radix-ui/react-dialog';
 
 export function CreateNewIssue() {
    const [createMore, setCreateMore] = useState<boolean>(false);
@@ -127,6 +133,16 @@ export function CreateNewIssue() {
                />
 
                <div className="w-full flex items-center justify-start gap-1.5 flex-wrap">
+                  <TemplatePicker
+                     onPick={(title, description) =>
+                        setAddIssueForm((prev) => ({
+                           ...prev,
+                           // only prefill fields the user hasn't typed in yet
+                           title: prev.title.trim() ? prev.title : title,
+                           description: prev.description.trim() ? prev.description : description,
+                        }))
+                     }
+                  />
                   <StatusSelector
                      status={addIssueForm.status}
                      onChange={(newStatus) =>

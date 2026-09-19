@@ -7,13 +7,12 @@ import { IssueFilterBar } from '@/components/common/issues/issue-filter-bar';
 import { SearchIssues } from '@/components/common/issues/search-issues';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Issue, issueCreatorIndex } from '@/mock-data/issues';
+import { Issue } from '@/mock-data/issues';
 import { useLabelsStore } from '@/store/labels-store';
 import { priorities } from '@/mock-data/priorities';
 import { useProjectsStore } from '@/store/projects-store';
 import { useTeamsStore } from '@/store/teams-store';
 import { statusUserColors, type User } from '@/mock-data/users';
-import { useMembersStore } from '@/store/members-store';
 import { displayOrderedStatus } from '@/mock-data/status';
 import { useFilterStore } from '@/store/filter-store';
 import { useIssuesStore } from '@/store/issues-store';
@@ -25,8 +24,8 @@ import { parseAsString, useQueryState } from 'nuqs';
 import { useEffect, useMemo, useState } from 'react';
 
 const presenceLabel: Record<User['status'], string> = {
-   online: 'Online now',
-   away: 'Away as of 11 minutes ago',
+   online: 'Online',
+   away: 'Away',
    offline: 'Offline',
 };
 
@@ -103,7 +102,6 @@ function useClientTimes(member: User) {
 export default function MemberProfile({ member }: { member: User }) {
    const teams = useTeamsStore((s) => s.teams);
    const labels = useLabelsStore((s) => s.labels);
-   const users = useMembersStore((s) => s.members);
    const { issues } = useIssuesStore();
    const projects = useProjectsStore((s) => s.projects);
    const [activeTab] = useQueryState('tab', parseAsString.withDefault('assigned'));
@@ -116,17 +114,12 @@ export default function MemberProfile({ member }: { member: User }) {
    const isSearching = isSearchOpen && searchQuery.trim() !== '';
    const isViewTypeGrid = viewType === 'grid';
 
-   const memberIndex = Math.max(
-      0,
-      users.findIndex((candidate) => candidate.id === member.id)
-   );
-
    const scopedIssues = useMemo(() => {
       if (activeTab === 'created') {
-         return issues.filter((issue) => issueCreatorIndex(issue, users.length) === memberIndex);
+         return issues.filter((issue) => issue.creatorId === member.id);
       }
       return issues.filter((issue) => issue.assignee?.id === member.id);
-   }, [issues, activeTab, member.id, memberIndex, users.length]);
+   }, [issues, activeTab, member.id]);
 
    const displayedIssues = useMemo(
       () => applyIssueFilters(scopedIssues, filters),

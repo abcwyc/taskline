@@ -19,7 +19,10 @@ import {
  * Mirrors `issues.server.ts` — see that file for the pattern.
  */
 
-const projectInclude = { labels: { select: { labelId: true } } } satisfies Prisma.ProjectInclude;
+const projectInclude = {
+   labels: { select: { labelId: true } },
+   state: { select: { key: true } },
+} satisfies Prisma.ProjectInclude;
 type ProjectRow = Prisma.ProjectGetPayload<{ include: typeof projectInclude }>;
 
 const PRIORITY_BY_KEY: Record<string, Priority> = {
@@ -85,7 +88,7 @@ export function serializeProject(row: ProjectRow, percentComplete = 0): ProjectD
       id: row.id,
       name: row.name,
       iconKey: row.icon,
-      statusId: row.stateId,
+      statusId: row.state.key, // public key — matches the client status registry
       priorityId: PRIORITY_ENUM_TO_KEY[row.priority] ?? 'no-priority',
       healthId: HEALTH_ENUM_TO_KEY[row.health] ?? 'no-update',
       leadId: row.leadId,
@@ -110,7 +113,13 @@ export async function listProjects(
    if (query.teamId) where.teamId = query.teamId;
    if (query.initiativeId) where.initiativeId = query.initiativeId;
    if (query.leadId) where.leadId = query.leadId;
-   if (query.statusId) where.stateId = query.statusId;
+   if (query.statusId) {
+      const state = await db.workflowState.findFirst({
+         where: { orgId, OR: [{ id: query.statusId }, { key: query.statusId }] },
+         select: { id: true },
+      });
+      where.stateId = state?.id ?? query.statusId;
+   }
    if (query.healthId) where.health = toHealth(query.healthId);
    if (query.q) where.name = { contains: query.q, mode: 'insensitive' };
 
@@ -154,13 +163,28 @@ export async function createProject(orgId: string, body: ProjectCreateBody): Pro
    }
    if (!teamId) throw new PublicError('no team to attach the project to');
 
+   const stateId = body.statusId
+      ? (
+           await db.workflowState.findFirst({
+              where: { orgId, OR: [{ id: body.statusId }, { key: body.statusId }] },
+              select: { id: true },
+           })
+        )?.id
+      : (
+           await db.workflowState.findFirst({
+              where: { orgId, category: { in: ['TRIAGE', 'BACKLOG', 'UNSTARTED'] } },
+              orderBy: { workflowOrder: 'asc' },
+           })
+        )?.id;
+   if (!stateId) throw new PublicError('no workflow status to attach the project to');
+
    const row = await db.project.create({
       data: {
          org: { connect: { id: orgId } },
          team: { connect: { id: teamId } },
          name: body.name?.trim() || 'New project',
          icon: body.iconKey ?? 'Box',
-         state: { connect: { id: body.statusId ?? 'to-do' } },
+         state: { connect: { id: stateId } },
          priority: toPriority(body.priorityId),
          health: toHealth(body.healthId),
          healthUpdatedAt: body.healthId && body.healthId !== 'no-update' ? new Date() : null,
@@ -199,7 +223,14 @@ export async function updateProject(
    const data: Prisma.ProjectUpdateInput = {};
    if (body.name !== undefined) data.name = body.name;
    if (body.iconKey !== undefined) data.icon = body.iconKey;
-   if (body.statusId !== undefined) data.state = { connect: { id: body.statusId } };
+   if (body.statusId !== undefined && body.statusId !== '') {
+      const state = await db.workflowState.findFirst({
+         where: { orgId, OR: [{ id: body.statusId }, { key: body.statusId }] },
+         select: { id: true },
+      });
+      if (!state) throw new PublicError(`unknown status: ${body.statusId}`, 400);
+      data.state = { connect: { id: state.id } };
+   }
    if (body.priorityId !== undefined) data.priority = toPriority(body.priorityId);
    if (body.healthId !== undefined) {
       data.health = toHealth(body.healthId);
