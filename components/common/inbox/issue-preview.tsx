@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { getNotificationIcon } from '@/lib/notification-utils';
 import { useIssueDetail } from '@/store/issue-details-store';
+import type { IssueDetail } from '@/mock-data/issue-details';
 import { InboxItem } from '@/mock-data/inbox';
 import { useIssuesStore } from '@/store/issues-store';
 import { useNotificationsStore } from '@/store/notifications-store';
@@ -27,6 +28,14 @@ interface IssuePreviewProps {
  * notification (live status/assignee from the store, rich description
  * from issue-details) plus the notification context.
  */
+/** Placeholder while the issue detail is still loading (the fetch is async). */
+const LOADING_DETAIL: IssueDetail = {
+   identifier: '',
+   description: [],
+   activity: [],
+   subscribed: false,
+};
+
 export default function IssuePreview({ notification, onMarkAsRead }: IssuePreviewProps) {
    const { orgId } = useParams<{ orgId: string }>();
    const { getUnreadCount } = useNotificationsStore();
@@ -55,7 +64,7 @@ export default function IssuePreview({ notification, onMarkAsRead }: IssuePrevie
 
    // Live issue from the store (falls back to the notification snapshot).
    const displayIssue = liveIssue ?? notification;
-   const detail = detailMaybe!;
+   const detail = detailMaybe ?? LOADING_DETAIL;
 
    return (
       <div className="flex flex-col h-full overflow-hidden">
