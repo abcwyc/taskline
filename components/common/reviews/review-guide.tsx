@@ -1,15 +1,19 @@
 'use client';
 
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Checkbox } from '@/components/ui/checkbox';
-import { getReviewFileDiff, getReviewGuide, Review } from '@/mock-data/reviews';
-import { FileCode2 } from 'lucide-react';
-import { useMemo } from 'react';
-import { DiffView } from './diff-view';
+import { cn } from '@/lib/utils';
+import { Review } from '@/mock-data/reviews';
+import { useMembersStore } from '@/store/members-store';
+import { Check, X } from 'lucide-react';
 import { DiffStat, InlineText, PrIcon } from './review-shared';
 
-/** Guide tab: narrated walk-through sections next to the relevant diff. */
+/** Guide tab: the author's summary, test plan and the current verdict. */
 export function ReviewGuide({ review }: { review: Review }) {
-   const sections = useMemo(() => getReviewGuide(review), [review]);
+   const getMemberById = useMembersStore((s) => s.getMemberById);
+   const verdictBy =
+      review.verdict && review.verdictById ? getMemberById(review.verdictById) : undefined;
+   const hasContent = review.summary.length > 0 || review.testPlan.length > 0;
 
    return (
       <div className="h-full overflow-y-auto relative">
@@ -28,51 +32,80 @@ export function ReviewGuide({ review }: { review: Review }) {
                </div>
             </div>
 
-            {sections.map((section, index) => {
-               const file = review.files.find((candidate) => candidate.name === section.diffName);
-               const diff = file ? getReviewFileDiff(review, file) : undefined;
-               return (
-                  <div
-                     key={section.title}
-                     className="grid grid-cols-1 xl:grid-cols-[minmax(260px,1fr)_2fr] gap-6"
-                  >
-                     <div className="flex flex-col gap-3">
-                        <h2 className="text-lg font-semibold leading-snug">{section.title}</h2>
-                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                           {String(index + 1).padStart(2, '0')} /{' '}
-                           {String(sections.length).padStart(2, '0')}
-                           <label className="inline-flex items-center gap-1.5 cursor-pointer">
-                              <Checkbox className="size-3.5" />
-                              Reviewed
-                           </label>
-                        </div>
-                        {section.paragraphs.map((paragraph, pIndex) => (
-                           <p key={pIndex} className="text-sm leading-relaxed">
-                              <InlineText text={paragraph} />
-                           </p>
-                        ))}
-                        <div className="flex flex-col gap-1.5 mt-1">
-                           {section.fileRefs.map((ref) => (
-                              <div
-                                 key={ref.name}
-                                 className="flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-xs bg-container"
-                              >
-                                 <FileCode2 className="size-3.5 text-muted-foreground shrink-0" />
-                                 <span className="font-medium">{ref.name}</span>
-                                 <span className="text-muted-foreground truncate flex-1">
-                                    {ref.path}
-                                 </span>
-                                 <span className="text-emerald-600 dark:text-emerald-400 font-medium shrink-0">
-                                    {ref.stat}
-                                 </span>
-                              </div>
-                           ))}
-                        </div>
-                     </div>
-                     <div>{diff && <DiffView diff={diff} />}</div>
+            {!hasContent && (
+               <div className="rounded-lg border border-dashed px-6 py-8 text-sm text-muted-foreground">
+                  The author did not add a summary or test plan.
+               </div>
+            )}
+
+            {review.summary.length > 0 && (
+               <section className="flex flex-col gap-3">
+                  <h2 className="text-lg font-semibold">Summary</h2>
+                  <ul className="flex flex-col gap-2 list-disc pl-5 text-sm leading-relaxed">
+                     {review.summary.map((bullet, index) => (
+                        <li key={index}>
+                           <InlineText text={bullet} />
+                        </li>
+                     ))}
+                  </ul>
+               </section>
+            )}
+
+            {review.testPlan.length > 0 && (
+               <section className="flex flex-col gap-3">
+                  <h2 className="text-lg font-semibold">Test plan</h2>
+                  <div className="flex flex-col gap-1.5">
+                     {review.testPlan.map((item, index) => (
+                        <label key={index} className="flex items-start gap-2 text-sm">
+                           <Checkbox checked={item.checked} className="size-4 mt-0.5" />
+                           <span>
+                              <InlineText text={item.text} />
+                           </span>
+                        </label>
+                     ))}
                   </div>
-               );
-            })}
+               </section>
+            )}
+
+            <section className="flex flex-col gap-3">
+               <h2 className="text-lg font-semibold">Verdict</h2>
+               {review.verdict ? (
+                  <div className="rounded-lg border p-4 flex items-center gap-2.5 flex-wrap">
+                     <span
+                        className={cn(
+                           'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium',
+                           review.verdict === 'approved'
+                              ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                              : 'border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                        )}
+                     >
+                        {review.verdict === 'approved' ? (
+                           <Check className="size-3.5" />
+                        ) : (
+                           <X className="size-3.5" />
+                        )}
+                        {review.verdict === 'approved' ? 'Approved' : 'Changes requested'}
+                     </span>
+                     <Avatar className="size-5">
+                        <AvatarImage
+                           src={verdictBy?.avatarUrl}
+                           alt={verdictBy?.name ?? review.verdictById ?? 'Unknown'}
+                        />
+                        <AvatarFallback>
+                           {(verdictBy?.name ?? review.verdictById ?? '?')[0]}
+                        </AvatarFallback>
+                     </Avatar>
+                     <span className="text-sm text-muted-foreground">
+                        by{' '}
+                        <span className="font-medium text-foreground">
+                           {verdictBy?.name ?? review.verdictById ?? 'Unknown'}
+                        </span>
+                     </span>
+                  </div>
+               ) : (
+                  <p className="text-sm text-muted-foreground">No verdict yet</p>
+               )}
+            </section>
          </div>
 
          <div className="sticky bottom-4 flex justify-center pointer-events-none">

@@ -25,7 +25,7 @@ export interface ReviewCommit {
 }
 
 export interface DiffLine {
-   type: 'context' | 'add' | 'del' | 'skip';
+   type: 'context' | 'add' | 'del' | 'skip' | 'hunk';
    /** New-file line number (omitted for del/skip). */
    number?: number;
    text?: string;
@@ -67,6 +67,14 @@ export interface ReviewNote {
    footer?: string;
 }
 
+export interface ReviewCommentItem {
+   id: string;
+   authorId: string;
+   filePath: string | null;
+   body: string;
+   createdAt: string;
+}
+
 export interface Review {
    /** URL slug. */
    id: string;
@@ -91,6 +99,15 @@ export interface Review {
    testPlan: { text: string; checked: boolean }[];
    deployment?: { project: string; state: string; action: string };
    reviewNote?: ReviewNote;
+   /** Raw unified-diff text per file path (locally created reviews). */
+   diffs?: Record<string, string>;
+   /** Discussion on the review (locally created reviews carry this live). */
+   comments?: ReviewCommentItem[];
+   /** Latest reviewer verdict, if any. */
+   verdict?: 'approved' | 'changes_requested' | null;
+   verdictById?: string | null;
+   createdById?: string | null;
+   createdAt?: string;
 }
 
 /* -------------------------------------------------------------------------- */

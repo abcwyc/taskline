@@ -1,15 +1,178 @@
 'use client';
 
+import { Button } from '@/components/ui/button';
+import {
+   Dialog,
+   DialogContent,
+   DialogFooter,
+   DialogHeader,
+   DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { SidebarTrigger } from '@/components/ui/sidebar';
+import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import type { Review, ReviewList, ReviewStatus } from '@/mock-data/reviews';
 import { useReviewsStore } from '@/store/reviews-store';
-import { ListFilter, SlidersHorizontal } from 'lucide-react';
+import { ListFilter, Plus, SlidersHorizontal } from 'lucide-react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
-import { ReactNode, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { ReactNode, useMemo, useState } from 'react';
 import { ReviewDetail, ReviewSection } from './review-detail';
 import { PrIcon } from './review-shared';
+
+const EMPTY_FORM = {
+   title: '',
+   repo: '',
+   targetBranch: 'main',
+   sourceBranch: '',
+   resolves: '',
+   summary: '',
+   diff: '',
+};
+
+/** "New review" dialog: paste a unified diff, get a parsed review. */
+function NewReviewDialog({
+   open,
+   onOpenChange,
+   orgId,
+}: {
+   open: boolean;
+   onOpenChange: (open: boolean) => void;
+   orgId: string;
+}) {
+   const createReview = useReviewsStore((s) => s.createReview);
+   const router = useRouter();
+   const [form, setForm] = useState(EMPTY_FORM);
+   const [submitting, setSubmitting] = useState(false);
+
+   const set = (key: keyof typeof EMPTY_FORM) => (value: string) =>
+      setForm((prev) => ({ ...prev, [key]: value }));
+
+   const close = () => {
+      onOpenChange(false);
+      setForm(EMPTY_FORM);
+   };
+
+   const submit = async () => {
+      if (!form.title.trim() || !form.diff.trim() || submitting) return;
+      setSubmitting(true);
+      const created = await createReview({
+         title: form.title,
+         repo: form.repo.trim() || undefined,
+         targetBranch: form.targetBranch.trim() || 'main',
+         sourceBranch: form.sourceBranch.trim() || undefined,
+         resolvesIdentifier: form.resolves.trim() || null,
+         summary: form.summary
+            .split('\n')
+            .map((line) => line.trim())
+            .filter(Boolean),
+         diff: form.diff,
+      });
+      setSubmitting(false);
+      if (created) {
+         close();
+         router.push(`/${orgId}/review/${created.id}`);
+      }
+   };
+
+   return (
+      <Dialog open={open} onOpenChange={(value) => (value ? onOpenChange(true) : close())}>
+         <DialogContent className="sm:max-w-xl">
+            <DialogHeader>
+               <DialogTitle>New review</DialogTitle>
+            </DialogHeader>
+            <div className="flex flex-col gap-4">
+               <div className="flex flex-col gap-2">
+                  <Label htmlFor="new-review-title">
+                     Title <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                     id="new-review-title"
+                     value={form.title}
+                     onChange={(event) => set('title')(event.target.value)}
+                     placeholder="feat(sheet): clamp the header title to two lines"
+                  />
+               </div>
+               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="flex flex-col gap-2">
+                     <Label htmlFor="new-review-repo">Repo</Label>
+                     <Input
+                        id="new-review-repo"
+                        value={form.repo}
+                        onChange={(event) => set('repo')(event.target.value)}
+                        placeholder="e.g. circle"
+                     />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                     <Label htmlFor="new-review-target">Target branch</Label>
+                     <Input
+                        id="new-review-target"
+                        value={form.targetBranch}
+                        onChange={(event) => set('targetBranch')(event.target.value)}
+                        placeholder="main"
+                     />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                     <Label htmlFor="new-review-source">Source branch</Label>
+                     <Input
+                        id="new-review-source"
+                        value={form.sourceBranch}
+                        onChange={(event) => set('sourceBranch')(event.target.value)}
+                        placeholder="feat/lnui-920"
+                     />
+                  </div>
+               </div>
+               <div className="flex flex-col gap-2">
+                  <Label htmlFor="new-review-resolves">Resolves issue</Label>
+                  <Input
+                     id="new-review-resolves"
+                     value={form.resolves}
+                     onChange={(event) => set('resolves')(event.target.value)}
+                     placeholder="e.g. LNUI-701"
+                     className="font-mono"
+                  />
+               </div>
+               <div className="flex flex-col gap-2">
+                  <Label htmlFor="new-review-summary">Summary</Label>
+                  <Textarea
+                     id="new-review-summary"
+                     value={form.summary}
+                     onChange={(event) => set('summary')(event.target.value)}
+                     placeholder={'One bullet per line\nWhat changed and why'}
+                     className="min-h-20"
+                  />
+               </div>
+               <div className="flex flex-col gap-2">
+                  <Label htmlFor="new-review-diff">
+                     Diff <span className="text-red-500">*</span>
+                  </Label>
+                  <Textarea
+                     id="new-review-diff"
+                     value={form.diff}
+                     onChange={(event) => set('diff')(event.target.value)}
+                     placeholder="Paste a unified git diff (git diff main...feat)"
+                     rows={12}
+                     className="font-mono text-xs min-h-48"
+                  />
+               </div>
+            </div>
+            <DialogFooter>
+               <Button variant="ghost" onClick={close} disabled={submitting}>
+                  Cancel
+               </Button>
+               <Button
+                  onClick={submit}
+                  disabled={!form.title.trim() || !form.diff.trim() || submitting}
+               >
+                  Create review
+               </Button>
+            </DialogFooter>
+         </DialogContent>
+      </Dialog>
+   );
+}
 
 /** Hand-drawn empty-state sketch (paper plane over a folded sheet). */
 function EmptySketch() {
@@ -118,9 +281,17 @@ export default function Reviews({
    section = 'overview',
 }: ReviewsProps) {
    const { orgId } = useParams<{ orgId: string }>();
-   const forYouReviews = useReviewsStore((s) => s.forYouReviews());
-   const createdReviews = useReviewsStore((s) => s.createdReviews());
+   const allReviews = useReviewsStore((s) => s.reviews);
+   const forYouReviews = useMemo(
+      () => allReviews.filter((r) => r.list === 'for-you'),
+      [allReviews]
+   );
+   const createdReviews = useMemo(
+      () => allReviews.filter((r) => r.list === 'created'),
+      [allReviews]
+   );
    const source = listTab === 'for-you' ? forYouReviews : createdReviews;
+   const [createOpen, setCreateOpen] = useState(false);
 
    const groups = (['open', 'merged', 'closed'] as ReviewStatus[])
       .map((status) => ({
@@ -138,10 +309,15 @@ export default function Reviews({
                   <span className="text-sm font-medium">Reviews</span>
                </div>
                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Button size="xs" onClick={() => setCreateOpen(true)}>
+                     <Plus className="size-3.5" />
+                     New review
+                  </Button>
                   <ListFilter className="size-4" />
                   <SlidersHorizontal className="size-4" />
                </div>
             </div>
+            <NewReviewDialog open={createOpen} onOpenChange={setCreateOpen} orgId={orgId} />
             <div className="flex items-center gap-1.5 px-4 py-2 shrink-0">
                <Link
                   href={`/${orgId}/reviews`}

@@ -4,10 +4,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { FileDiff } from '@/mock-data/reviews';
 import { ArrowDownToLine, FileCode2, MoreHorizontal } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { DiffStat } from './review-shared';
 
 /** One file diff: header (name, path, stats, Reviewed) + unified code view. */
-export function DiffView({ diff }: { diff: FileDiff }) {
+export function DiffView({ diff, actions }: { diff: FileDiff; actions?: ReactNode }) {
    return (
       <div className="rounded-lg border overflow-hidden bg-container">
          <div className="flex items-center gap-2 px-3 py-2 border-b bg-sidebar/50 text-sm">
@@ -15,6 +16,7 @@ export function DiffView({ diff }: { diff: FileDiff }) {
             <span className="font-medium">{diff.name}</span>
             <span className="text-xs text-muted-foreground truncate">{diff.path}/</span>
             <span className="flex-1" />
+            {actions}
             <DiffStat additions={diff.additions} deletions={diff.deletions} />
             <label className="inline-flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer">
                <Checkbox className="size-3.5" />
@@ -30,8 +32,24 @@ export function DiffView({ diff }: { diff: FileDiff }) {
                         key={index}
                         className="flex items-center justify-center gap-1.5 py-1.5 text-muted-foreground bg-sidebar/40 border-y border-border/40"
                      >
-                        <ArrowDownToLine className="size-3" />
-                        {line.count} unchanged lines
+                        {line.text ? (
+                           <span>{line.text}</span>
+                        ) : (
+                           <>
+                              <ArrowDownToLine className="size-3" />
+                              {line.count} unchanged lines
+                           </>
+                        )}
+                     </div>
+                  );
+               }
+               if (line.type === 'hunk') {
+                  return (
+                     <div
+                        key={index}
+                        className="px-3 py-1 text-muted-foreground bg-sidebar/40 border-y border-border/40 select-none"
+                     >
+                        {line.text}
                      </div>
                   );
                }

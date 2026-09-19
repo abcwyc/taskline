@@ -1,11 +1,39 @@
 'use client';
 
+import {
+   AlertDialog,
+   AlertDialogAction,
+   AlertDialogCancel,
+   AlertDialogContent,
+   AlertDialogDescription,
+   AlertDialogFooter,
+   AlertDialogHeader,
+   AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
+import {
+   DropdownMenu,
+   DropdownMenuContent,
+   DropdownMenuItem,
+   DropdownMenuSeparator,
+   DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { useReviewsStore } from '@/store/reviews-store';
-import { Eye, Link2, MoreHorizontal, Play, Star } from 'lucide-react';
+import {
+   Check,
+   CircleSlash,
+   GitMerge,
+   Link2,
+   MoreHorizontal,
+   RotateCcw,
+   Star,
+   Trash2,
+   X,
+} from 'lucide-react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { ReviewDiff } from './review-diff';
 import { ReviewGuide } from './review-guide';
 import { ReviewOverview } from './review-overview';
@@ -22,7 +50,12 @@ const SECTION_TABS: { key: ReviewSection; label: string; path: string }[] = [
 /** Right pane of the Reviews split view: breadcrumb, tabs and section body. */
 export function ReviewDetail({ reviewId, section }: { reviewId: string; section: ReviewSection }) {
    const { orgId } = useParams<{ orgId: string }>();
+   const router = useRouter();
    const review = useReviewsStore((s) => s.getReviewById(reviewId));
+   const setVerdict = useReviewsStore((s) => s.setVerdict);
+   const setStatus = useReviewsStore((s) => s.setStatus);
+   const removeReview = useReviewsStore((s) => s.removeReview);
+   const [deleteOpen, setDeleteOpen] = useState(false);
 
    if (!review) {
       return (
@@ -31,6 +64,8 @@ export function ReviewDetail({ reviewId, section }: { reviewId: string; section:
          </div>
       );
    }
+
+   const isOpen = review.status === 'open';
 
    return (
       <div className="h-full flex flex-col overflow-hidden">
@@ -46,9 +81,25 @@ export function ReviewDetail({ reviewId, section }: { reviewId: string; section:
             <PrIcon status={review.status} />
             <span className="text-sm font-medium truncate">{review.title}</span>
             <DiffStat additions={review.additions} deletions={review.deletions} />
+            {review.verdict && (
+               <span
+                  className={cn(
+                     'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium shrink-0',
+                     review.verdict === 'approved'
+                        ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                        : 'border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                  )}
+               >
+                  {review.verdict === 'approved' ? (
+                     <Check className="size-3" />
+                  ) : (
+                     <X className="size-3" />
+                  )}
+                  {review.verdict === 'approved' ? 'Approved' : 'Changes requested'}
+               </span>
+            )}
             <span className="flex-1" />
             <Star className="size-3.5 text-muted-foreground shrink-0" />
-            <MoreHorizontal className="size-3.5 text-muted-foreground shrink-0" />
             <Link2 className="size-3.5 text-muted-foreground shrink-0 hidden sm:block" />
          </div>
          <div className="flex items-center justify-between px-4 h-10 border-b shrink-0">
@@ -68,12 +119,67 @@ export function ReviewDetail({ reviewId, section }: { reviewId: string; section:
                   </Link>
                ))}
             </div>
-            <div className="flex items-center gap-1">
-               <Button size="xs" variant="ghost">
-                  <Eye className="size-3.5" />
-                  Preview
+            <div className="flex items-center gap-1.5">
+               <Button
+                  size="xs"
+                  variant="outline"
+                  disabled={!isOpen}
+                  title={isOpen ? 'Approve this review' : 'Only open reviews can be reviewed'}
+                  onClick={() => setVerdict(review.id, 'approved')}
+                  className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-600 dark:hover:text-emerald-400"
+               >
+                  <Check className="size-3.5" />
+                  Approve
                </Button>
-               <Play className="size-3.5 text-muted-foreground" />
+               <Button
+                  size="xs"
+                  variant="outline"
+                  disabled={!isOpen}
+                  title={
+                     isOpen ? 'Request changes on this review' : 'Only open reviews can be reviewed'
+                  }
+                  onClick={() => setVerdict(review.id, 'changes_requested')}
+                  className="text-amber-600 dark:text-amber-400 hover:text-amber-600 dark:hover:text-amber-400"
+               >
+                  <X className="size-3.5" />
+                  Request changes
+               </Button>
+               <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                     <Button
+                        size="xs"
+                        variant="ghost"
+                        className="size-7 px-0"
+                        aria-label="More review actions"
+                     >
+                        <MoreHorizontal className="size-3.5" />
+                     </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-44">
+                     {isOpen ? (
+                        <>
+                           <DropdownMenuItem onClick={() => setStatus(review.id, 'merged')}>
+                              <GitMerge />
+                              Mark merged
+                           </DropdownMenuItem>
+                           <DropdownMenuItem onClick={() => setStatus(review.id, 'closed')}>
+                              <CircleSlash />
+                              Close review
+                           </DropdownMenuItem>
+                        </>
+                     ) : (
+                        <DropdownMenuItem onClick={() => setStatus(review.id, 'open')}>
+                           <RotateCcw />
+                           Reopen
+                        </DropdownMenuItem>
+                     )}
+                     <DropdownMenuSeparator />
+                     <DropdownMenuItem variant="destructive" onClick={() => setDeleteOpen(true)}>
+                        <Trash2 />
+                        Delete review
+                     </DropdownMenuItem>
+                  </DropdownMenuContent>
+               </DropdownMenu>
             </div>
          </div>
          <div className="flex-1 min-h-0 overflow-hidden">
@@ -81,6 +187,30 @@ export function ReviewDetail({ reviewId, section }: { reviewId: string; section:
             {section === 'guide' && <ReviewGuide review={review} />}
             {section === 'diff' && <ReviewDiff review={review} />}
          </div>
+
+         <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+            <AlertDialogContent>
+               <AlertDialogHeader>
+                  <AlertDialogTitle>Delete review?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                     This permanently deletes “{review.title}” together with its comments. This
+                     action cannot be undone.
+                  </AlertDialogDescription>
+               </AlertDialogHeader>
+               <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                     className="bg-destructive text-white hover:bg-destructive/90"
+                     onClick={() => {
+                        removeReview(review.id);
+                        router.push(`/${orgId}/reviews`);
+                     }}
+                  >
+                     Delete
+                  </AlertDialogAction>
+               </AlertDialogFooter>
+            </AlertDialogContent>
+         </AlertDialog>
       </div>
    );
 }

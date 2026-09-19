@@ -1,20 +1,28 @@
 'use client';
 
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { Review, ReviewFileCategory } from '@/mock-data/reviews';
+import { useMeStore } from '@/store/me-store';
+import { useMembersStore } from '@/store/members-store';
+import { useReviewsStore } from '@/store/reviews-store';
+import { formatDistanceToNowStrict } from 'date-fns';
 import {
    ChevronDown,
    ChevronRight,
    FileCode2,
    GitCommitHorizontal,
-   Paperclip,
    Plus,
    Send,
+   Trash2,
    UserPlus,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { useState } from 'react';
 import { DiffStat, InlineText, IssueCheckIcon, PrIcon } from './review-shared';
 
 const CATEGORY_LABELS: Record<ReviewFileCategory, string> = {
@@ -63,6 +71,112 @@ function FilesPanel({ review }: { review: Review }) {
                </div>
             );
          })}
+      </div>
+   );
+}
+
+/** Discussion under the overview: persisted comments + a composer. */
+function ReviewComments({ review }: { review: Review }) {
+   const addComment = useReviewsStore((s) => s.addComment);
+   const deleteComment = useReviewsStore((s) => s.deleteComment);
+   const getMemberById = useMembersStore((s) => s.getMemberById);
+   const me = useMeStore((s) => s.me);
+   const [draft, setDraft] = useState('');
+   const [posting, setPosting] = useState(false);
+
+   const comments = review.comments ?? [];
+
+   const submit = async () => {
+      const text = draft.trim();
+      if (!text || posting) return;
+      setPosting(true);
+      const ok = await addComment(review.id, text);
+      setPosting(false);
+      if (ok) setDraft('');
+   };
+
+   const onKeyDown = (event: React.KeyboardEvent) => {
+      if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+         event.preventDefault();
+         void submit();
+      }
+   };
+
+   return (
+      <div className="flex flex-col gap-3">
+         <h2 className="text-lg font-semibold">Comments</h2>
+         {comments.length === 0 && (
+            <p className="text-sm text-muted-foreground">No comments yet — start the discussion.</p>
+         )}
+         <div className="flex flex-col gap-2.5">
+            {comments.map((comment) => {
+               const author = getMemberById(comment.authorId);
+               const canDelete =
+                  Boolean(me) && (me?.id === comment.authorId || me?.role === 'Admin');
+               return (
+                  <div
+                     key={comment.id}
+                     className="group flex items-start gap-2.5 rounded-lg border border-border/60 bg-container p-3"
+                  >
+                     <Avatar className="size-5 mt-0.5">
+                        <AvatarImage
+                           src={author?.avatarUrl}
+                           alt={author?.name ?? comment.authorId}
+                        />
+                        <AvatarFallback>{(author?.name ?? comment.authorId)[0]}</AvatarFallback>
+                     </Avatar>
+                     <div className="flex-1 min-w-0 flex flex-col gap-1">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                           <span className="text-sm font-medium">
+                              {author?.name ?? comment.authorId}
+                           </span>
+                           <span className="text-xs text-muted-foreground">
+                              {formatDistanceToNowStrict(new Date(comment.createdAt), {
+                                 addSuffix: true,
+                              })}
+                           </span>
+                           {comment.filePath && (
+                              <span className="inline-flex items-center gap-1 rounded border border-border/60 bg-muted/60 px-1.5 py-px font-mono text-[11px] text-muted-foreground max-w-56">
+                                 <FileCode2 className="size-3 shrink-0" />
+                                 <span className="truncate">{comment.filePath}</span>
+                              </span>
+                           )}
+                        </div>
+                        <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+                           {comment.body}
+                        </p>
+                     </div>
+                     {canDelete && (
+                        <button
+                           type="button"
+                           aria-label="Delete comment"
+                           onClick={() => deleteComment(review.id, comment.id)}
+                           className="mt-0.5 shrink-0 text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-red-500 transition-[color,opacity]"
+                        >
+                           <Trash2 className="size-3.5" />
+                        </button>
+                     )}
+                  </div>
+               );
+            })}
+         </div>
+         <div className="flex flex-col gap-2 rounded-lg border p-3">
+            <Textarea
+               value={draft}
+               onChange={(event) => setDraft(event.target.value)}
+               onKeyDown={onKeyDown}
+               placeholder="Leave a comment..."
+               rows={2}
+               className="min-h-0 resize-none"
+            />
+            <div className="flex items-center justify-end gap-2">
+               <span className="mr-auto text-xs text-muted-foreground">⌘↵ to submit</span>
+               <Button size="xs" onClick={() => void submit()} disabled={!draft.trim() || posting}>
+                  <Send className="size-3.5" />
+                  Comment
+               </Button>
+            </div>
+         </div>
       </div>
    );
 }
@@ -157,13 +271,6 @@ export function ReviewOverview({ review }: { review: Review }) {
                   </div>
                )}
 
-               <div className="flex items-center gap-2 rounded-lg border px-3 py-2.5 text-sm text-muted-foreground">
-                  <span className="size-5 rounded-full bg-muted inline-block shrink-0" />
-                  <span className="flex-1">Leave a reply...</span>
-                  <Paperclip className="size-4" />
-                  <Send className="size-4" />
-               </div>
-
                <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <GitCommitHorizontal className="size-3.5 shrink-0" />
                   <span className="truncate">
@@ -218,6 +325,8 @@ export function ReviewOverview({ review }: { review: Review }) {
                      )}
                   </div>
                )}
+
+               <ReviewComments review={review} />
             </div>
          </div>
 
