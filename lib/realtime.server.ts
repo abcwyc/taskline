@@ -3,7 +3,7 @@ import 'server-only';
 /**
  * In-process realtime bus feeding the SSE endpoint (`/api/events`).
  *
- * Scoped to a single server instance on purpose — Circle's supported
+ * Scoped to a single server instance on purpose — Taskline's supported
  * production shape is a single-instance deployment (see README). If that ever
  * changes, swap this class for Redis pub/sub; publishers and subscribers keep
  * the same interface.

@@ -2,9 +2,22 @@ import type { DocumentFolder, TeamDocument } from '@/mock-data/documents';
 import type { User } from '@/mock-data/users';
 import { useMembersStore } from '@/store/members-store';
 
-import { DocumentCreateBody, DocumentDTO, DocumentFolderDTO, DocumentUpdateBody } from './types';
+import {
+   DocumentContentDTO,
+   DocumentCreateBody,
+   DocumentDTO,
+   DocumentDetailDTO,
+   DocumentFolderDTO,
+   DocumentUpdateBody,
+} from './types';
 
 const BASE = '/api/documents';
+
+/** A single document with its editable content. */
+export interface DocumentDetail extends TeamDocument {
+   folderId: string;
+   content: DocumentContentDTO | null;
+}
 
 async function http<T>(url: string, init?: RequestInit): Promise<T> {
    const res = await fetch(url, { headers: { 'content-type': 'application/json' }, ...init });
@@ -42,11 +55,17 @@ export const dtoToFolder = (f: DocumentFolderDTO): DocumentFolder => ({
    id: f.id,
    name: f.name,
    icon: f.icon,
+   ...(f.teamId ? { teamId: f.teamId } : {}),
    documents: f.documents.map(dtoToDoc),
 });
 
 export async function fetchDocumentFolders(): Promise<DocumentFolder[]> {
    return (await http<DocumentFolderDTO[]>(BASE)).map(dtoToFolder);
+}
+
+export async function fetchDocument(id: string): Promise<DocumentDetail> {
+   const dto = await http<DocumentDetailDTO>(`${BASE}/${encodeURIComponent(id)}`);
+   return { ...dtoToDoc(dto), folderId: dto.folderId, content: dto.content };
 }
 
 export async function createDocument(input: DocumentCreateBody): Promise<TeamDocument> {

@@ -7,7 +7,7 @@ import { logError } from '@/lib/logger';
  * Outbound email over SMTP (nodemailer). Configure either:
  *   SMTP_URL=smtp://user:pass@host:587
  * or the discrete vars SMTP_HOST / SMTP_PORT / SMTP_USER / SMTP_PASS
- * plus optional SMTP_SECURE=true and MAIL_FROM (default "Circle <no-reply@localhost>").
+ * plus optional SMTP_SECURE=true and MAIL_FROM (default "Taskline <no-reply@localhost>").
  *
  * When nothing is configured, email is silently skipped — in-app notifications
  * still work — so the deployment degrades gracefully.
@@ -65,7 +65,7 @@ export async function sendNotificationEmails(
 
       const mail = await transporter();
       if (!mail) return;
-      const from = process.env.MAIL_FROM || 'Circle <no-reply@localhost>';
+      const from = process.env.MAIL_FROM || 'Taskline <no-reply@localhost>';
       await mail.sendMail({
          from,
          bcc: recipients.map((r) => r.email),

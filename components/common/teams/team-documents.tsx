@@ -33,6 +33,8 @@ import { useDocumentsStore } from '@/store/documents-store';
 import { formatRelativeTime } from '@/lib/i18n';
 import { formatDistanceToNowStrict, parseISO } from 'date-fns';
 import { ChevronRight, FolderPlus, MoreHorizontal, Pin, Plus } from 'lucide-react';
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 const timeAgo = (date: string) =>
@@ -50,6 +52,7 @@ const timeAgo = (date: string) =>
  */
 export default function TeamDocuments() {
    const { locale, t } = useLanguage();
+   const { orgId } = useParams<{ orgId: string }>();
    const documentFolders = useDocumentsStore((s) => s.folders);
    const createDocument = useDocumentsStore((s) => s.createDocument);
    const renameDocument = useDocumentsStore((s) => s.renameDocument);
@@ -164,8 +167,13 @@ export default function TeamDocuments() {
                         className="grid grid-cols-[1fr_40px] md:grid-cols-[1fr_90px_90px_40px] items-center px-6 h-11 hover:bg-sidebar/50 border-b border-border/30 text-sm"
                      >
                         <div className="flex items-center gap-2 min-w-0 pl-6">
-                           <span className="text-base leading-none">{doc.icon}</span>
-                           <span className="font-medium truncate">{doc.name}</span>
+                           <Link
+                              href={`/${orgId}/document/${doc.id}`}
+                              className="flex items-center gap-2 min-w-0 hover:underline underline-offset-2"
+                           >
+                              <span className="text-base leading-none">{doc.icon}</span>
+                              <span className="font-medium truncate">{doc.name}</span>
+                           </Link>
                            {doc.pinned && <Pin className="size-3 text-muted-foreground shrink-0" />}
                         </div>
                         <span className="hidden md:block text-xs text-muted-foreground">

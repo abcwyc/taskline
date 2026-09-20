@@ -14,6 +14,8 @@ import { createFolder, fetchFolders } from '@/lib/api/folders';
 import type { DocumentFolder } from '@/mock-data/documents';
 import { useMembersStore } from '@/store/members-store';
 import { Plus } from 'lucide-react';
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { apiErrorMessage, SettingsCard, SettingsSection, SettingsShell } from './shared';
@@ -102,6 +104,7 @@ function NewFolderDialog({
  */
 export default function DocumentsSettings() {
    const { t } = useLanguage();
+   const { orgId } = useParams<{ orgId: string }>();
    const members = useMembersStore((s) => s.members);
    const [folders, setFolders] = useState<DocumentFolder[] | null>(null);
    const [dialogOpen, setDialogOpen] = useState(false);
@@ -162,7 +165,11 @@ export default function DocumentsSettings() {
                   {folder.documents.map((doc) => {
                      const creator = members.find((m) => m.id === doc.creator.id) ?? doc.creator;
                      return (
-                        <div key={doc.id} className="flex items-center gap-3 px-4 py-2.5">
+                        <Link
+                           key={doc.id}
+                           href={`/${orgId}/document/${doc.id}`}
+                           className="flex items-center gap-3 px-4 py-2.5 hover:bg-accent/40 transition-colors"
+                        >
                            <span className="text-base shrink-0">{doc.icon}</span>
                            <div className="flex-1 min-w-0">
                               <div className="text-sm font-medium truncate">{doc.name}</div>
@@ -173,7 +180,7 @@ export default function DocumentsSettings() {
                            <div className="shrink-0 text-xs text-muted-foreground">
                               {t('Updated')} {doc.updatedAt.slice(0, 10)}
                            </div>
-                        </div>
+                        </Link>
                      );
                   })}
                   {folder.documents.length === 0 && (

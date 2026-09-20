@@ -20,7 +20,7 @@ interface PullRequestPayload {
 }
 
 /**
- * POST /api/integrations/github/webhook — GitHub → Circle, inbound only.
+ * POST /api/integrations/github/webhook — GitHub → Taskline, inbound only.
  *
  * Configure in GitHub: Settings → Webhooks → payload URL
  * `https://<host>/api/integrations/github/webhook`, content type
@@ -30,7 +30,7 @@ interface PullRequestPayload {
  * the title, body or branch name and (b) — when the workspace `github.autoDone`
  * setting is on — moves merged issues to the first COMPLETED workflow state.
  *
- * Like the rest of Circle, this assumes the single-workspace deployment shape:
+ * Like the rest of Taskline, this assumes the single-workspace deployment shape:
  * the target workspace is the first org.
  */
 export async function POST(req: NextRequest) {

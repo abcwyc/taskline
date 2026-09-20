@@ -507,17 +507,29 @@ export interface DocumentDTO {
    updatedAt: string;
 }
 
+export interface DocumentContentDTO {
+   text?: string;
+}
+
+export interface DocumentDetailDTO extends DocumentDTO {
+   folderId: string;
+   content: DocumentContentDTO | null;
+}
+
 export interface DocumentFolderDTO {
    id: string;
    name: string;
    icon: string;
+   teamId: string | null;
    documents: DocumentDTO[];
 }
 
 export type DocumentCreateBody = Partial<Pick<DocumentDTO, 'name' | 'icon' | 'pinned'>> & {
    folderId?: string;
 };
-export type DocumentUpdateBody = Partial<Pick<DocumentDTO, 'name' | 'icon' | 'pinned'>>;
+export type DocumentUpdateBody = Partial<Pick<DocumentDTO, 'name' | 'icon' | 'pinned'>> & {
+   content?: DocumentContentDTO;
+};
 
 /* -------------------------------------------------------------------------- */
 /*                                 Triage                                     */

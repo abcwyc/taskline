@@ -14,6 +14,8 @@ export interface DocumentFolder {
    id: string;
    name: string;
    icon: string;
+   /** owning team, when the folder is team-scoped (workspace folders omit it) */
+   teamId?: string;
    documents: TeamDocument[];
 }
 

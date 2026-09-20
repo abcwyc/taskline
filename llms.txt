@@ -1,6 +1,6 @@
-# Circle
+# Taskline
 
-> Circle — a self-hosted, Linear-inspired project management app (issues + details, projects, teams, cycles, initiatives, triage, saved views, reviews, documents, inbox, settings) built with Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS v4, shadcn/ui, Zustand, Prisma/PostgreSQL and Auth.js. Real backend: all product flows persist through `/api/**` route handlers into PostgreSQL (`lib/api/*.server.ts` domain layer, Zod validation, role-based authorization). `mock-data/` remains only as shared UI types, static registries (statuses/priorities/icons) and the optional demo seed source — never as live product state.
+> Taskline — a self-hosted, Linear-inspired project management app (issues + details, projects, teams, cycles, initiatives, triage, saved views, reviews, documents, inbox, settings) built with Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS v4, shadcn/ui, Zustand, Prisma/PostgreSQL and Auth.js. Real backend: all product flows persist through `/api/**` route handlers into PostgreSQL (`lib/api/*.server.ts` domain layer, Zod validation, role-based authorization). `mock-data/` remains only as shared UI types, static registries (statuses/priorities/icons) and the optional demo seed source — never as live product state.
 
 Key facts for coding agents:
 

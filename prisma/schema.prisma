@@ -1,4 +1,4 @@
-// Circle — production schema
+// Taskline — production schema
 // Derived 1:1 from the shapes in `mock-data/*`. The API layer is expected to
 // re-assemble circle-shaped DTOs (nested `status` / `assignee` / `labels` /
 // `project` objects) from these normalized tables so the React components and

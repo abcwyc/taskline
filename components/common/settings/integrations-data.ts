@@ -24,7 +24,7 @@ const list: Integration[] = [
       id: 'github',
       name: 'GitHub',
       description:
-         'Connect GitHub to automate PR workflows, review code in Circle, sync issues and understand your codebase',
+         'Connect GitHub to automate PR workflows, review code in Taskline, sync issues and understand your codebase',
       status: 'enabled',
       color: '#24292f',
    },
@@ -85,14 +85,14 @@ const list: Integration[] = [
    {
       id: 'jira',
       name: 'Jira',
-      description: 'Smoothly transition from Jira to Circle',
+      description: 'Smoothly transition from Jira to Taskline',
       color: '#2684ff',
    },
    // Agents
    {
       id: 'codex',
       name: 'Codex',
-      description: 'Delegate issues to Codex directly from Circle',
+      description: 'Delegate issues to Codex directly from Taskline',
       status: 'enabled',
       color: '#10a37f',
    },
@@ -150,31 +150,31 @@ const list: Integration[] = [
    {
       id: 'cursor-mcp',
       name: 'Cursor MCP',
-      description: 'Connect Cursor to the Circle MCP server',
+      description: 'Connect Cursor to the Taskline MCP server',
       color: '#111111',
    },
    {
       id: 'chatgpt',
       name: 'ChatGPT',
-      description: 'Connect ChatGPT deep research to Circle',
+      description: 'Connect ChatGPT deep research to Taskline',
       color: '#10a37f',
    },
    {
       id: 'claude',
       name: 'Claude',
-      description: 'Connect Claude to the Circle MCP server',
+      description: 'Connect Claude to the Taskline MCP server',
       color: '#d97757',
    },
    {
       id: 'v0-mcp',
       name: 'v0 by Vercel MCP connector',
-      description: 'Connect v0 and Circle through MCP',
+      description: 'Connect v0 and Taskline through MCP',
       color: '#000000',
    },
    {
       id: 'windsurf',
       name: 'Windsurf',
-      description: 'Connect Windsurf to the Circle MCP server',
+      description: 'Connect Windsurf to the Taskline MCP server',
       color: '#0ea5e9',
    },
    {
@@ -192,7 +192,7 @@ const list: Integration[] = [
    {
       id: 'adk',
       name: 'ADK',
-      description: 'Connect your Google ADK agents to Circle',
+      description: 'Connect your Google ADK agents to Taskline',
       color: '#4285f4',
    },
    // Engineering
@@ -212,7 +212,7 @@ const list: Integration[] = [
    {
       id: 'vscode',
       name: 'VS Code',
-      description: 'Easily build VS Code extensions with Circle Connect',
+      description: 'Easily build VS Code extensions with Taskline Connect',
       color: '#007acc',
    },
    {
@@ -224,7 +224,7 @@ const list: Integration[] = [
    {
       id: 'incident-io',
       name: 'incident.io',
-      description: 'Manage incidents and triage responsibility directly in Circle',
+      description: 'Manage incidents and triage responsibility directly in Taskline',
       color: '#f25533',
    },
    {
@@ -244,7 +244,7 @@ const list: Integration[] = [
    {
       id: 'honeybadger',
       name: 'Honeybadger',
-      description: 'Manage Honeybadger errors via Circle issues',
+      description: 'Manage Honeybadger errors via Taskline issues',
       color: '#ea580c',
    },
    {
@@ -288,7 +288,7 @@ const list: Integration[] = [
    },
    {
       id: 'circleback',
-      name: 'Circleback',
+      name: 'Tasklineback',
       description: 'Automatically create issues from meeting action items',
       color: '#0f172a',
    },
@@ -334,7 +334,7 @@ const list: Integration[] = [
       id: 'productlane',
       name: 'Productlane',
       description:
-         'Helpdesk, customer requests portal, public roadmap, and changelog built on Circle',
+         'Helpdesk, customer requests portal, public roadmap, and changelog built on Taskline',
       color: '#2dd4bf',
    },
    {
@@ -373,7 +373,7 @@ const list: Integration[] = [
    {
       id: 'claap',
       name: 'Claap',
-      description: 'Record bugs and directly create issues in Circle',
+      description: 'Record bugs and directly create issues in Taskline',
       color: '#7c3aed',
    },
    {
@@ -563,7 +563,7 @@ export const INTEGRATION_CATEGORIES: IntegrationCategory[] = [
    },
    {
       id: 'crafted',
-      label: 'Circle crafted',
+      label: 'Taskline crafted',
       items: [
          'github',
          'slack',

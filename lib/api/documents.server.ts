@@ -1,8 +1,16 @@
 import 'server-only';
 
+import { Prisma } from '@prisma/client';
+
 import { db } from '@/lib/db';
 import { PublicError } from './http';
-import { DocumentCreateBody, DocumentFolderDTO, DocumentUpdateBody } from './types';
+import {
+   DocumentContentDTO,
+   DocumentCreateBody,
+   DocumentDetailDTO,
+   DocumentFolderDTO,
+   DocumentUpdateBody,
+} from './types';
 
 export async function listFolders(orgId: string): Promise<DocumentFolderDTO[]> {
    const rows = await db.documentFolder.findMany({
@@ -14,6 +22,7 @@ export async function listFolders(orgId: string): Promise<DocumentFolderDTO[]> {
       id: f.id,
       name: f.name,
       icon: f.icon,
+      teamId: f.teamId,
       documents: f.documents.map((d) => ({
          id: d.id,
          name: d.name,
@@ -68,6 +77,24 @@ export async function createDocument(orgId: string, body: DocumentCreateBody, cr
    };
 }
 
+export async function getDocument(orgId: string, id: string): Promise<DocumentDetailDTO | null> {
+   const doc = await db.document.findFirst({
+      where: { id, folder: { orgId } },
+   });
+   if (!doc) return null;
+   return {
+      id: doc.id,
+      name: doc.name,
+      icon: doc.icon,
+      pinned: doc.pinned,
+      folderId: doc.folderId,
+      content: (doc.content as DocumentContentDTO | null) ?? null,
+      creatorId: doc.creatorId,
+      createdAt: doc.createdAt.toISOString(),
+      updatedAt: doc.updatedAt.toISOString(),
+   };
+}
+
 export async function updateDocument(orgId: string, id: string, body: DocumentUpdateBody) {
    const doc = await db.document.findFirst({
       where: { id, folder: { orgId } },
@@ -80,6 +107,7 @@ export async function updateDocument(orgId: string, id: string, body: DocumentUp
          ...(body.name !== undefined ? { name: body.name } : {}),
          ...(body.icon !== undefined ? { icon: body.icon } : {}),
          ...(body.pinned !== undefined ? { pinned: body.pinned } : {}),
+         ...(body.content !== undefined ? { content: body.content as Prisma.InputJsonValue } : {}),
       },
    });
    return {

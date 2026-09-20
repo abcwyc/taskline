@@ -14,7 +14,6 @@ import {
    Slack,
    Star,
    Tag,
-   User,
    X,
 } from 'lucide-react';
 import Link from 'next/link';

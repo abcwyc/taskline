@@ -49,9 +49,12 @@ export default async function SignUpPage({
          <div className="w-full max-w-sm">
             <div className="mb-8 flex items-center gap-2">
                <div className="flex size-7 items-center justify-center rounded bg-orange-500 text-sm font-semibold text-white">
-                  C
+                  T
                </div>
-               <span className="text-lg font-semibold">Circle</span>
+               <div>
+                  <div className="text-lg font-semibold leading-tight">Taskline</div>
+                  <div className="text-xs text-muted-foreground">Tasks, in a line.</div>
+               </div>
             </div>
 
             <h1 className="text-xl font-semibold tracking-tight">

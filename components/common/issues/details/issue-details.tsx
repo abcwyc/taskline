@@ -218,7 +218,9 @@ function DescriptionEditor({
             </button>
          ) : (
             <>
-               <ContentBlocks blocks={detail.description} />
+               <div className="pr-8">
+                  <ContentBlocks blocks={detail.description} />
+               </div>
                <button
                   onClick={start}
                   aria-label={t('Edit description')}

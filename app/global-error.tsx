@@ -13,7 +13,7 @@ export default function GlobalError({
          <body className="min-h-svh bg-background text-foreground">
             <main className="flex min-h-svh items-center justify-center p-6">
                <div className="max-w-sm rounded-lg border p-6 text-center">
-                  <h1 className="text-base font-semibold">{tt('Circle could not start')}</h1>
+                  <h1 className="text-base font-semibold">{tt('Taskline could not start')}</h1>
                   <p className="mt-2 text-sm text-muted-foreground">
                      {tt('Reload the application to try again.')}
                   </p>

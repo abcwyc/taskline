@@ -171,7 +171,12 @@ export const documentCreate = z
    .strict();
 
 export const documentUpdate = z
-   .object({ name: zText(200).optional(), icon: zEmoji, pinned: z.boolean().optional() })
+   .object({
+      name: zText(200).optional(),
+      icon: zEmoji,
+      pinned: z.boolean().optional(),
+      content: z.object({ text: RICH }).strict().optional(),
+   })
    .strict();
 
 export const teamCreate = z

@@ -10,7 +10,7 @@ import { parseUnifiedDiff } from './diff';
 /**
  * Server-side data access for the review surface.
  *
- * Circle has no VCS integration: a review is created by pasting a unified
+ * Taskline has no VCS integration: a review is created by pasting a unified
  * diff. The diff is parsed server-side into per-file stats + raw patches,
  * stored in `Review.data`. Seeded demo rows keep their fixture payloads.
  */
@@ -382,5 +382,5 @@ async function notifyReview(
    await client.notification.create({
       data: { userId: creatorId, actorId, type, content, issueId: null },
    });
-   void sendNotificationEmails([creatorId], `Circle: review ${type}`, content);
+   void sendNotificationEmails([creatorId], `Taskline: review ${type}`, content);
 }

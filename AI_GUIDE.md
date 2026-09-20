@@ -1,13 +1,13 @@
-# Circle — Engineering Guide
+# Taskline — Engineering Guide
 
-This is the current architecture reference for humans and coding agents. Circle
+This is the current architecture reference for humans and coding agents. Taskline
 started as a front-end template, but its primary product flows now use a real
 Next.js API, PostgreSQL/Prisma persistence, Auth.js authentication, and
 server-enforced roles.
 
 ## Product boundary
 
-Circle currently supports one workspace per deployment and a small number of
+Taskline currently supports one workspace per deployment and a small number of
 users on one application instance. The schema is organization-scoped, but API
 context still selects the user's first membership. Do not advertise or implement
 multiple workspaces only in the UI: tenant selection must first be carried from

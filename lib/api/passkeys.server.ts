@@ -22,7 +22,7 @@ import { db } from '@/lib/db';
 type transports = AuthenticatorTransport[];
 
 export function rpName(): string {
-   return 'Circle';
+   return 'Taskline';
 }
 
 export function rpID(): string {

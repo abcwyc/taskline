@@ -1,5 +1,5 @@
 /**
- * Circle — database seed
+ * Taskline — database seed
  * ----------------------------------------------------------------------------
  * Transforms the existing `mock-data/*` modules into real rows so a fresh
  * install boots with the same fully-populated workspace the template ships.

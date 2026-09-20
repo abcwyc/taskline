@@ -13,44 +13,41 @@ const geistMono = Geist_Mono({
    subsets: ['latin'],
 });
 
-const siteUrl = 'https://circle.lndev.me';
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.AUTH_URL || 'http://localhost:3000';
 
 export const metadata: Metadata = {
    title: {
-      template: '%s | Circle by lndev-ui',
-      default: 'Circle by lndev-ui',
+      template: '%s | Taskline',
+      default: 'Taskline — Tasks, in a line.',
    },
    description:
-      'Project management interface inspired by Linear. Built with Next.js and shadcn/ui, this application allows tracking of issues, projects and teams with a modern, responsive UI.',
+      'Taskline — Tasks, in a line. A self-hosted, Linear-inspired project management tool for tracking issues, projects and teams with a modern, responsive UI.',
    openGraph: {
       type: 'website',
       locale: 'en_US',
       url: siteUrl,
-      siteName: 'Circle',
+      siteName: 'Taskline',
       images: [
          {
             url: `${siteUrl}/banner.png`,
             width: 2560,
             height: 1440,
-            alt: 'lndev/ui',
+            alt: 'Taskline',
          },
       ],
    },
    twitter: {
       card: 'summary_large_image',
-      site: '@ln_dev7',
-      creator: '@ln_dev7',
       images: [
          {
             url: `${siteUrl}/banner.png`,
             width: 2560,
             height: 1440,
-            alt: 'Circle',
+            alt: 'Taskline',
          },
       ],
    },
-   authors: [{ name: 'Leonel NGOYA', url: 'https://lndev.me/' }],
-   keywords: ['ui', 'lndev', 'components', 'template'],
+   keywords: ['taskline', 'project management', 'issue tracking', 'tasks'],
 };
 
 import { ThemeProvider } from '@/components/layout/theme-provider';

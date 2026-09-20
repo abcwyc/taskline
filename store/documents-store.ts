@@ -28,6 +28,7 @@ interface DocumentsState {
    renameDocument: (id: string, name: string) => void;
    togglePin: (id: string, pinned: boolean) => void;
    deleteDocument: (id: string) => void;
+   saveContent: (id: string, text: string) => void;
 
    createFolder: (name: string, icon?: string) => Promise<void>;
    renameFolder: (id: string, name: string) => void;
@@ -102,6 +103,22 @@ export const useDocumentsStore = create<DocumentsState>((set, get) => ({
       apiDelete(id).catch((err) => {
          set({ folders: snapshot });
          toast.error(tt('Failed to delete'));
+         console.error(err);
+      });
+   },
+
+   saveContent: (id, text) => {
+      const snapshot = get().folders;
+      // keep the list's "last edited" fresh; content itself isn't part of the list state
+      set({
+         folders: patchDoc(snapshot, id, (d) => ({
+            ...d,
+            updatedAt: new Date().toISOString().slice(0, 10),
+         })),
+      });
+      apiUpdate(id, { content: { text } }).catch((err) => {
+         set({ folders: snapshot });
+         toast.error(tt('Failed to update'));
          console.error(err);
       });
    },

@@ -1,12 +1,14 @@
-# Circle
+# Taskline
 
-Circle is a self-hosted, Linear-inspired project-management application built
+> Tasks, in a line.
+
+Taskline is a self-hosted, Linear-inspired project-management application built
 with Next.js, PostgreSQL, Prisma, Auth.js, and React. Issues, projects, teams,
 cycles, initiatives, triage, saved views, members, invitations, notifications,
 comments, and attachments are persisted in PostgreSQL/local storage.
 
 The supported production shape is a **small, single-workspace, single-instance
-deployment**. Circle is not yet a multi-tenant SaaS or a horizontally scalable
+deployment**. Taskline is not yet a multi-tenant SaaS or a horizontally scalable
 service. See [DEPLOY.md](./DEPLOY.md) and [SECURITY.md](./SECURITY.md) before
 putting it on a network.
 

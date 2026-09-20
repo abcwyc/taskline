@@ -126,7 +126,7 @@ export default function Integrations({ githubConfigured = false }: { githubConfi
                <h1 className="text-2xl font-medium">{t('Integrations')}</h1>
                <p className="text-sm text-muted-foreground">
                   {t(
-                     'Circle runs self-hosted — connect GitHub below; other third-party SaaS integrations are not bundled in this build.'
+                     'Taskline runs self-hosted — connect GitHub below; other third-party SaaS integrations are not bundled in this build.'
                   )}
                </p>
             </div>

@@ -75,7 +75,7 @@ export function verifyTotp(secretBase32: string, code: string): boolean {
    return candidates.includes(code);
 }
 
-export function otpauthUrl(secret: string, email: string, issuer = 'Circle'): string {
+export function otpauthUrl(secret: string, email: string, issuer = 'Taskline'): string {
    const label = encodeURIComponent(`${issuer}:${email}`);
    const params = new URLSearchParams({
       secret,

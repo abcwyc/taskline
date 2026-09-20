@@ -4,7 +4,7 @@ import { Link2Off } from 'lucide-react';
 import { SettingsShell } from './shared';
 import { useLanguage } from '@/components/providers/language-provider';
 
-/** Personal "Connected accounts" settings. Circle authenticates with
+/** Personal "Connected accounts" settings. Taskline authenticates with
  *  workspace credentials only — there is nothing to connect in this build. */
 export default function AccountConnections() {
    const { t } = useLanguage();
@@ -22,7 +22,7 @@ export default function AccountConnections() {
             <p className="text-sm font-medium">{t('No connected accounts')}</p>
             <p className="text-sm text-muted-foreground max-w-sm">
                {t(
-                  "Circle authenticates with your workspace credentials (email and password). Linking external accounts isn't part of this build."
+                  "Taskline authenticates with your workspace credentials (email and password). Linking external accounts isn't part of this build."
                )}
             </p>
          </div>

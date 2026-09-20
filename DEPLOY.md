@@ -1,6 +1,6 @@
-# Deploying Circle
+# Deploying Taskline
 
-Circle is a Next.js 15 (App Router) app + Prisma/PostgreSQL backend + Auth.js
+Taskline is a Next.js 15 (App Router) app + Prisma/PostgreSQL backend + Auth.js
 credentials login. The core project-management surface — issues, projects,
 teams, cycles, initiatives, views, docs, triage, notifications, attachments — is
 DB-backed. Some settings sub-pages and the Agent / Reviews / Integrations

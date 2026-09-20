@@ -16,6 +16,7 @@ export async function listFolders(orgId: string, teamId?: string): Promise<Docum
       id: f.id,
       name: f.name,
       icon: f.icon,
+      teamId: f.teamId,
       documents: f.documents.map((d) => ({
          id: d.id,
          name: d.name,
@@ -51,7 +52,7 @@ export async function createFolder(
          order: (last?.order ?? 0) + 1,
       },
    });
-   return { id: row.id, name: row.name, icon: row.icon, documents: [] };
+   return { id: row.id, name: row.name, icon: row.icon, teamId: row.teamId, documents: [] };
 }
 
 export async function updateFolder(
@@ -71,7 +72,13 @@ export async function updateFolder(
          ...(body.order !== undefined ? { order: body.order } : {}),
       },
    });
-   return { id: updated.id, name: updated.name, icon: updated.icon, documents: [] };
+   return {
+      id: updated.id,
+      name: updated.name,
+      icon: updated.icon,
+      teamId: updated.teamId,
+      documents: [],
+   };
 }
 
 export async function deleteFolder(

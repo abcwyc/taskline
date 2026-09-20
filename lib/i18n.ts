@@ -445,12 +445,12 @@ const ZH_CN: Record<string, string> = {
    'Choose which activity creates notifications in your inbox': '选择哪些活动会在收件箱中创建通知',
    'CI pipeline': 'CI 流水线',
    'Circle': '圆形',
-   "Circle authenticates with your workspace credentials (email and password). Linking external accounts isn't part of this build.":
-      'Circle 使用你的工作区凭据（邮箱和密码）进行身份验证。此版本不支持关联外部账号。',
-   'Circle could not start': 'Circle 无法启动',
-   'Circle crafted': 'Circle 官方打造',
-   'Circle runs self-hosted — connect GitHub below; other third-party SaaS integrations are not bundled in this build.':
-      'Circle 为自托管部署——可在下方连接 GitHub；其余第三方 SaaS 集成本版本暂未内置。',
+   "Taskline authenticates with your workspace credentials (email and password). Linking external accounts isn't part of this build.":
+      'Taskline 使用你的工作区凭据（邮箱和密码）进行身份验证。此版本不支持关联外部账号。',
+   'Taskline could not start': 'Taskline 无法启动',
+   'Taskline crafted': 'Taskline 官方打造',
+   'Taskline runs self-hosted — connect GitHub below; other third-party SaaS integrations are not bundled in this build.':
+      'Taskline 为自托管部署——可在下方连接 GitHub；其余第三方 SaaS 集成本版本暂未内置。',
    'Receives pull request events and links them to issues by identifier (e.g. LNUI-701 in the PR title, body or branch name).':
       '接收拉取请求事件，并按标识符（如 PR 标题、正文或分支名中的 LNUI-701）自动关联事项。',
    'Webhook secret configured': '已配置 Webhook 密钥',
@@ -484,14 +484,14 @@ const ZH_CN: Record<string, string> = {
       '配置工作区 AI 助手。仅工作区管理员可以更改这些设置。',
    'Confirm new password': '确认新密码',
    'Confirm password': '确认密码',
-   'Connect ChatGPT deep research to Circle': '将 ChatGPT 深度研究连接到 Circle',
-   'Connect Claude to the Circle MCP server': '将 Claude 连接到 Circle MCP 服务器',
-   'Connect Cursor to the Circle MCP server': '将 Cursor 连接到 Circle MCP 服务器',
-   'Connect GitHub to automate PR workflows, review code in Circle, sync issues and understand your codebase':
-      '连接 GitHub，自动化 PR 工作流、在 Circle 中评审代码、同步事项并了解你的代码库',
-   'Connect v0 and Circle through MCP': '通过 MCP 连接 v0 与 Circle',
-   'Connect Windsurf to the Circle MCP server': '将 Windsurf 连接到 Circle MCP 服务器',
-   'Connect your Google ADK agents to Circle': '将你的 Google ADK 代理连接到 Circle',
+   'Connect ChatGPT deep research to Taskline': '将 ChatGPT 深度研究连接到 Taskline',
+   'Connect Claude to the Taskline MCP server': '将 Claude 连接到 Taskline MCP 服务器',
+   'Connect Cursor to the Taskline MCP server': '将 Cursor 连接到 Taskline MCP 服务器',
+   'Connect GitHub to automate PR workflows, review code in Taskline, sync issues and understand your codebase':
+      '连接 GitHub，自动化 PR 工作流、在 Taskline 中评审代码、同步事项并了解你的代码库',
+   'Connect v0 and Taskline through MCP': '通过 MCP 连接 v0 与 Taskline',
+   'Connect Windsurf to the Taskline MCP server': '将 Windsurf 连接到 Taskline MCP 服务器',
+   'Connect your Google ADK agents to Taskline': '将你的 Google ADK 代理连接到 Taskline',
    'Connect your user accounts to sync attribution of your actions between apps':
       '关联你的账号，在不同应用之间同步你的操作归属',
    'Connected accounts': '关联账号',
@@ -580,7 +580,7 @@ const ZH_CN: Record<string, string> = {
    'Decline': '拒绝',
    'Declined': '已拒绝',
    'Declining…': '正在拒绝…',
-   'Delegate issues to Codex directly from Circle': '直接从 Circle 将事项委托给 Codex',
+   'Delegate issues to Codex directly from Taskline': '直接从 Taskline 将事项委托给 Codex',
    'Delete alias': '删除别名',
    'Delete all notifications': '删除所有通知',
    'Delete all read notifications': '删除所有已读通知',
@@ -613,6 +613,7 @@ const ZH_CN: Record<string, string> = {
    'Display': '显示',
    'document': '篇文档',
    'Document': '文档',
+   'Document not found': '未找到文档',
    'documents': '篇文档',
    'Documents': '文档',
    'Download': '下载',
@@ -623,8 +624,8 @@ const ZH_CN: Record<string, string> = {
    'Due date set to 7 days from now': '截止日期已设为 7 天后',
    'e.g. circle': '例如 circle',
    'e.g. LNUI-701': '例如 LNUI-701',
-   'Easily build VS Code extensions with Circle Connect':
-      '使用 Circle Connect 轻松构建 VS Code 扩展',
+   'Easily build VS Code extensions with Taskline Connect':
+      '使用 Taskline Connect 轻松构建 VS Code 扩展',
    'Edit': '编辑',
    'Edit comment': '编辑评论',
    'Edit comment...': '编辑评论…',
@@ -768,8 +769,8 @@ const ZH_CN: Record<string, string> = {
    'Guidance saved': '指引已保存',
    'Guide': '指南',
    'h': ' 小时',
-   'Helpdesk, customer requests portal, public roadmap, and changelog built on Circle':
-      '基于 Circle 构建的服务台、客户请求门户、公开路线图和更新日志',
+   'Helpdesk, customer requests portal, public roadmap, and changelog built on Taskline':
+      '基于 Taskline 构建的服务台、客户请求门户、公开路线图和更新日志',
    'hidden by filters': '已按筛选条件隐藏',
    'Hidden columns': '隐藏的列',
    'Hours must be whole numbers (respond 1–2000, resolve 1–10000).':
@@ -850,9 +851,9 @@ const ZH_CN: Record<string, string> = {
    'Make a copy...': '创建副本…',
    'Make code reviews easier by syncing pull request channels with your issues':
       '通过将 PR 频道与事项同步，让代码评审更轻松',
-   'Manage Honeybadger errors via Circle issues': '通过 Circle 事项管理 Honeybadger 错误',
-   'Manage incidents and triage responsibility directly in Circle':
-      '直接在 Circle 中管理事故与受理值班',
+   'Manage Honeybadger errors via Taskline issues': '通过 Taskline 事项管理 Honeybadger 错误',
+   'Manage incidents and triage responsibility directly in Taskline':
+      '直接在 Taskline 中管理事故与受理值班',
    'Manage issue automations, git workflows and other workflows':
       '管理事项自动化、git 工作流及其他工作流',
    'Manage team access and who in the team can take certain actions':
@@ -1060,7 +1061,7 @@ const ZH_CN: Record<string, string> = {
       '只读——仅工作区管理员可编辑 SLA 策略。',
    'Ready': '就绪',
    'Received': '接收时间',
-   'Record bugs and directly create issues in Circle': '录制 Bug 并直接在 Circle 中创建事项',
+   'Record bugs and directly create issues in Taskline': '录制 Bug 并直接在 Taskline 中创建事项',
    'Recurring issues': '周期性事项',
    'red': '红色',
    'Related': '相关',
@@ -1142,6 +1143,8 @@ const ZH_CN: Record<string, string> = {
    'Save changes': '保存更改',
    'Saved automatically when you click away.': '点击其他位置后自动保存。',
    'Saving…': '保存中…',
+   'Save failed — click to retry': '保存失败，点击重试',
+   'Saved': '已保存',
    'Edit title': '编辑标题',
    'Enter to save, Esc to cancel': '回车保存，Esc 取消',
    'Rich content such as lists, code and images is saved as plain text.':
@@ -1194,7 +1197,7 @@ const ZH_CN: Record<string, string> = {
    'SLAs': 'SLA',
    'SLAs saved': 'SLA 已保存',
    'Slice': '维度',
-   'Smoothly transition from Jira to Circle': '从 Jira 平稳迁移到 Circle',
+   'Smoothly transition from Jira to Taskline': '从 Jira 平稳迁移到 Taskline',
    'Snooze': '延后提醒',
    'Snooze 1 hour': '延后 1 小时',
    'Snooze 3 hours': '延后 3 小时',
@@ -1214,6 +1217,7 @@ const ZH_CN: Record<string, string> = {
    'Start a new team with its own issues, cycles and projects.':
       '创建一个拥有独立事项、周期和项目的新团队。',
    'Starting…': '正在开启…',
+   'Start writing…': '开始编写…',
    'Status and icon': '状态与图标',
    'Status changes': '状态变更',
    'Status distribution': '状态分布',
@@ -1346,6 +1350,8 @@ const ZH_CN: Record<string, string> = {
    'Unknown member': '未知成员',
    'Unlink pull request': '取消关联拉取请求',
    'Unpin': '取消置顶',
+   'Untitled': '无标题文档',
+   'Unsaved changes': '未保存的更改',
    'unread notification': '条未读通知',
    'unread notifications': '条未读通知',
    'Unstarted': '未开始',

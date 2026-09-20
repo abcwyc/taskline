@@ -87,7 +87,7 @@ async function notify(
          content: opts.content,
       })),
    });
-   void sendNotificationEmails(to, `Circle: ${opts.type}`, opts.content);
+   void sendNotificationEmails(to, `Taskline: ${opts.type}`, opts.content);
 }
 
 /** Map a notification type to the preference that gates it (null = always). */
