@@ -6,6 +6,7 @@ import { StatusTriageIcon } from '@/mock-data/status';
 import { TriageItem } from '@/mock-data/triage';
 import { useTriageStore } from '@/store/triage-store';
 import { Check, Clock, Sparkles, Star, X } from 'lucide-react';
+import { useLanguage } from '@/components/providers/language-provider';
 
 /* ------------------------------ building blocks ---------------------------- */
 
@@ -29,6 +30,7 @@ const LABEL_DOTS: Record<string, string> = {
 /** The "Triage Intelligence" strip: suggestions + related issues. */
 function IntelligenceCard({ item }: { item: TriageItem }) {
    const { intelligence } = item;
+   const { t } = useLanguage();
    const chips: React.ReactNode[] = [];
 
    if (intelligence.suggestedAssignee) {
@@ -72,7 +74,7 @@ function IntelligenceCard({ item }: { item: TriageItem }) {
                className="size-2 rounded-full"
                style={{ backgroundColor: LABEL_DOTS[label.color] ?? '#6b7280' }}
             />
-            {label.name}
+            {t(label.name)}
          </span>
       );
    });
@@ -83,17 +85,17 @@ function IntelligenceCard({ item }: { item: TriageItem }) {
       <div className="rounded-lg border bg-container/60 p-4 flex flex-col gap-3">
          <span className="inline-flex items-center gap-2 text-sm font-medium">
             <Sparkles className="size-4 text-muted-foreground" />
-            Triage Intelligence
+            {t('Triage Intelligence')}
          </span>
          {chips.length > 0 && (
             <div className="flex items-start gap-3 text-xs">
-               <span className="text-muted-foreground shrink-0 pt-1">Suggestions</span>
+               <span className="text-muted-foreground shrink-0 pt-1">{t('Suggestions')}</span>
                <span className="flex items-center gap-1.5 flex-wrap">{chips}</span>
             </div>
          )}
          {intelligence.related.length > 0 && (
             <div className="flex items-start gap-3 text-xs">
-               <span className="text-muted-foreground shrink-0 pt-0.5">Related to</span>
+               <span className="text-muted-foreground shrink-0 pt-0.5">{t('Related to')}</span>
                <span className="flex flex-col gap-1.5 min-w-0">
                   {intelligence.related.map((related) => (
                      <span
@@ -146,6 +148,7 @@ function PreviewCard({ preview }: { preview: NonNullable<TriageItem['preview']> 
 
 export function TriageDetails({ item }: { item: TriageItem }) {
    const { accept, decline, snooze, select } = useTriageStore();
+   const { t } = useLanguage();
 
    return (
       <div className="flex-1 min-w-0 h-full flex flex-col overflow-hidden">
@@ -154,7 +157,7 @@ export function TriageDetails({ item }: { item: TriageItem }) {
                onClick={() => select(null)}
                className="lg:hidden text-xs text-muted-foreground hover:text-foreground"
             >
-               Back
+               {t('Back')}
             </button>
             <span className="text-sm text-muted-foreground shrink-0">{item.identifier}</span>
             <span className="text-sm font-medium truncate">{item.title}</span>
@@ -167,7 +170,7 @@ export function TriageDetails({ item }: { item: TriageItem }) {
                   onClick={() => accept(item.id)}
                >
                   <Check className="size-4" />
-                  Accept
+                  {t('Accept')}
                </Button>
                <Button
                   variant="ghost"
@@ -176,7 +179,7 @@ export function TriageDetails({ item }: { item: TriageItem }) {
                   onClick={() => decline(item.id)}
                >
                   <X className="size-4" />
-                  Decline
+                  {t('Decline')}
                </Button>
                <Button
                   variant="ghost"
@@ -208,17 +211,18 @@ export function TriageDetails({ item }: { item: TriageItem }) {
 
             <aside className="hidden xl:flex flex-col w-64 shrink-0 border-l h-full overflow-y-auto p-5 gap-6">
                <div className="flex flex-col gap-3">
-                  <span className="text-xs text-muted-foreground">Properties</span>
+                  <span className="text-xs text-muted-foreground">{t('Properties')}</span>
                   <PropertyRow>
                      <span className="inline-flex items-center gap-2">
                         <StatusTriageIcon color="#f2790f" />
-                        Triage
+                        {t('Triage')}
                      </span>
                   </PropertyRow>
                   <PropertyRow>
                      <span className="text-xs text-muted-foreground">
-                        Priority, assignee, labels and project are set on the issue after you accept
-                        this request.
+                        {t(
+                           'Priority, assignee, labels and project are set on the issue after you accept this request.'
+                        )}
                      </span>
                   </PropertyRow>
                </div>

@@ -15,6 +15,8 @@ import { useNotificationsStore } from '@/store/notifications-store';
 import { formatDistanceToNowStrict } from 'date-fns';
 import { AlarmClock, Trash2 } from 'lucide-react';
 import { motion } from 'motion/react';
+import { useLanguage } from '@/components/providers/language-provider';
+import { formatRelativeTime } from '@/lib/i18n';
 
 interface IssueLineProps {
    notification: InboxItem;
@@ -35,6 +37,7 @@ export default function IssueLine({
 }: IssueLineProps) {
    const deleteNotification = useNotificationsStore((s) => s.deleteNotification);
    const snoozeNotification = useNotificationsStore((s) => s.snoozeNotification);
+   const { locale, t } = useLanguage();
 
    return (
       <motion.div
@@ -101,12 +104,15 @@ export default function IssueLine({
                   )}
                >
                   <p className="text-sm text-muted-foreground line-clamp-1">
-                     {notification.content}
+                     {t(notification.content)}
                   </p>
                   <span className="text-xs text-muted-foreground shrink-0 group-hover:hidden">
-                     {formatDistanceToNowStrict(new Date(notification.timestamp), {
-                        addSuffix: true,
-                     })}
+                     {formatRelativeTime(
+                        locale,
+                        formatDistanceToNowStrict(new Date(notification.timestamp), {
+                           addSuffix: true,
+                        })
+                     )}
                   </span>
                   <div
                      className="hidden group-hover:flex items-center gap-0.5 shrink-0"
@@ -116,31 +122,31 @@ export default function IssueLine({
                         <DropdownMenuTrigger asChild>
                            <button
                               className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-                              aria-label="Snooze notification"
-                              title="Snooze"
+                              aria-label={t('Snooze notification')}
+                              title={t('Snooze')}
                            >
                               <AlarmClock className="size-3.5" />
                            </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                            <DropdownMenuItem onClick={() => snoozeNotification(notification.id, 1)}>
-                              Snooze 1 hour
+                              {t('Snooze 1 hour')}
                            </DropdownMenuItem>
                            <DropdownMenuItem onClick={() => snoozeNotification(notification.id, 3)}>
-                              Snooze 3 hours
+                              {t('Snooze 3 hours')}
                            </DropdownMenuItem>
                            <DropdownMenuItem
                               onClick={() => snoozeNotification(notification.id, 16)}
                            >
-                              Snooze until tomorrow
+                              {t('Snooze until tomorrow')}
                            </DropdownMenuItem>
                         </DropdownMenuContent>
                      </DropdownMenu>
                      <button
                         className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
                         onClick={() => deleteNotification(notification.id)}
-                        aria-label="Delete notification"
-                        title="Delete"
+                        aria-label={t('Delete notification')}
+                        title={t('Delete')}
                      >
                         <Trash2 className="size-3.5" />
                      </button>

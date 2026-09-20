@@ -1,11 +1,13 @@
 'use client';
 
+import { useLanguage } from '@/components/providers/language-provider';
 import { useIssuesStore } from '@/store/issues-store';
 import { useSearchStore } from '@/store/search-store';
 import { useEffect, useState } from 'react';
 import { IssueLine } from './issue-line';
 
 export function SearchIssues() {
+   const { t } = useLanguage();
    const [searchResults, setSearchResults] = useState<
       ReturnType<typeof useIssuesStore.getState>['issues']
    >([]);
@@ -33,7 +35,9 @@ export function SearchIssues() {
                {searchResults.length > 0 ? (
                   <div className="border rounded-md mt-4">
                      <div className="py-2 px-4 border-b bg-muted/50">
-                        <h3 className="text-sm font-medium">Results ({searchResults.length})</h3>
+                        <h3 className="text-sm font-medium">
+                           {t('Results')} ({searchResults.length})
+                        </h3>
                      </div>
                      <div className="divide-y">
                         {searchResults.map((issue) => (
@@ -43,7 +47,7 @@ export function SearchIssues() {
                   </div>
                ) : (
                   <div className="text-center py-8 text-muted-foreground">
-                     No results found for &quot;{searchQuery}&quot;
+                     {t('No results found for')} &quot;{searchQuery}&quot;
                   </div>
                )}
             </div>

@@ -13,14 +13,16 @@ import {
 import { useTeamsStore } from '@/store/teams-store';
 import { Button } from '@/components/ui/button';
 import { useParams } from 'next/navigation';
+import { useLanguage } from '@/components/providers/language-provider';
 
 export function NavTeamsSettings() {
    const teams = useTeamsStore((s) => s.teams);
    const { orgId } = useParams<{ orgId: string }>();
+   const { t } = useLanguage();
    const joinedTeams = teams.filter((t) => t.joined);
    return (
       <SidebarGroup>
-         <SidebarGroupLabel>Your teams</SidebarGroupLabel>
+         <SidebarGroupLabel>{t('Your teams')}</SidebarGroupLabel>
          <SidebarMenu>
             {joinedTeams.map((team) => (
                <SidebarMenuItem key={team.id}>
@@ -39,7 +41,7 @@ export function NavTeamsSettings() {
                   <Button variant="ghost" className="w-full justify-start gap-2 px-2" asChild>
                      <Link href={`/${orgId}/settings/teams/new`}>
                         <PlusIcon className="size-4" />
-                        <span>Join or create a team</span>
+                        <span>{t('Join or create a team')}</span>
                      </Link>
                   </Button>
                </SidebarMenuButton>

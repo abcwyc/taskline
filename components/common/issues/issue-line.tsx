@@ -1,9 +1,10 @@
 'use client';
 
+import { useLanguage } from '@/components/providers/language-provider';
+import { formatAppDate } from '@/lib/i18n';
 import { Issue } from '@/mock-data/issues';
 import { useCyclesStore } from '@/store/cycles-store';
 import { useDisplaySettingsStore } from '@/store/display-settings-store';
-import { format } from 'date-fns';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { AssigneeUser } from './assignee-user';
@@ -17,6 +18,7 @@ import { ContextMenu, ContextMenuTrigger } from '@/components/ui/context-menu';
 import { IssueContextMenu } from './issue-context-menu';
 
 export function IssueLine({ issue, layoutId = false }: { issue: Issue; layoutId?: boolean }) {
+   const { locale, t } = useLanguage();
    const { orgId } = useParams<{ orgId: string }>();
    const { displayProperties } = useDisplaySettingsStore();
    const cycle = useCyclesStore((s) =>
@@ -66,12 +68,12 @@ export function IssueLine({ issue, layoutId = false }: { issue: Issue; layoutId?
                   )}
                   {displayProperties.dueDate && issue.dueDate && (
                      <span className="text-xs text-orange-400 shrink-0 hidden sm:inline-block">
-                        Due {format(new Date(issue.dueDate), 'MMM dd')}
+                        {t('Due')} {formatAppDate(locale, new Date(issue.dueDate), 'MMM dd')}
                      </span>
                   )}
                   {displayProperties.created && (
                      <span className="text-xs text-muted-foreground shrink-0 hidden sm:inline-block">
-                        {format(new Date(issue.createdAt), 'MMM dd')}
+                        {formatAppDate(locale, new Date(issue.createdAt), 'MMM dd')}
                      </span>
                   )}
                   {displayProperties.assignee && <AssigneeUser user={issue.assignee} />}

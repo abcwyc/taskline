@@ -3,6 +3,7 @@
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { useLanguage } from '@/components/providers/language-provider';
 import { INTEGRATION_LOGOS } from './integration-logos';
 import { INTEGRATION_CATEGORIES, INTEGRATIONS, Integration } from './integrations-data';
 
@@ -48,14 +49,16 @@ function IntegrationIcon({ integration, size = 36 }: { integration: Integration;
 
 /** Honest availability tag — none of these can be connected in this build. */
 function NotAvailableTag() {
+   const { t } = useLanguage();
    return (
       <span className="text-[11px] text-muted-foreground border rounded px-1 py-px leading-none shrink-0">
-         Not available in this build
+         {t('Not available in this build')}
       </span>
    );
 }
 
 function IntegrationCard({ integration }: { integration: Integration }) {
+   const { t } = useLanguage();
    return (
       <div className="flex items-start gap-3 rounded-lg border bg-container p-3">
          <IntegrationIcon integration={integration} />
@@ -65,7 +68,7 @@ function IntegrationCard({ integration }: { integration: Integration }) {
                <NotAvailableTag />
             </span>
             <span className="text-xs text-muted-foreground line-clamp-2">
-               {integration.description}
+               {t(integration.description)}
             </span>
          </span>
       </div>
@@ -74,10 +77,11 @@ function IntegrationCard({ integration }: { integration: Integration }) {
 
 function CategorySection({ label, items }: { label: string; items: Integration[] }) {
    const [expanded, setExpanded] = useState(false);
+   const { t } = useLanguage();
    const visible = expanded ? items : items.slice(0, VISIBLE_PER_CATEGORY);
    return (
       <section className="flex flex-col gap-3">
-         <h2 className="text-base font-medium">{label}</h2>
+         <h2 className="text-base font-medium">{t(label)}</h2>
          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             {visible.map((integration) => (
                <IntegrationCard key={integration.id} integration={integration} />
@@ -88,7 +92,7 @@ function CategorySection({ label, items }: { label: string; items: Integration[]
                onClick={() => setExpanded(true)}
                className="self-start text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
-               Show all
+               {t('Show all')}
             </button>
          )}
       </section>
@@ -102,6 +106,7 @@ function CategorySection({ label, items }: { label: string; items: Integration[]
  */
 export default function Integrations() {
    const [query, setQuery] = useState('');
+   const { t } = useLanguage();
 
    const searchResults = useMemo(() => {
       const needle = query.trim().toLowerCase();
@@ -117,22 +122,24 @@ export default function Integrations() {
       <div className="w-full overflow-y-auto h-full">
          <div className="max-w-2xl mx-auto px-6 py-10 flex flex-col gap-8">
             <div className="flex flex-col gap-1">
-               <h1 className="text-2xl font-medium">Integrations</h1>
+               <h1 className="text-2xl font-medium">{t('Integrations')}</h1>
                <p className="text-sm text-muted-foreground">
-                  Circle runs self-hosted and does not bundle third-party SaaS integrations in this
-                  build.
+                  {t(
+                     'Circle runs self-hosted and does not bundle third-party SaaS integrations in this build.'
+                  )}
                </p>
             </div>
 
             <div className="rounded-md border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-sm text-amber-700 dark:text-amber-400">
-               The list below is a reference catalog of common integrations — none of them can be
-               connected or configured in this build.
+               {t(
+                  'The list below is a reference catalog of common integrations — none of them can be connected or configured in this build.'
+               )}
             </div>
 
             <div className="relative">
                <Search className="size-4 text-muted-foreground absolute left-2.5 top-1/2 -translate-y-1/2" />
                <Input
-                  placeholder="Search integrations"
+                  placeholder={t('Search integrations')}
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                   className="pl-8 h-9"
@@ -142,7 +149,8 @@ export default function Integrations() {
             {searchResults ? (
                <section className="flex flex-col gap-3">
                   <h2 className="text-base font-medium">
-                     {searchResults.length} result{searchResults.length === 1 ? '' : 's'}
+                     {searchResults.length}{' '}
+                     {searchResults.length === 1 ? t('result') : t('results')}
                   </h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                      {searchResults.map((integration) => (

@@ -14,6 +14,7 @@ import { useIssuesStore } from '@/store/issues-store';
 import { status as allStatus, Status } from '@/mock-data/status';
 import { CheckIcon } from 'lucide-react';
 import { useEffect, useId, useState } from 'react';
+import { useLanguage } from '@/components/providers/language-provider';
 
 interface StatusSelectorProps {
    status: Status;
@@ -21,6 +22,7 @@ interface StatusSelectorProps {
 }
 
 export function StatusSelector({ status, onChange }: StatusSelectorProps) {
+   const { t } = useLanguage();
    const id = useId();
    const [open, setOpen] = useState<boolean>(false);
    const [value, setValue] = useState<string>(status.id);
@@ -61,7 +63,7 @@ export function StatusSelector({ status, onChange }: StatusSelectorProps) {
                      }
                      return null;
                   })()}
-                  <span>{value ? allStatus.find((s) => s.id === value)?.name : 'To do'}</span>
+                  <span>{value ? allStatus.find((s) => s.id === value)?.name : t('To do')}</span>
                </Button>
             </PopoverTrigger>
             <PopoverContent
@@ -69,9 +71,9 @@ export function StatusSelector({ status, onChange }: StatusSelectorProps) {
                align="start"
             >
                <Command>
-                  <CommandInput placeholder="Set status..." />
+                  <CommandInput placeholder={t('Set status…')} />
                   <CommandList>
-                     <CommandEmpty>No status found.</CommandEmpty>
+                     <CommandEmpty>{t('No status found.')}</CommandEmpty>
                      <CommandGroup>
                         {allStatus.map((item) => (
                            <CommandItem
@@ -82,7 +84,7 @@ export function StatusSelector({ status, onChange }: StatusSelectorProps) {
                            >
                               <div className="flex items-center gap-2">
                                  <item.icon />
-                                 {item.name}
+                                 {t(item.name)}
                               </div>
                               {value === item.id && <CheckIcon size={16} className="ml-auto" />}
                               <span className="text-muted-foreground text-xs">

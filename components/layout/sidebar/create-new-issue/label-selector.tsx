@@ -16,6 +16,7 @@ import { useLabelsStore } from '@/store/labels-store';
 import { CheckIcon, TagIcon } from 'lucide-react';
 import { useId, useState } from 'react';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/components/providers/language-provider';
 
 interface LabelSelectorProps {
    selectedLabels: LabelInterface[];
@@ -23,6 +24,7 @@ interface LabelSelectorProps {
 }
 
 export function LabelSelector({ selectedLabels, onChange }: LabelSelectorProps) {
+   const { t } = useLanguage();
    const id = useId();
    const [open, setOpen] = useState<boolean>(false);
 
@@ -76,9 +78,9 @@ export function LabelSelector({ selectedLabels, onChange }: LabelSelectorProps) 
                align="start"
             >
                <Command>
-                  <CommandInput placeholder="Search labels..." />
+                  <CommandInput placeholder={t('Search labels...')} />
                   <CommandList>
-                     <CommandEmpty>No labels found.</CommandEmpty>
+                     <CommandEmpty>{t('No labels found.')}</CommandEmpty>
                      <CommandGroup>
                         {labels.map((label) => {
                            const isSelected = selectedLabels.some((l) => l.id === label.id);
@@ -94,7 +96,7 @@ export function LabelSelector({ selectedLabels, onChange }: LabelSelectorProps) 
                                        className={`size-3 rounded-full`}
                                        style={{ backgroundColor: label.color }}
                                     />
-                                    <span>{label.name}</span>
+                                    <span>{t(label.name)}</span>
                                  </div>
                                  {isSelected && <CheckIcon size={16} className="ml-auto" />}
                                  <span className="text-muted-foreground text-xs">

@@ -1,5 +1,6 @@
 'use client';
 
+import { useLanguage } from '@/components/providers/language-provider';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { createColumnConfigHelper } from '@/components/data-table-filter/core/filters';
 import type { ColumnOption, FiltersState } from '@/components/data-table-filter/core/types';
@@ -15,6 +16,7 @@ import { Project } from '@/mock-data/projects';
 import { User } from '@/mock-data/users';
 import { useMembersStore } from '@/store/members-store';
 import { useProjectsStore } from '@/store/projects-store';
+import { tt } from '@/lib/i18n';
 import { useMemo } from 'react';
 import {
    BarChart3,
@@ -30,11 +32,14 @@ import {
 /*                                Option lists                                */
 /* -------------------------------------------------------------------------- */
 
-const statusOptions: ColumnOption[] = status.map((item) => ({
-   value: item.id,
-   label: item.name,
-   icon: <item.icon />,
-}));
+type Translate = (key: string) => string;
+
+const buildStatusOptions = (t: Translate): ColumnOption[] =>
+   status.map((item) => ({
+      value: item.id,
+      label: t(item.name),
+      icon: <item.icon />,
+   }));
 
 const STATUS_TYPES: { id: StatusCategory; name: string }[] = [
    { id: 'triage', name: 'Triage' },
@@ -45,17 +50,18 @@ const STATUS_TYPES: { id: StatusCategory; name: string }[] = [
    { id: 'canceled', name: 'Canceled' },
 ];
 
-const statusTypeOptions: ColumnOption[] = STATUS_TYPES.map((item) => ({
-   value: item.id,
-   label: item.name,
-   icon: <CircleDashed className="size-4 text-muted-foreground" />,
-}));
+const buildStatusTypeOptions = (t: Translate): ColumnOption[] =>
+   STATUS_TYPES.map((item) => ({
+      value: item.id,
+      label: t(item.name),
+      icon: <CircleDashed className="size-4 text-muted-foreground" />,
+   }));
 
 /** Assignee options are dynamic (members are DB-backed). */
-const buildAssigneeOptions = (members: User[]): ColumnOption[] => [
+const buildAssigneeOptions = (members: User[], t: Translate): ColumnOption[] => [
    {
       value: 'unassigned',
-      label: 'Unassigned',
+      label: t('Unassigned'),
       icon: <CircleUserRound className="size-4 text-muted-foreground" />,
    },
    ...members.map((user) => ({
@@ -70,16 +76,17 @@ const buildAssigneeOptions = (members: User[]): ColumnOption[] => [
    })),
 ];
 
-const priorityOptions: ColumnOption[] = priorities.map((priority) => ({
-   value: priority.id,
-   label: priority.name,
-   icon: <priority.icon className="size-4 text-muted-foreground" />,
-}));
+const buildPriorityOptions = (t: Translate): ColumnOption[] =>
+   priorities.map((priority) => ({
+      value: priority.id,
+      label: t(priority.name),
+      icon: <priority.icon className="size-4 text-muted-foreground" />,
+   }));
 
-const buildLabelOptions = (list: LabelInterface[]): ColumnOption[] =>
+const buildLabelOptions = (list: LabelInterface[], t: Translate): ColumnOption[] =>
    list.map((label) => ({
       value: label.id,
-      label: label.name,
+      label: t(label.name),
       icon: <span className="size-2.5 rounded-full" style={{ backgroundColor: label.color }} />,
    }));
 
@@ -91,15 +98,15 @@ const buildProjectOptions = (projectList: Project[]): ColumnOption[] =>
       icon: <project.icon className="size-4 text-muted-foreground" />,
    }));
 
-const buildCycleOptions = (list: Cycle[]): ColumnOption[] => [
+const buildCycleOptions = (list: Cycle[], t: Translate): ColumnOption[] => [
    {
       value: 'no-cycle',
-      label: 'No cycle',
+      label: t('No cycle'),
       icon: <RefreshCcw className="size-4 text-muted-foreground" />,
    },
    ...list.map((cycle) => ({
       value: cycle.id,
-      label: `${cycle.name} (${cycleStatusLabel[cycle.status]})`,
+      label: `${cycle.name} (${t(cycleStatusLabel[cycle.status])})`,
       icon: <RefreshCcw className="size-4 text-muted-foreground" />,
    })),
 ];
@@ -120,30 +127,31 @@ function buildIssueFilterColumns(
    projectOptions: ColumnOption[],
    assigneeOptions: ColumnOption[],
    labelOptions: ColumnOption[],
-   cycleOptions: ColumnOption[]
+   cycleOptions: ColumnOption[],
+   t: Translate
 ) {
    return [
       dtf
          .option()
          .id('status')
          .accessor((issue: Issue) => issue.status.id)
-         .displayName('Status')
+         .displayName(t('Status'))
          .icon(CircleCheck)
-         .options(statusOptions)
+         .options(buildStatusOptions(t))
          .build(),
       dtf
          .option()
          .id('statusType')
          .accessor((issue: Issue) => issue.status.category)
-         .displayName('Status type')
+         .displayName(t('Status type'))
          .icon(CircleDashed)
-         .options(statusTypeOptions)
+         .options(buildStatusTypeOptions(t))
          .build(),
       dtf
          .option()
          .id('assignee')
          .accessor((issue: Issue) => issue.assignee?.id ?? 'unassigned')
-         .displayName('Assignee')
+         .displayName(t('Assignee'))
          .icon(CircleUserRound)
          .options(assigneeOptions)
          .build(),
@@ -151,15 +159,15 @@ function buildIssueFilterColumns(
          .option()
          .id('priority')
          .accessor((issue: Issue) => issue.priority.id)
-         .displayName('Priority')
+         .displayName(t('Priority'))
          .icon(BarChart3)
-         .options(priorityOptions)
+         .options(buildPriorityOptions(t))
          .build(),
       dtf
          .multiOption()
          .id('labels')
          .accessor((issue: Issue) => issue.labels.map((label) => label.id))
-         .displayName('Labels')
+         .displayName(t('Labels'))
          .icon(Tag)
          .options(labelOptions)
          .build(),
@@ -167,7 +175,7 @@ function buildIssueFilterColumns(
          .option()
          .id('project')
          .accessor((issue: Issue) => issue.project?.id ?? '')
-         .displayName('Project')
+         .displayName(t('Project'))
          .icon(Folder)
          .options(projectOptions)
          .build(),
@@ -175,7 +183,7 @@ function buildIssueFilterColumns(
          .option()
          .id('cycle')
          .accessor((issue: Issue) => (issue.cycleId === '' ? 'no-cycle' : issue.cycleId))
-         .displayName('Cycle')
+         .displayName(t('Cycle'))
          .icon(RefreshCcw)
          .options(cycleOptions)
          .build(),
@@ -186,10 +194,11 @@ function buildIssueFilterColumns(
  * Static accessors/operators used by `applyIssueFilters`. Options are supplied
  * by `useIssueFilterColumns` from the persisted workspace stores.
  */
-export const issueFilterColumns = buildIssueFilterColumns([], [], [], []);
+export const issueFilterColumns = buildIssueFilterColumns([], [], [], [], tt);
 
 /** Filter-UI columns with the live (DB-backed) project / member / label / cycle lists. */
 export function useIssueFilterColumns() {
+   const { t } = useLanguage();
    const projectList = useProjectsStore((s) => s.projects);
    const memberList = useMembersStore((s) => s.members);
    const labelList = useLabelsStore((s) => s.labels);
@@ -198,11 +207,12 @@ export function useIssueFilterColumns() {
       () =>
          buildIssueFilterColumns(
             buildProjectOptions(projectList),
-            buildAssigneeOptions(memberList),
-            buildLabelOptions(labelList),
-            buildCycleOptions(cycleList)
+            buildAssigneeOptions(memberList, t),
+            buildLabelOptions(labelList, t),
+            buildCycleOptions(cycleList, t),
+            t
          ),
-      [projectList, memberList, labelList, cycleList]
+      [projectList, memberList, labelList, cycleList, t]
    );
 }
 

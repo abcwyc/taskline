@@ -10,6 +10,7 @@ import {
    updateLabel as apiUpdateLabel,
 } from '@/lib/api/labels';
 import type { LabelCreateBody } from '@/lib/api/types';
+import { tt } from '@/lib/i18n';
 
 interface LabelsState {
    labels: LabelInterface[];
@@ -39,7 +40,7 @@ export const useLabelsStore = create<LabelsState>((set, get) => ({
          set({ labels: await apiFetchLabels(), hydrated: true, isLoading: false });
       } catch (err) {
          set({ isLoading: false, error: (err as Error).message });
-         toast.error('Failed to load labels');
+         toast.error(tt('Failed to load labels'));
          throw err;
       }
    },
@@ -53,7 +54,7 @@ export const useLabelsStore = create<LabelsState>((set, get) => ({
          set({ labels: [...get().labels, label] });
          return label;
       } catch (err) {
-         toast.error('Failed to create label');
+         toast.error(tt('Failed to create label'));
          console.error(err);
          return null;
       }
@@ -67,7 +68,7 @@ export const useLabelsStore = create<LabelsState>((set, get) => ({
          .then((saved) => set({ labels: get().labels.map((l) => (l.id === id ? saved : l)) }))
          .catch((err) => {
             set({ labels: get().labels.map((l) => (l.id === id ? snapshot : l)) });
-            toast.error('Failed to save changes');
+            toast.error(tt('Failed to save changes'));
             console.error(err);
          });
    },
@@ -77,7 +78,7 @@ export const useLabelsStore = create<LabelsState>((set, get) => ({
       set({ labels: snapshot.filter((l) => l.id !== id) });
       apiDeleteLabel(id).catch((err) => {
          set({ labels: snapshot });
-         toast.error('Failed to delete label');
+         toast.error(tt('Failed to delete label'));
          console.error(err);
       });
    },

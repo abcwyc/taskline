@@ -2,6 +2,7 @@ import type { Project } from '@/mock-data/projects';
 import { create } from 'zustand';
 import { toast } from 'sonner';
 import { createMutationGuard } from '@/lib/client-mutation';
+import { tt } from '@/lib/i18n';
 
 import {
    createProject as apiCreateProject,
@@ -55,7 +56,7 @@ export const useProjectsStore = create<ProjectsState>((set, get) => {
             set({ projects, hydrated: true, isLoading: false });
          } catch (err) {
             set({ isLoading: false, error: (err as Error).message });
-            toast.error('Failed to load projects');
+            toast.error(tt('Failed to load projects'));
             throw err;
          }
       },
@@ -72,7 +73,7 @@ export const useProjectsStore = create<ProjectsState>((set, get) => {
             })
             .catch((err) => {
                set({ projects: get().projects.filter((p) => p.id !== project.id) });
-               toast.error('Failed to create project');
+               toast.error(tt('Failed to create project'));
                console.error(err);
             });
       },
@@ -83,7 +84,7 @@ export const useProjectsStore = create<ProjectsState>((set, get) => {
             set({ projects: [...get().projects, saved] });
             return saved;
          } catch (err) {
-            toast.error('Failed to create project');
+            toast.error(tt('Failed to create project'));
             console.error(err);
             return null;
          }
@@ -103,7 +104,7 @@ export const useProjectsStore = create<ProjectsState>((set, get) => {
             .catch((err) => {
                if (!mutations.isCurrent(id, version)) return;
                set({ projects: get().projects.map((p) => (p.id === id ? snapshot : p)) });
-               toast.error('Failed to save changes');
+               toast.error(tt('Failed to save changes'));
                console.error(err);
             });
       },
@@ -115,7 +116,7 @@ export const useProjectsStore = create<ProjectsState>((set, get) => {
          apiDeleteProject(id).catch((err) => {
             if (!mutations.isCurrent(id, version)) return;
             set({ projects: snapshot });
-            toast.error('Failed to delete project');
+            toast.error(tt('Failed to delete project'));
             console.error(err);
          });
       },

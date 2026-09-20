@@ -2,6 +2,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { useLanguage } from '@/components/providers/language-provider';
 import { useTeamsStore } from '@/store/teams-store';
 import { Plus } from 'lucide-react';
 import { useParams } from 'next/navigation';
@@ -13,6 +14,7 @@ import { InviteDialog } from '@/components/common/forms/invite-dialog';
  * their email and role.
  */
 export default function TeamMembers() {
+   const { t } = useLanguage();
    const teams = useTeamsStore((s) => s.teams);
    const { teamId } = useParams<{ orgId: string; teamId: string }>();
    const [inviteOpen, setInviteOpen] = useState(false);
@@ -23,20 +25,20 @@ export default function TeamMembers() {
    return (
       <div className="w-full">
          <div className="flex items-center justify-between px-6 py-3">
-            <span className="text-sm text-muted-foreground font-medium">Name ↓</span>
+            <span className="text-sm text-muted-foreground font-medium">{t('Name')} ↓</span>
             <div className="flex items-center gap-2">
                <Button size="xs" variant="secondary" onClick={() => setInviteOpen(true)}>
                   <Plus className="size-4 mr-1" />
-                  Add a member
+                  {t('Add a member')}
                </Button>
                <InviteDialog open={inviteOpen} onOpenChange={setInviteOpen} />
             </div>
          </div>
 
          <div className="bg-container px-6 py-1.5 text-sm flex items-center text-muted-foreground border-b sticky top-0 z-10">
-            <div className="w-[55%] md:w-[45%]">Name</div>
-            <div className="hidden md:block md:w-[35%]">Email</div>
-            <div className="w-[45%] md:w-[20%]">Role</div>
+            <div className="w-[55%] md:w-[45%]">{t('Name')}</div>
+            <div className="hidden md:block md:w-[35%]">{t('Email')}</div>
+            <div className="w-[45%] md:w-[20%]">{t('Role')}</div>
          </div>
 
          {members.map((member) => (
@@ -61,7 +63,7 @@ export default function TeamMembers() {
                </div>
                <div className="w-[45%] md:w-[20%]">
                   <span className="text-xs px-2 py-1 rounded-md bg-accent text-muted-foreground">
-                     {member.role}
+                     {t(member.role)}
                   </span>
                </div>
             </div>

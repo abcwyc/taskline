@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { TParams } from '@/components/providers/t-params';
+import { T } from '@/components/providers/t';
 import { getInviteByToken } from '@/lib/api/invites.server';
 import { auth } from '@/lib/auth';
 import { signUpAction } from '@/lib/auth-actions';
@@ -52,37 +54,48 @@ export default async function SignUpPage({
                <span className="text-lg font-semibold">Circle</span>
             </div>
 
-            <h1 className="text-xl font-semibold tracking-tight">Create your account</h1>
+            <h1 className="text-xl font-semibold tracking-tight">
+               <T k="Create your account" />
+            </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-               {invite
-                  ? `You've been invited to join ${invite.orgName}.`
-                  : askBootstrap
-                    ? 'Enter the bootstrap secret to create the first admin.'
-                    : inviteWall
-                      ? 'This workspace is invite-only.'
-                      : 'The first account becomes the workspace admin.'}
+               {invite ? (
+                  <TParams
+                     k="You've been invited to join {org}."
+                     params={{ org: invite.orgName }}
+                  />
+               ) : askBootstrap ? (
+                  <T k="Enter the bootstrap secret to create the first admin." />
+               ) : inviteWall ? (
+                  <T k="This workspace is invite-only." />
+               ) : (
+                  <T k="The first account becomes the workspace admin." />
+               )}
             </p>
 
             {error && (
                <p className="mt-4 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                  {ERRORS[error] ?? 'Could not create the account.'}
+                  <T k={ERRORS[error] ?? 'Could not create the account.'} />
                </p>
             )}
 
             {blocked ? (
                <p className="mt-6 rounded-md border bg-muted/40 px-3 py-3 text-sm text-muted-foreground">
-                  {token
-                     ? 'That invite link is invalid or has already been used.'
-                     : bootstrapClosed
-                       ? 'Web sign-up is closed. Create the first admin with `pnpm create-admin` (or set BOOTSTRAP_SECRET).'
-                       : 'You need an invitation to join this workspace.'}
+                  {token ? (
+                     <T k="That invite link is invalid or has already been used." />
+                  ) : bootstrapClosed ? (
+                     <T k="Web sign-up is closed. Create the first admin with `pnpm create-admin` (or set BOOTSTRAP_SECRET)." />
+                  ) : (
+                     <T k="You need an invitation to join this workspace." />
+                  )}
                </p>
             ) : (
                <form action={signUpAction} className="mt-6 flex flex-col gap-4">
                   {token && <input type="hidden" name="invite" value={token} />}
                   {askBootstrap && (
                      <div className="flex flex-col gap-1.5">
-                        <Label htmlFor="bootstrap">Bootstrap secret</Label>
+                        <Label htmlFor="bootstrap">
+                           <T k="Bootstrap secret" />
+                        </Label>
                         <Input
                            id="bootstrap"
                            name="bootstrap"
@@ -93,11 +106,15 @@ export default async function SignUpPage({
                      </div>
                   )}
                   <div className="flex flex-col gap-1.5">
-                     <Label htmlFor="name">Name</Label>
+                     <Label htmlFor="name">
+                        <T k="Name" />
+                     </Label>
                      <Input id="name" name="name" autoComplete="name" placeholder="Ada Lovelace" />
                   </div>
                   <div className="flex flex-col gap-1.5">
-                     <Label htmlFor="email">Email</Label>
+                     <Label htmlFor="email">
+                        <T k="Email" />
+                     </Label>
                      <Input
                         id="email"
                         name="email"
@@ -110,7 +127,9 @@ export default async function SignUpPage({
                      />
                   </div>
                   <div className="flex flex-col gap-1.5">
-                     <Label htmlFor="password">Password</Label>
+                     <Label htmlFor="password">
+                        <T k="Password" />
+                     </Label>
                      <Input
                         id="password"
                         name="password"
@@ -121,15 +140,15 @@ export default async function SignUpPage({
                      />
                   </div>
                   <Button type="submit" className="mt-2 w-full">
-                     Create account
+                     <T k="Create account" />
                   </Button>
                </form>
             )}
 
             <p className="mt-4 text-sm text-muted-foreground">
-               Already have an account?{' '}
+               <T k="Already have an account?" />{' '}
                <Link href="/sign-in" className="text-foreground underline">
-                  Sign in
+                  <T k="Sign in" />
                </Link>
             </p>
          </div>

@@ -12,6 +12,7 @@ import {
    viewPatchToBody,
 } from '@/lib/api/views';
 import type { ViewCreateBody } from '@/lib/api/types';
+import { tt } from '@/lib/i18n';
 import { useIssuesStore } from '@/store/issues-store';
 import { useProjectsStore } from '@/store/projects-store';
 
@@ -71,7 +72,7 @@ export const useViewsStore = create<ViewsState>((set, get) => ({
          set({ views: await apiFetch(), hydrated: true, isLoading: false });
       } catch (err) {
          set({ isLoading: false, error: (err as Error).message });
-         toast.error('Failed to load views');
+         toast.error(tt('Failed to load views'));
          throw err;
       }
    },
@@ -88,7 +89,7 @@ export const useViewsStore = create<ViewsState>((set, get) => ({
          set({ views: [...get().views, view] });
          return view;
       } catch (err) {
-         toast.error('Failed to create view');
+         toast.error(tt('Failed to create view'));
          console.error(err);
          return null;
       }
@@ -102,7 +103,7 @@ export const useViewsStore = create<ViewsState>((set, get) => ({
          .then((saved) => set({ views: get().views.map((v) => (v.id === id ? saved : v)) }))
          .catch((err) => {
             set({ views: get().views.map((v) => (v.id === id ? snapshot : v)) });
-            toast.error('Failed to save changes');
+            toast.error(tt('Failed to save changes'));
             console.error(err);
          });
    },
@@ -112,7 +113,7 @@ export const useViewsStore = create<ViewsState>((set, get) => ({
       set({ views: snapshot.filter((v) => v.id !== id) });
       apiDelete(id).catch((err) => {
          set({ views: snapshot });
-         toast.error('Failed to delete view');
+         toast.error(tt('Failed to delete view'));
          console.error(err);
       });
    },

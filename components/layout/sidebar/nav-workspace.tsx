@@ -101,7 +101,7 @@ export function NavWorkspace() {
                      <SidebarMenuButton asChild>
                         <span>
                            <MoreHorizontal />
-                           <span>More</span>
+                           <span>{t('More')}</span>
                         </span>
                      </SidebarMenuButton>
                   </DropdownMenuTrigger>

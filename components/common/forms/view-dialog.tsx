@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/select';
 import type { View, ViewType } from '@/mock-data/views';
 import { useViewsStore } from '@/store/views-store';
+import { useLanguage } from '@/components/providers/language-provider';
 
 export function ViewDialog({
    open,
@@ -36,6 +37,7 @@ export function ViewDialog({
 }) {
    const createView = useViewsStore((s) => s.createView);
    const updateView = useViewsStore((s) => s.updateView);
+   const { t } = useLanguage();
 
    const [name, setName] = useState('');
    const [description, setDescription] = useState('');
@@ -68,51 +70,52 @@ export function ViewDialog({
       <Dialog open={open} onOpenChange={onOpenChange}>
          <DialogContent className="sm:max-w-md">
             <DialogHeader>
-               <DialogTitle>{view ? 'Edit view' : 'New view'}</DialogTitle>
+               <DialogTitle>{view ? t('Edit view') : t('New view')}</DialogTitle>
             </DialogHeader>
             <div className="flex flex-col gap-4 py-2">
                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="view-name">Name</Label>
+                  <Label htmlFor="view-name">{t('Name')}</Label>
                   <Input
                      id="view-name"
                      autoFocus
                      value={name}
                      onChange={(e) => setName(e.target.value)}
-                     placeholder="Blocked issues"
+                     placeholder={t('Blocked issues')}
                   />
                </div>
                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="view-desc">Description</Label>
+                  <Label htmlFor="view-desc">{t('Description')}</Label>
                   <Input
                      id="view-desc"
                      value={description}
                      onChange={(e) => setDescription(e.target.value)}
-                     placeholder="What this view shows"
+                     placeholder={t('What this view shows')}
                   />
                </div>
                <div className="flex flex-col gap-1.5">
-                  <Label>Type</Label>
+                  <Label>{t('Type')}</Label>
                   <Select value={type} onValueChange={(v) => setType(v as ViewType)}>
                      <SelectTrigger>
                         <SelectValue />
                      </SelectTrigger>
                      <SelectContent>
-                        <SelectItem value="issue">Issues</SelectItem>
-                        <SelectItem value="project">Projects</SelectItem>
+                        <SelectItem value="issue">{t('Issues')}</SelectItem>
+                        <SelectItem value="project">{t('Projects')}</SelectItem>
                      </SelectContent>
                   </Select>
                </div>
                <p className="text-xs text-muted-foreground">
-                  New views start with no filter (they show everything). Refine the filter from the
-                  view page.
+                  {t(
+                     'New views start with no filter (they show everything). Refine the filter from the view page.'
+                  )}
                </p>
             </div>
             <DialogFooter>
                <Button variant="ghost" onClick={() => onOpenChange(false)}>
-                  Cancel
+                  {t('Cancel')}
                </Button>
                <Button onClick={submit} disabled={!name.trim()}>
-                  {view ? 'Save' : 'Create'}
+                  {view ? t('Save') : t('Create')}
                </Button>
             </DialogFooter>
          </DialogContent>

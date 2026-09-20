@@ -14,6 +14,7 @@ import {
    updateFolder as apiUpdateFolder,
 } from '@/lib/api/folders';
 import type { DocumentCreateBody } from '@/lib/api/types';
+import { tt } from '@/lib/i18n';
 
 interface DocumentsState {
    folders: DocumentFolder[];
@@ -65,7 +66,7 @@ export const useDocumentsStore = create<DocumentsState>((set, get) => ({
             return { folders };
          });
       } catch (err) {
-         toast.error('Failed to create document');
+         toast.error(tt('Failed to create document'));
          console.error(err);
       }
    },
@@ -75,7 +76,7 @@ export const useDocumentsStore = create<DocumentsState>((set, get) => ({
       set({ folders: patchDoc(snapshot, id, (d) => ({ ...d, name })) });
       apiUpdate(id, { name }).catch((err) => {
          set({ folders: snapshot });
-         toast.error('Failed to rename');
+         toast.error(tt('Failed to rename'));
          console.error(err);
       });
    },
@@ -85,7 +86,7 @@ export const useDocumentsStore = create<DocumentsState>((set, get) => ({
       set({ folders: patchDoc(snapshot, id, (d) => ({ ...d, pinned })) });
       apiUpdate(id, { pinned }).catch((err) => {
          set({ folders: snapshot });
-         toast.error('Failed to update');
+         toast.error(tt('Failed to update'));
          console.error(err);
       });
    },
@@ -100,7 +101,7 @@ export const useDocumentsStore = create<DocumentsState>((set, get) => ({
       });
       apiDelete(id).catch((err) => {
          set({ folders: snapshot });
-         toast.error('Failed to delete');
+         toast.error(tt('Failed to delete'));
          console.error(err);
       });
    },
@@ -110,7 +111,7 @@ export const useDocumentsStore = create<DocumentsState>((set, get) => ({
          const folder = await apiCreateFolder({ name, icon });
          set((s) => ({ folders: [...s.folders, folder] }));
       } catch (err) {
-         toast.error('Failed to create folder');
+         toast.error(tt('Failed to create folder'));
          console.error(err);
       }
    },
@@ -120,7 +121,7 @@ export const useDocumentsStore = create<DocumentsState>((set, get) => ({
       set({ folders: snapshot.map((f) => (f.id === id ? { ...f, name } : f)) });
       apiUpdateFolder(id, { name }).catch((err) => {
          set({ folders: snapshot });
-         toast.error('Failed to rename folder');
+         toast.error(tt('Failed to rename folder'));
          console.error(err);
       });
    },
@@ -132,8 +133,8 @@ export const useDocumentsStore = create<DocumentsState>((set, get) => ({
          set({ folders: snapshot });
          toast.error(
             (err as Error).message.includes('409')
-               ? 'Folder must be empty before deleting'
-               : 'Failed to delete folder'
+               ? tt('Folder must be empty before deleting')
+               : tt('Failed to delete folder')
          );
          console.error(err);
       });

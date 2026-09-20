@@ -19,9 +19,11 @@ import { useProjectsStore } from '@/store/projects-store';
 import { Plus, Tag, X } from 'lucide-react';
 import { useState } from 'react';
 import { SettingsCard, SettingsSection, SettingsShell } from './shared';
+import { useLanguage } from '@/components/providers/language-provider';
 
 /** One label chip with a remove "X" that appears on hover. */
 function LabelChip({ label, onRemove }: { label: LabelInterface; onRemove: () => void }) {
+   const { t } = useLanguage();
    return (
       <Badge
          variant="outline"
@@ -32,11 +34,11 @@ function LabelChip({ label, onRemove }: { label: LabelInterface; onRemove: () =>
             style={{ backgroundColor: label.color }}
             aria-hidden="true"
          />
-         {label.name}
+         {t(label.name)}
          <button
             type="button"
             onClick={onRemove}
-            aria-label={`Remove label ${label.name}`}
+            aria-label={`${t('Remove label')} ${label.name}`}
             className="text-muted-foreground/60 hover:text-foreground transition-colors"
          >
             <X className="size-3 opacity-0 group-hover/chip:opacity-100 transition-opacity" />
@@ -47,6 +49,7 @@ function LabelChip({ label, onRemove }: { label: LabelInterface; onRemove: () =>
 
 /** Popover to attach an existing label or create + attach a new one. */
 function AddLabelPopover({ project }: { project: Project }) {
+   const { t } = useLanguage();
    const labels = useLabelsStore((s) => s.labels);
    const createLabel = useLabelsStore((s) => s.createLabel);
    const updateProject = useProjectsStore((s) => s.updateProject);
@@ -76,17 +79,17 @@ function AddLabelPopover({ project }: { project: Project }) {
                size="xs"
                variant="secondary"
                className="gap-1 rounded-full"
-               aria-label={`Add label to ${project.name}`}
+               aria-label={`${t('Add label to')} ${project.name}`}
             >
                <Plus className="size-3.5" />
-               Label
+               {t('Label')}
             </Button>
          </PopoverTrigger>
          <PopoverContent className="border-input w-56 p-0" align="start">
             <Command>
-               <CommandInput placeholder="Search labels..." />
+               <CommandInput placeholder={t('Search labels...')} />
                <CommandList>
-                  <CommandEmpty>No labels found.</CommandEmpty>
+                  <CommandEmpty>{t('No labels found.')}</CommandEmpty>
                   <CommandGroup>
                      {available.map((label) => (
                         <CommandItem
@@ -99,12 +102,12 @@ function AddLabelPopover({ project }: { project: Project }) {
                               className="size-2.5 rounded-full shrink-0"
                               style={{ backgroundColor: label.color }}
                            />
-                           {label.name}
+                           {t(label.name)}
                         </CommandItem>
                      ))}
                      {available.length === 0 && (
                         <div className="px-2 py-1.5 text-xs text-muted-foreground">
-                           All workspace labels are attached.
+                           {t('All workspace labels are attached.')}
                         </div>
                      )}
                   </CommandGroup>
@@ -114,7 +117,7 @@ function AddLabelPopover({ project }: { project: Project }) {
                      value={newName}
                      onChange={(e) => setNewName(e.target.value)}
                      onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
-                     placeholder="New label name..."
+                     placeholder={t('New label name...')}
                      className="h-7 text-xs"
                   />
                   <Button
@@ -123,7 +126,7 @@ function AddLabelPopover({ project }: { project: Project }) {
                      onClick={handleCreate}
                      disabled={!newName.trim()}
                   >
-                     Create
+                     {t('Create')}
                   </Button>
                </div>
             </Command>
@@ -137,6 +140,7 @@ function AddLabelPopover({ project }: { project: Project }) {
  * (managed under Issue labels); each project carries a subset of them.
  */
 export default function ProjectLabelsSettings() {
+   const { t } = useLanguage();
    const projects = useProjectsStore((s) => s.projects);
    const updateProject = useProjectsStore((s) => s.updateProject);
 
@@ -148,10 +152,12 @@ export default function ProjectLabelsSettings() {
 
    return (
       <SettingsShell
-         title="Project labels"
-         description="Labels are shared across the workspace — manage the full set under Issue labels. Here you choose which labels each project carries."
+         title={t('Project labels')}
+         description={t(
+            'Labels are shared across the workspace — manage the full set under Issue labels. Here you choose which labels each project carries.'
+         )}
       >
-         <SettingsSection title={`${projects.length} projects`}>
+         <SettingsSection title={`${projects.length} ${t('projects')}`}>
             <SettingsCard>
                {projects.map((project) => (
                   <div key={project.id} className="flex items-start gap-3 px-4 py-3">
@@ -163,7 +169,9 @@ export default function ProjectLabelsSettings() {
                         <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
                            <Tag className="size-3.5 text-muted-foreground/70 shrink-0" />
                            {project.labels.length === 0 && (
-                              <span className="text-xs text-muted-foreground">No labels</span>
+                              <span className="text-xs text-muted-foreground">
+                                 {t('No labels')}
+                              </span>
                            )}
                            {project.labels.map((label) => (
                               <LabelChip
@@ -178,7 +186,7 @@ export default function ProjectLabelsSettings() {
                   </div>
                ))}
                {projects.length === 0 && (
-                  <div className="px-4 py-3 text-sm text-muted-foreground">No projects</div>
+                  <div className="px-4 py-3 text-sm text-muted-foreground">{t('No projects')}</div>
                )}
             </SettingsCard>
          </SettingsSection>

@@ -9,6 +9,7 @@ import {
    DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { CycleDialog } from '@/components/common/forms/cycle-dialog';
+import { useLanguage } from '@/components/providers/language-provider';
 import { useCyclesStore } from '@/store/cycles-store';
 import { MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
@@ -43,6 +44,7 @@ interface CycleLineProps {
  */
 export default function CycleLine({ cycle }: CycleLineProps) {
    const { orgId, teamId } = useParams<{ orgId: string; teamId: string }>();
+   const { t } = useLanguage();
    const deleteCycle = useCyclesStore((s) => s.deleteCycle);
    const [editOpen, setEditOpen] = useState(false);
 
@@ -55,9 +57,9 @@ export default function CycleLine({ cycle }: CycleLineProps) {
             <MoreHorizontal className="size-4" />
          </DropdownMenuTrigger>
          <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-            <DropdownMenuItem onClick={() => setEditOpen(true)}>Edit</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setEditOpen(true)}>{t('Edit')}</DropdownMenuItem>
             <DropdownMenuItem className="text-destructive" onClick={() => deleteCycle(cycle.id)}>
-               Delete
+               {t('Delete')}
             </DropdownMenuItem>
          </DropdownMenuContent>
       </DropdownMenu>
@@ -79,7 +81,7 @@ export default function CycleLine({ cycle }: CycleLineProps) {
 
          <div className="flex items-center gap-3 sm:gap-6 shrink-0">
             <span className="text-xs px-2 py-1 rounded-md bg-accent text-muted-foreground whitespace-nowrap">
-               {cycleStatusLabel[cycle.status]}
+               {t(cycleStatusLabel[cycle.status])}
             </span>
 
             {cycle.status === 'completed' ? (
@@ -88,24 +90,26 @@ export default function CycleLine({ cycle }: CycleLineProps) {
                      <CapacityRing value={cycle.successRate ?? 0} color="#6771c5" />
                      <span className="text-sm">
                         {cycle.successRate ?? 0}%{' '}
-                        <span className="text-muted-foreground">success</span>
+                        <span className="text-muted-foreground">{t('success')}</span>
                      </span>
                   </div>
                   <span className="hidden md:inline-block text-sm w-28 text-right">
-                     {cycle.completed} <span className="text-muted-foreground">completed</span>
+                     {cycle.completed}{' '}
+                     <span className="text-muted-foreground">{t('completed')}</span>
                   </span>
                </>
             ) : (
                <div className="hidden sm:flex items-center gap-2 w-36 justify-end whitespace-nowrap">
                   <CapacityRing value={cycle.capacity} color="#6771c5" />
                   <span className="text-sm">
-                     {cycle.capacity}% <span className="text-muted-foreground">of capacity</span>
+                     {cycle.capacity}%{' '}
+                     <span className="text-muted-foreground">{t('of capacity')}</span>
                   </span>
                </div>
             )}
 
             <span className="text-sm w-14 sm:w-20 text-right whitespace-nowrap">
-               {cycle.scope} <span className="text-muted-foreground">scope</span>
+               {cycle.scope} <span className="text-muted-foreground">{t('scope')}</span>
             </span>
             {rowMenu}
          </div>

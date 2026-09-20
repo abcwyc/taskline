@@ -1,5 +1,6 @@
 'use client';
 
+import { useLanguage } from '@/components/providers/language-provider';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
@@ -10,6 +11,7 @@ import { DiffStat, InlineText, PrIcon } from './review-shared';
 
 /** Guide tab: the author's summary, test plan and the current verdict. */
 export function ReviewGuide({ review }: { review: Review }) {
+   const { t } = useLanguage();
    const getMemberById = useMembersStore((s) => s.getMemberById);
    const verdictBy =
       review.verdict && review.verdictById ? getMemberById(review.verdictById) : undefined;
@@ -34,13 +36,13 @@ export function ReviewGuide({ review }: { review: Review }) {
 
             {!hasContent && (
                <div className="rounded-lg border border-dashed px-6 py-8 text-sm text-muted-foreground">
-                  The author did not add a summary or test plan.
+                  {t('The author did not add a summary or test plan.')}
                </div>
             )}
 
             {review.summary.length > 0 && (
                <section className="flex flex-col gap-3">
-                  <h2 className="text-lg font-semibold">Summary</h2>
+                  <h2 className="text-lg font-semibold">{t('Summary')}</h2>
                   <ul className="flex flex-col gap-2 list-disc pl-5 text-sm leading-relaxed">
                      {review.summary.map((bullet, index) => (
                         <li key={index}>
@@ -53,7 +55,7 @@ export function ReviewGuide({ review }: { review: Review }) {
 
             {review.testPlan.length > 0 && (
                <section className="flex flex-col gap-3">
-                  <h2 className="text-lg font-semibold">Test plan</h2>
+                  <h2 className="text-lg font-semibold">{t('Test plan')}</h2>
                   <div className="flex flex-col gap-1.5">
                      {review.testPlan.map((item, index) => (
                         <label key={index} className="flex items-start gap-2 text-sm">
@@ -68,7 +70,7 @@ export function ReviewGuide({ review }: { review: Review }) {
             )}
 
             <section className="flex flex-col gap-3">
-               <h2 className="text-lg font-semibold">Verdict</h2>
+               <h2 className="text-lg font-semibold">{t('Verdict')}</h2>
                {review.verdict ? (
                   <div className="rounded-lg border p-4 flex items-center gap-2.5 flex-wrap">
                      <span
@@ -84,7 +86,7 @@ export function ReviewGuide({ review }: { review: Review }) {
                         ) : (
                            <X className="size-3.5" />
                         )}
-                        {review.verdict === 'approved' ? 'Approved' : 'Changes requested'}
+                        {review.verdict === 'approved' ? t('Approved') : t('Changes requested')}
                      </span>
                      <Avatar className="size-5">
                         <AvatarImage
@@ -96,21 +98,21 @@ export function ReviewGuide({ review }: { review: Review }) {
                         </AvatarFallback>
                      </Avatar>
                      <span className="text-sm text-muted-foreground">
-                        by{' '}
+                        {t('by')}{' '}
                         <span className="font-medium text-foreground">
                            {verdictBy?.name ?? review.verdictById ?? 'Unknown'}
                         </span>
                      </span>
                   </div>
                ) : (
-                  <p className="text-sm text-muted-foreground">No verdict yet</p>
+                  <p className="text-sm text-muted-foreground">{t('No verdict yet')}</p>
                )}
             </section>
          </div>
 
          <div className="sticky bottom-4 flex justify-center pointer-events-none">
             <span className="pointer-events-auto inline-flex items-center gap-2 rounded-full border bg-container shadow-sm px-4 py-1.5 text-xs text-muted-foreground">
-               {review.files.length} files changed
+               {review.files.length} {t('files changed')}
                <DiffStat additions={review.additions} deletions={review.deletions} />
             </span>
          </div>

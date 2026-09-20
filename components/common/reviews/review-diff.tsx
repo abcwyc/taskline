@@ -1,10 +1,12 @@
 'use client';
 
+import { useLanguage } from '@/components/providers/language-provider';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
+import { formatRelativeTime } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 import {
    getReviewFileDiff,
@@ -76,6 +78,7 @@ function parsePatch(file: ReviewFileStat, patch: string): FileDiff {
 
 /** Compact note under a file block for a comment scoped to that file. */
 function FileCommentNote({ review, comment }: { review: Review; comment: ReviewCommentItem }) {
+   const { locale, t } = useLanguage();
    const deleteComment = useReviewsStore((s) => s.deleteComment);
    const getMemberById = useMembersStore((s) => s.getMemberById);
    const me = useMeStore((s) => s.me);
@@ -92,7 +95,10 @@ function FileCommentNote({ review, comment }: { review: Review; comment: ReviewC
             <div className="flex items-center gap-1.5 text-xs">
                <span className="font-medium">{author?.name ?? comment.authorId}</span>
                <span className="text-muted-foreground">
-                  {formatDistanceToNowStrict(new Date(comment.createdAt), { addSuffix: true })}
+                  {formatRelativeTime(
+                     locale,
+                     formatDistanceToNowStrict(new Date(comment.createdAt), { addSuffix: true })
+                  )}
                </span>
             </div>
             <p className="text-xs leading-relaxed whitespace-pre-wrap break-words">
@@ -102,7 +108,7 @@ function FileCommentNote({ review, comment }: { review: Review; comment: ReviewC
          {canDelete && (
             <button
                type="button"
-               aria-label="Delete comment"
+               aria-label={t('Delete comment')}
                onClick={() => deleteComment(review.id, comment.id)}
                className="mt-0.5 shrink-0 text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-red-500 transition-[color,opacity]"
             >
@@ -116,6 +122,7 @@ function FileCommentNote({ review, comment }: { review: Review; comment: ReviewC
 /** One file: the real pasted patch when available (seeded demo rows fall back
  * to the deterministic generator), plus a per-file comment affordance. */
 function FileDiffBlock({ review, file }: { review: Review; file: ReviewFileStat }) {
+   const { t } = useLanguage();
    const addComment = useReviewsStore((s) => s.addComment);
    const [composing, setComposing] = useState(false);
    const [draft, setDraft] = useState('');
@@ -155,14 +162,14 @@ function FileDiffBlock({ review, file }: { review: Review; file: ReviewFileStat 
                   )}
                >
                   <MessageSquarePlus className="size-3.5" />
-                  Comment
+                  {t('Comment')}
                </button>
             }
          />
          {composing && (
             <div className="mt-2 rounded-lg border p-3 flex flex-col gap-2">
                <span className="text-xs text-muted-foreground">
-                  Comment on <span className="font-mono">{file.path}</span>
+                  {t('Comment on')} <span className="font-mono">{file.path}</span>
                </span>
                <Textarea
                   value={draft}
@@ -175,7 +182,7 @@ function FileDiffBlock({ review, file }: { review: Review; file: ReviewFileStat 
                   }}
                   rows={2}
                   autoFocus
-                  placeholder={`Leave a comment on ${file.name}...`}
+                  placeholder={`${t('Leave a comment on')} ${file.name}…`}
                   className="min-h-0 resize-none"
                />
                <div className="flex items-center justify-end gap-2">
@@ -188,14 +195,14 @@ function FileDiffBlock({ review, file }: { review: Review; file: ReviewFileStat 
                      }}
                      disabled={posting}
                   >
-                     Cancel
+                     {t('Cancel')}
                   </Button>
                   <Button
                      size="xs"
                      onClick={() => void submit()}
                      disabled={!draft.trim() || posting}
                   >
-                     Comment
+                     {t('Comment')}
                   </Button>
                </div>
             </div>
@@ -213,6 +220,7 @@ function FileDiffBlock({ review, file }: { review: Review; file: ReviewFileStat 
 
 /** Diff tab: Files / Commits toolbar, file list and stacked unified diffs. */
 export function ReviewDiff({ review }: { review: Review }) {
+   const { locale, t } = useLanguage();
    const [query, setQuery] = useState('');
 
    const files = useMemo(
@@ -229,23 +237,23 @@ export function ReviewDiff({ review }: { review: Review }) {
             <div className="flex items-center gap-1.5 text-xs">
                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border bg-accent font-medium">
                   <ListFilter className="size-3.5" />
-                  Files
+                  {t('Files')}
                   <span className="text-muted-foreground">{review.files.length}</span>
                </span>
                <Popover>
                   <PopoverTrigger asChild>
                      <button className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-muted-foreground hover:bg-accent/50 transition-colors">
                         <GitCommitHorizontal className="size-3.5" />
-                        Commits
+                        {t('Commits')}
                         <span>{review.commits.length}</span>
                      </button>
                   </PopoverTrigger>
                   <PopoverContent align="start" className="w-96 p-0 text-sm">
                      <div className="flex items-center justify-between px-3 py-2 border-b">
-                        <span className="font-medium">All commits</span>
+                        <span className="font-medium">{t('All commits')}</span>
                         <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
                            <Check className="size-3.5" />
-                           {review.commits.length} commits
+                           {review.commits.length} {t('commits')}
                         </span>
                      </div>
                      {review.commits.map((commit) => (
@@ -255,7 +263,9 @@ export function ReviewDiff({ review }: { review: Review }) {
                         >
                            <span className="font-mono text-muted-foreground">{commit.sha}</span>
                            <span className="flex-1 truncate">{commit.message}</span>
-                           <span className="text-muted-foreground shrink-0">{commit.timeAgo}</span>
+                           <span className="text-muted-foreground shrink-0">
+                              {formatRelativeTime(locale, commit.timeAgo)}
+                           </span>
                         </div>
                      ))}
                   </PopoverContent>
@@ -269,7 +279,7 @@ export function ReviewDiff({ review }: { review: Review }) {
                <div className="relative shrink-0">
                   <Search className="size-3.5 text-muted-foreground absolute left-2 top-1/2 -translate-y-1/2" />
                   <Input
-                     placeholder="Filter files..."
+                     placeholder={t('Filter files…')}
                      value={query}
                      onChange={(event) => setQuery(event.target.value)}
                      className="pl-7 h-8 text-xs"

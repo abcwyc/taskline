@@ -9,6 +9,7 @@ import { useIssuesStore } from '@/store/issues-store';
 import { ChevronDown, ChevronRight, ChevronUp, MoreHorizontal, Star } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { useLanguage } from '@/components/providers/language-provider';
 
 /**
  * Issue page header: breadcrumb (team › cycle › identifier + title) and
@@ -18,6 +19,7 @@ export default function HeaderNav() {
    const teams = useTeamsStore((s) => s.teams);
    const { orgId, issueId } = useParams<{ orgId: string; issueId: string }>();
    const { issues } = useIssuesStore();
+   const { t } = useLanguage();
 
    const team = teams[0];
    const index = issues.findIndex((candidate) => candidate.identifier === issueId);
@@ -83,7 +85,7 @@ export default function HeaderNav() {
                {previousIssue ? (
                   <Link
                      href={`/${orgId}/issue/${previousIssue.identifier}`}
-                     aria-label="Previous issue"
+                     aria-label={t('Previous issue')}
                   >
                      <ChevronUp className="size-4" />
                   </Link>
@@ -99,7 +101,10 @@ export default function HeaderNav() {
                asChild={!!nextIssue}
             >
                {nextIssue ? (
-                  <Link href={`/${orgId}/issue/${nextIssue.identifier}`} aria-label="Next issue">
+                  <Link
+                     href={`/${orgId}/issue/${nextIssue.identifier}`}
+                     aria-label={t('Next issue')}
+                  >
                      <ChevronDown className="size-4" />
                   </Link>
                ) : (

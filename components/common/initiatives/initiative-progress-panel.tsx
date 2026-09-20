@@ -1,5 +1,6 @@
 'use client';
 
+import { useLanguage } from '@/components/providers/language-provider';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import type { Initiative } from '@/mock-data/initiatives';
@@ -24,6 +25,7 @@ interface ProgressPoint {
 
 /** Progress area chart + Health/Status/Teams/Leads breakdown of an initiative. */
 export function InitiativeProgressPanel({ initiative }: { initiative: Initiative }) {
+   const { t } = useLanguage();
    const teams = useTeamsStore((s) => s.teams);
    const [tab, setTab] = useState<BreakdownTab>('teams');
    const projects = useMemo(() => getInitiativeProjects(initiative), [initiative]);
@@ -82,7 +84,7 @@ export function InitiativeProgressPanel({ initiative }: { initiative: Initiative
             if (existing) existing.count += 1;
             else
                byStatus.set(project.status.id, {
-                  label: project.status.name,
+                  label: t(project.status.name),
                   color: project.status.color,
                   count: 1,
                });
@@ -92,17 +94,17 @@ export function InitiativeProgressPanel({ initiative }: { initiative: Initiative
       return allHealth
          .map((entry) => ({
             key: entry.id,
-            label: entry.name,
+            label: t(entry.name),
             color: entry.color,
             icon: undefined,
             count: projects.filter((project) => project.health.id === entry.id).length,
          }))
          .filter((row) => row.count > 0);
-   }, [tab, projects, teams]);
+   }, [tab, projects, teams, t]);
 
    return (
       <div className="flex flex-col gap-3">
-         <span className="text-sm font-medium">Progress</span>
+         <span className="text-sm font-medium">{t('Progress')}</span>
          <div className="h-44 -mx-2">
             <ResponsiveContainer width="100%" height="100%">
                <AreaChart data={series} margin={{ top: 4, right: 4, bottom: 0, left: 4 }}>
@@ -128,7 +130,7 @@ export function InitiativeProgressPanel({ initiative }: { initiative: Initiative
                      stroke="#5e6ad2"
                      fill="#5e6ad2"
                      fillOpacity={0.55}
-                     name="Completed"
+                     name={t('Completed')}
                   />
                   <Area
                      type="monotone"
@@ -137,7 +139,7 @@ export function InitiativeProgressPanel({ initiative }: { initiative: Initiative
                      stroke="#f2c94c"
                      fill="#f2c94c"
                      fillOpacity={0.4}
-                     name="Started"
+                     name={t('Started')}
                   />
                   <Area
                      type="monotone"
@@ -146,7 +148,7 @@ export function InitiativeProgressPanel({ initiative }: { initiative: Initiative
                      stroke="#95a2b3"
                      fill="#95a2b3"
                      fillOpacity={0.18}
-                     name="Scope"
+                     name={t('Scope')}
                   />
                </AreaChart>
             </ResponsiveContainer>
@@ -170,7 +172,7 @@ export function InitiativeProgressPanel({ initiative }: { initiative: Initiative
                         : 'text-muted-foreground hover:bg-accent/50'
                   )}
                >
-                  {label}
+                  {t(label)}
                </button>
             ))}
          </div>

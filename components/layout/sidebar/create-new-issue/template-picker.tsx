@@ -13,6 +13,7 @@ import { fetchIssueTemplates } from '@/lib/api/issue-templates';
 import type { IssueTemplateDTO } from '@/lib/api/types';
 import { LayoutTemplate } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useLanguage } from '@/components/providers/language-provider';
 
 /**
  * Template picker for the create-issue dialog. Selecting a template calls
@@ -20,6 +21,7 @@ import { useEffect, useState } from 'react';
  * fills fields that are still empty, never clobbering user input).
  */
 export function TemplatePicker({ onPick }: { onPick: (title: string, body: string) => void }) {
+   const { t } = useLanguage();
    const [templates, setTemplates] = useState<IssueTemplateDTO[] | null>(null);
 
    useEffect(() => {
@@ -39,11 +41,11 @@ export function TemplatePicker({ onPick }: { onPick: (title: string, body: strin
          <DropdownMenuTrigger asChild>
             <Button size="xs" variant="secondary" className="gap-1.5">
                <LayoutTemplate className="size-3.5" />
-               Template
+               {t('Template')}
             </Button>
          </DropdownMenuTrigger>
          <DropdownMenuContent align="start" className="min-w-52">
-            <DropdownMenuLabel>Issue templates</DropdownMenuLabel>
+            <DropdownMenuLabel>{t('Issue templates')}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             {templates.map((template) => (
                <DropdownMenuItem

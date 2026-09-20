@@ -1,7 +1,9 @@
 'use client';
 
 import { Cycle } from '@/mock-data/cycles';
-import { format, parseISO } from 'date-fns';
+import { useLanguage } from '@/components/providers/language-provider';
+import { formatAppDate } from '@/lib/i18n';
+import { parseISO } from 'date-fns';
 import {
    Area,
    CartesianGrid,
@@ -32,6 +34,7 @@ interface CycleBurnupChartProps {
  * indigo completed area and a dashed ideal line.
  */
 export function CycleBurnupChart({ cycle, height = 210, compact = false }: CycleBurnupChartProps) {
+   const { locale, t } = useLanguage();
    const data = cycle.burnup ?? [];
 
    if (data.length === 0) {
@@ -40,7 +43,7 @@ export function CycleBurnupChart({ cycle, height = 210, compact = false }: Cycle
             className="flex items-center justify-center text-xs text-muted-foreground border border-dashed rounded-md"
             style={{ height }}
          >
-            No progress data yet
+            {t('No progress data yet')}
          </div>
       );
    }
@@ -62,7 +65,7 @@ export function CycleBurnupChart({ cycle, height = 210, compact = false }: Cycle
             <XAxis
                dataKey="date"
                ticks={compact ? [first, last] : [first, middle, last]}
-               tickFormatter={(value: string) => format(parseISO(value), 'MMM d')}
+               tickFormatter={(value: string) => formatAppDate(locale, parseISO(value), 'MMM d')}
                tick={{ fontSize: 11, fill: 'currentColor', opacity: 0.6 }}
                axisLine={false}
                tickLine={false}
@@ -77,12 +80,12 @@ export function CycleBurnupChart({ cycle, height = 210, compact = false }: Cycle
                   fontSize: 12,
                   color: 'var(--popover-foreground)',
                }}
-               labelFormatter={(value) => format(parseISO(String(value)), 'MMM d')}
+               labelFormatter={(value) => formatAppDate(locale, parseISO(String(value)), 'MMM d')}
             />
             <Line
                type="monotone"
                dataKey="ideal"
-               name="Ideal"
+               name={t('Ideal')}
                stroke={COLORS.ideal}
                strokeDasharray="4 4"
                strokeWidth={1.25}
@@ -92,7 +95,7 @@ export function CycleBurnupChart({ cycle, height = 210, compact = false }: Cycle
             <Line
                type="monotone"
                dataKey="scope"
-               name="Scope"
+               name={t('Scope')}
                stroke={COLORS.scope}
                strokeWidth={1.5}
                dot={false}
@@ -101,7 +104,7 @@ export function CycleBurnupChart({ cycle, height = 210, compact = false }: Cycle
             <Line
                type="monotone"
                dataKey="started"
-               name="Started"
+               name={t('Started')}
                stroke={COLORS.started}
                strokeWidth={1.5}
                dot={false}
@@ -110,7 +113,7 @@ export function CycleBurnupChart({ cycle, height = 210, compact = false }: Cycle
             <Area
                type="monotone"
                dataKey="completed"
-               name="Completed"
+               name={t('Completed')}
                stroke={COLORS.completed}
                strokeWidth={1.75}
                fill={`url(#completed-fill-${cycle.id})`}
@@ -122,6 +125,7 @@ export function CycleBurnupChart({ cycle, height = 210, compact = false }: Cycle
 }
 
 export function CycleProgressLegend({ cycle }: { cycle: Cycle }) {
+   const { t } = useLanguage();
    const completedPercent = cycle.scope > 0 ? Math.round((cycle.completed / cycle.scope) * 100) : 0;
    const startedPercent = cycle.scope > 0 ? Math.round((cycle.started / cycle.scope) * 100) : 0;
 
@@ -162,7 +166,7 @@ export function CycleProgressLegend({ cycle }: { cycle: Cycle }) {
                      style={{ backgroundColor: row.swatch }}
                      aria-hidden="true"
                   />
-                  <span className="text-sm text-muted-foreground">{row.label}</span>
+                  <span className="text-sm text-muted-foreground">{t(row.label)}</span>
                </div>
                <div className="flex items-center gap-1.5 text-sm">
                   <span className="font-medium">{row.value}</span>

@@ -2,7 +2,9 @@
 
 import ProjectsTimeline from '@/components/common/projects/projects-timeline';
 import { ProjectGroup } from '@/components/common/projects/projects';
+import { useLanguage } from '@/components/providers/language-provider';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { formatAppDate, type AppLocale } from '@/lib/i18n';
 import type { Initiative } from '@/mock-data/initiatives';
 import { INITIATIVE_STATUS_META } from '@/mock-data/initiatives';
 import {
@@ -29,24 +31,8 @@ import { InitiativeStatusIcon } from './initiative-status-icon';
 
 const TABS = ['overview', 'activity', 'projects'] as const;
 
-const formatTarget = (iso: string): string => {
-   const [, month, day] = iso.split('-').map(Number);
-   const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-   ];
-   return `${months[(month ?? 1) - 1]} ${day}`;
-};
+const formatTarget = (locale: AppLocale, iso: string): string =>
+   formatAppDate(locale, iso, 'MMM d');
 
 /* ------------------------------ projects table ---------------------------- */
 
@@ -62,6 +48,7 @@ const GROUP_ORDER: { key: string; label: string; match: (project: Project) => bo
 ];
 
 function ProjectsSection({ initiative }: { initiative: Initiative }) {
+   const { locale, t } = useLanguage();
    const { orgId } = useParams<{ orgId: string }>();
    const projects = getInitiativeProjects(initiative);
    const groups = GROUP_ORDER.map((group) => ({
@@ -72,22 +59,22 @@ function ProjectsSection({ initiative }: { initiative: Initiative }) {
    return (
       <section className="flex flex-col gap-2">
          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-medium">Projects</h2>
+            <h2 className="text-lg font-medium">{t('Projects')}</h2>
             <Plus className="size-4 text-muted-foreground" />
          </div>
          <div className="flex items-center gap-2 py-1.5 text-xs text-muted-foreground border-b">
-            <span className="flex-1">Name</span>
-            <span className="hidden sm:block w-16 shrink-0">Health</span>
-            <span className="hidden sm:block w-16 shrink-0">Priority</span>
-            <span className="hidden md:block w-12 shrink-0">Lead</span>
-            <span className="hidden md:block w-24 shrink-0">Target date</span>
-            <span className="w-16 shrink-0">Status</span>
+            <span className="flex-1">{t('Name')}</span>
+            <span className="hidden sm:block w-16 shrink-0">{t('Health')}</span>
+            <span className="hidden sm:block w-16 shrink-0">{t('Priority')}</span>
+            <span className="hidden md:block w-12 shrink-0">{t('Lead')}</span>
+            <span className="hidden md:block w-24 shrink-0">{t('Target date')}</span>
+            <span className="w-16 shrink-0">{t('Status')}</span>
          </div>
          {groups.map((group) => (
             <div key={group.key} className="flex flex-col">
                <div className="flex items-center gap-2 py-1.5 text-xs text-muted-foreground">
                   <ChevronDown className="size-3" />
-                  {group.label}
+                  {t(group.label)}
                   <span className="flex-1 border-b border-border/60" />
                </div>
                {group.projects.map((project) => (
@@ -119,7 +106,7 @@ function ProjectsSection({ initiative }: { initiative: Initiative }) {
                         {project.targetDate ? (
                            <>
                               <CalendarRange className="size-3.5" />
-                              {formatTarget(project.targetDate)}
+                              {formatTarget(locale, project.targetDate)}
                            </>
                         ) : (
                            '—'
@@ -149,26 +136,27 @@ function PropertyRow({ label, children }: { label: string; children: React.React
 
 /** Right rail shared by the Overview and Projects tabs: properties, progress, activity. */
 function InitiativeAside({ initiative }: { initiative: Initiative }) {
+   const { locale, t } = useLanguage();
    const completed = countCompletedProjects(initiative);
    const total = initiative.projectIds.length;
 
    return (
       <aside className="hidden lg:flex flex-col w-80 shrink-0 border-l h-full overflow-y-auto p-5 gap-6 bg-container">
          <div className="flex flex-col gap-3">
-            <span className="text-sm font-medium">Properties</span>
-            <PropertyRow label="Status">
+            <span className="text-sm font-medium">{t('Properties')}</span>
+            <PropertyRow label={t('Status')}>
                <span className="inline-flex items-center gap-1.5">
                   <InitiativeStatusIcon status={initiative.status} />
-                  {INITIATIVE_STATUS_META[initiative.status].label}
+                  {t(INITIATIVE_STATUS_META[initiative.status].label)}
                </span>
             </PropertyRow>
-            <PropertyRow label="Priority">
+            <PropertyRow label={t('Priority')}>
                <span className="inline-flex items-center gap-1.5 text-muted-foreground">
                   <initiative.priority.icon className="size-4" />
-                  {initiative.priority.name}
+                  {t(initiative.priority.name)}
                </span>
             </PropertyRow>
-            <PropertyRow label="Owner">
+            <PropertyRow label={t('Owner')}>
                {initiative.owner ? (
                   <span className="inline-flex items-center gap-1.5">
                      <Avatar className="size-4">
@@ -181,24 +169,24 @@ function InitiativeAside({ initiative }: { initiative: Initiative }) {
                   </span>
                ) : (
                   <span className="text-muted-foreground inline-flex items-center gap-1.5">
-                     <UserRound className="size-4" /> Add owner
+                     <UserRound className="size-4" /> {t('Add owner')}
                   </span>
                )}
             </PropertyRow>
-            <PropertyRow label="Target date">
+            <PropertyRow label={t('Target date')}>
                <span className="inline-flex items-center gap-1.5 text-muted-foreground">
                   <CalendarRange className="size-4" />
-                  {initiative.target ?? 'Add target date'}
+                  {initiative.target ?? t('Add target date')}
                </span>
             </PropertyRow>
-            <PropertyRow label="Labels">
+            <PropertyRow label={t('Labels')}>
                <span className="text-muted-foreground inline-flex items-center gap-1.5">
-                  <Tag className="size-4" /> Add label
+                  <Tag className="size-4" /> {t('Add label')}
                </span>
             </PropertyRow>
-            <PropertyRow label="Projects">
+            <PropertyRow label={t('Projects')}>
                <span className="text-muted-foreground text-xs">
-                  {completed} / {total} completed
+                  {completed} / {total} {t('completed')}
                </span>
             </PropertyRow>
          </div>
@@ -207,18 +195,18 @@ function InitiativeAside({ initiative }: { initiative: Initiative }) {
 
          <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between">
-               <span className="text-sm font-medium">Activity</span>
+               <span className="text-sm font-medium">{t('Activity')}</span>
             </div>
             <div className="flex flex-col gap-2 text-xs text-muted-foreground">
                <span className="flex items-start gap-2">
                   <FilePenLine className="size-3.5 mt-px shrink-0" />
-                  {initiative.owner?.name ?? 'someone'} renamed the initiative ·{' '}
-                  {formatTarget(initiative.createdAt)}
+                  {initiative.owner?.name ?? t('someone')} {t('renamed the initiative')} ·{' '}
+                  {formatTarget(locale, initiative.createdAt)}
                </span>
                <span className="flex items-start gap-2">
                   <FileText className="size-3.5 mt-px shrink-0" />
-                  {initiative.owner?.name ?? 'someone'} created the initiative ·{' '}
-                  {formatTarget(initiative.createdAt)}
+                  {initiative.owner?.name ?? t('someone')} {t('created the initiative')} ·{' '}
+                  {formatTarget(locale, initiative.createdAt)}
                </span>
             </div>
          </div>
@@ -227,6 +215,7 @@ function InitiativeAside({ initiative }: { initiative: Initiative }) {
 }
 
 function Overview({ initiative }: { initiative: Initiative }) {
+   const { t } = useLanguage();
    return (
       <div className="w-full h-full flex overflow-hidden">
          <div className="flex-1 min-w-0 overflow-y-auto">
@@ -237,19 +226,19 @@ function Overview({ initiative }: { initiative: Initiative }) {
                <div className="flex flex-col gap-2">
                   <h1 className="text-2xl font-semibold">{initiative.name}</h1>
                   <p className="text-sm text-muted-foreground">
-                     {initiative.description ?? 'Add a short summary…'}
+                     {initiative.description ?? t('Add a short summary…')}
                   </p>
                </div>
 
                <div className="flex items-center gap-3 flex-wrap text-sm">
-                  <span className="text-muted-foreground text-xs w-24">Properties</span>
+                  <span className="text-muted-foreground text-xs w-24">{t('Properties')}</span>
                   <span className="inline-flex items-center gap-1.5">
                      <InitiativeStatusIcon status={initiative.status} />
-                     {INITIATIVE_STATUS_META[initiative.status].label}
+                     {t(INITIATIVE_STATUS_META[initiative.status].label)}
                   </span>
                   <span className="inline-flex items-center gap-1.5 text-muted-foreground">
                      <initiative.priority.icon className="size-4" />
-                     {initiative.priority.name}
+                     {t(initiative.priority.name)}
                   </span>
                   {initiative.owner ? (
                      <span className="inline-flex items-center gap-1.5">
@@ -266,7 +255,7 @@ function Overview({ initiative }: { initiative: Initiative }) {
                      </span>
                   ) : (
                      <span className="inline-flex items-center gap-1.5 text-muted-foreground">
-                        <UserRound className="size-4" /> Owner
+                        <UserRound className="size-4" /> {t('Owner')}
                      </span>
                   )}
                   {initiative.target && (
@@ -278,17 +267,17 @@ function Overview({ initiative }: { initiative: Initiative }) {
                </div>
 
                <div className="flex items-center gap-3 text-sm">
-                  <span className="text-muted-foreground text-xs w-24">Resources</span>
+                  <span className="text-muted-foreground text-xs w-24">{t('Resources')}</span>
                </div>
 
                <p className="rounded-lg border border-dashed py-4 text-center text-sm text-muted-foreground">
-                  Initiative updates are not supported in this build yet.
+                  {t('Initiative updates are not supported in this build yet.')}
                </p>
 
                <div className="flex flex-col gap-2">
-                  <h2 className="text-sm font-medium">Description</h2>
+                  <h2 className="text-sm font-medium">{t('Description')}</h2>
                   <p className="text-sm text-muted-foreground">
-                     {initiative.description ?? 'Add description…'}
+                     {initiative.description ?? t('Add description…')}
                   </p>
                </div>
 
@@ -304,23 +293,26 @@ function Overview({ initiative }: { initiative: Initiative }) {
 /* ------------------------------- activity tab ----------------------------- */
 
 function Activity({ initiative }: { initiative: Initiative }) {
+   const { locale, t } = useLanguage();
    const events = [
       {
-         label: `${initiative.owner?.name ?? 'someone'} created the initiative`,
-         date: formatTarget(initiative.createdAt),
+         label: `${initiative.owner?.name ?? t('someone')} ${t('created the initiative')}`,
+         date: formatTarget(locale, initiative.createdAt),
       },
       {
-         label: `${initiative.owner?.name ?? 'someone'} changed the status to ${INITIATIVE_STATUS_META[initiative.status].label}`,
-         date: formatTarget(initiative.createdAt),
+         label: `${initiative.owner?.name ?? t('someone')} ${t('changed the status to')}${t(
+            INITIATIVE_STATUS_META[initiative.status].label
+         )}`,
+         date: formatTarget(locale, initiative.createdAt),
       },
       {
-         label: `${initiative.projectIds.length} projects added to the initiative`,
-         date: formatTarget(initiative.createdAt),
+         label: `${initiative.projectIds.length} ${t('projects added to the initiative')}`,
+         date: formatTarget(locale, initiative.createdAt),
       },
    ];
    return (
       <div className="max-w-2xl mx-auto px-8 py-10 flex flex-col gap-4 w-full">
-         <h2 className="text-lg font-medium">Activity</h2>
+         <h2 className="text-lg font-medium">{t('Activity')}</h2>
          <div className="flex flex-col">
             {events.map((event, index) => (
                <div
@@ -341,6 +333,7 @@ function Activity({ initiative }: { initiative: Initiative }) {
 
 /** Initiative detail page: Overview / Activity / Projects tabs. */
 export default function InitiativeDetails({ initiativeId }: { initiativeId: string }) {
+   const { t } = useLanguage();
    const [tab] = useQueryState('tab', parseAsStringLiteral(TABS).withDefault('overview'));
    const initiative = useInitiativesStore((s) => s.getInitiativeById(initiativeId));
 
@@ -359,7 +352,7 @@ export default function InitiativeDetails({ initiativeId }: { initiativeId: stri
    if (!initiative) {
       return (
          <div className="w-full h-full flex items-center justify-center text-sm text-muted-foreground">
-            Initiative not found
+            {t('Initiative not found')}
          </div>
       );
    }

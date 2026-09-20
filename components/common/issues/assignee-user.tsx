@@ -1,4 +1,5 @@
 'use client';
+import { useLanguage } from '@/components/providers/language-provider';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
    DropdownMenu,
@@ -18,6 +19,7 @@ interface AssigneeUserProps {
 }
 
 export function AssigneeUser({ user }: AssigneeUserProps) {
+   const { t } = useLanguage();
    const users = useMembersStore((s) => s.members);
    const [open, setOpen] = useState(false);
    const [currentAssignee, setCurrentAssignee] = useState<User | null>(user);
@@ -59,7 +61,7 @@ export function AssigneeUser({ user }: AssigneeUserProps) {
             </button>
          </DropdownMenuTrigger>
          <DropdownMenuContent align="start" className="w-[206px]">
-            <DropdownMenuLabel>Assign to...</DropdownMenuLabel>
+            <DropdownMenuLabel>{t('Assign to...')}</DropdownMenuLabel>
             <DropdownMenuItem
                onClick={(e) => {
                   e.stopPropagation();
@@ -69,7 +71,7 @@ export function AssigneeUser({ user }: AssigneeUserProps) {
             >
                <div className="flex items-center gap-2">
                   <UserIcon className="h-5 w-5" />
-                  <span>No assignee</span>
+                  <span>{t('No assignee')}</span>
                </div>
                {!currentAssignee && <CheckIcon className="ml-auto h-4 w-4" />}
             </DropdownMenuItem>
@@ -96,11 +98,11 @@ export function AssigneeUser({ user }: AssigneeUserProps) {
                   </DropdownMenuItem>
                ))}
             <DropdownMenuSeparator />
-            <DropdownMenuLabel>New user</DropdownMenuLabel>
+            <DropdownMenuLabel>{t('New user')}</DropdownMenuLabel>
             <DropdownMenuItem>
                <div className="flex items-center gap-2">
                   <Send className="h-4 w-4" />
-                  <span>Invite and assign...</span>
+                  <span>{t('Invite and assign...')}</span>
                </div>
             </DropdownMenuItem>
          </DropdownMenuContent>

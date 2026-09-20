@@ -28,16 +28,11 @@ import {
    DialogTitle,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { useLanguage } from '@/components/providers/language-provider';
 import { useDocumentsStore } from '@/store/documents-store';
+import { formatRelativeTime } from '@/lib/i18n';
 import { formatDistanceToNowStrict, parseISO } from 'date-fns';
-import {
-   ChevronRight,
-   FolderPlus,
-   MoreHorizontal,
-   Pin,
-   Plus,
-   SlidersHorizontal,
-} from 'lucide-react';
+import { ChevronRight, FolderPlus, MoreHorizontal, Pin, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 const timeAgo = (date: string) =>
@@ -54,6 +49,7 @@ const timeAgo = (date: string) =>
  * with created / last edited metadata.
  */
 export default function TeamDocuments() {
+   const { locale, t } = useLanguage();
    const documentFolders = useDocumentsStore((s) => s.folders);
    const createDocument = useDocumentsStore((s) => s.createDocument);
    const renameDocument = useDocumentsStore((s) => s.renameDocument);
@@ -108,19 +104,19 @@ export default function TeamDocuments() {
       <div className="w-full">
          <div className="flex items-center justify-between px-6 py-3 gap-2">
             <div className="grid grid-cols-[1fr_40px] md:grid-cols-[1fr_90px_90px_40px] w-full items-center text-sm text-muted-foreground">
-               <span className="flex items-center gap-1 font-medium">Name ↓</span>
-               <span className="hidden md:block">Created</span>
-               <span className="hidden md:block">Last edited</span>
+               <span className="flex items-center gap-1 font-medium">{t('Name')} ↓</span>
+               <span className="hidden md:block">{t('Created')}</span>
+               <span className="hidden md:block">{t('Last edited')}</span>
                <span />
             </div>
             <div className="flex items-center gap-2 shrink-0">
                <Button size="xs" onClick={() => setNewOpen(true)}>
                   <Plus className="size-4 md:mr-1" />
-                  <span className="hidden md:inline">New document</span>
+                  <span className="hidden md:inline">{t('New document')}</span>
                </Button>
                <Button size="xs" variant="secondary" onClick={() => setNewFolderOpen(true)}>
                   <FolderPlus className="size-4 md:mr-1" />
-                  <span className="hidden md:inline">New folder</span>
+                  <span className="hidden md:inline">{t('New folder')}</span>
                </Button>
             </div>
          </div>
@@ -147,7 +143,7 @@ export default function TeamDocuments() {
                                  setRenamingFolder({ id: folder.id, name: folder.name })
                               }
                            >
-                              Rename
+                              {t('Rename')}
                            </DropdownMenuItem>
                            <DropdownMenuItem
                               className="text-destructive"
@@ -155,7 +151,7 @@ export default function TeamDocuments() {
                                  setDeletingFolder({ id: folder.id, name: folder.name })
                               }
                            >
-                              Delete
+                              {t('Delete')}
                            </DropdownMenuItem>
                         </DropdownMenuContent>
                      </DropdownMenu>
@@ -173,10 +169,10 @@ export default function TeamDocuments() {
                            {doc.pinned && <Pin className="size-3 text-muted-foreground shrink-0" />}
                         </div>
                         <span className="hidden md:block text-xs text-muted-foreground">
-                           {timeAgo(doc.createdAt)}
+                           {formatRelativeTime(locale, timeAgo(doc.createdAt))}
                         </span>
                         <span className="hidden md:block text-xs text-muted-foreground">
-                           {timeAgo(doc.updatedAt)}
+                           {formatRelativeTime(locale, timeAgo(doc.updatedAt))}
                         </span>
                         <div className="flex items-center gap-1 justify-end">
                            <Avatar className="size-5">
@@ -191,16 +187,16 @@ export default function TeamDocuments() {
                                  <DropdownMenuItem
                                     onClick={() => setRenaming({ id: doc.id, name: doc.name })}
                                  >
-                                    Rename
+                                    {t('Rename')}
                                  </DropdownMenuItem>
                                  <DropdownMenuItem onClick={() => togglePin(doc.id, !doc.pinned)}>
-                                    {doc.pinned ? 'Unpin' : 'Pin'}
+                                    {doc.pinned ? t('Unpin') : t('Pin')}
                                  </DropdownMenuItem>
                                  <DropdownMenuItem
                                     className="text-destructive"
                                     onClick={() => deleteDocument(doc.id)}
                                  >
-                                    Delete
+                                    {t('Delete')}
                                  </DropdownMenuItem>
                               </DropdownMenuContent>
                            </DropdownMenu>
@@ -214,25 +210,25 @@ export default function TeamDocuments() {
          <Dialog open={newOpen} onOpenChange={setNewOpen}>
             <DialogContent className="sm:max-w-sm">
                <DialogHeader>
-                  <DialogTitle>New document</DialogTitle>
+                  <DialogTitle>{t('New document')}</DialogTitle>
                </DialogHeader>
                <div className="flex flex-col gap-1.5 py-2">
-                  <Label htmlFor="doc-name">Name</Label>
+                  <Label htmlFor="doc-name">{t('Name')}</Label>
                   <Input
                      id="doc-name"
                      autoFocus
                      value={newName}
                      onChange={(e) => setNewName(e.target.value)}
                      onKeyDown={(e) => e.key === 'Enter' && create()}
-                     placeholder="Meeting notes"
+                     placeholder={t('Meeting notes')}
                   />
                </div>
                <DialogFooter>
                   <Button variant="ghost" onClick={() => setNewOpen(false)}>
-                     Cancel
+                     {t('Cancel')}
                   </Button>
                   <Button onClick={create} disabled={!newName.trim()}>
-                     Create
+                     {t('Create')}
                   </Button>
                </DialogFooter>
             </DialogContent>
@@ -241,7 +237,7 @@ export default function TeamDocuments() {
          <Dialog open={!!renaming} onOpenChange={(v) => !v && setRenaming(null)}>
             <DialogContent className="sm:max-w-sm">
                <DialogHeader>
-                  <DialogTitle>Rename document</DialogTitle>
+                  <DialogTitle>{t('Rename document')}</DialogTitle>
                </DialogHeader>
                <div className="py-2">
                   <Input
@@ -253,9 +249,9 @@ export default function TeamDocuments() {
                </div>
                <DialogFooter>
                   <Button variant="ghost" onClick={() => setRenaming(null)}>
-                     Cancel
+                     {t('Cancel')}
                   </Button>
-                  <Button onClick={rename}>Save</Button>
+                  <Button onClick={rename}>{t('Save')}</Button>
                </DialogFooter>
             </DialogContent>
          </Dialog>
@@ -263,22 +259,22 @@ export default function TeamDocuments() {
          <Dialog open={newFolderOpen} onOpenChange={setNewFolderOpen}>
             <DialogContent className="sm:max-w-sm">
                <DialogHeader>
-                  <DialogTitle>New folder</DialogTitle>
+                  <DialogTitle>{t('New folder')}</DialogTitle>
                </DialogHeader>
                <div className="flex flex-col gap-4 py-2">
                   <div className="flex flex-col gap-1.5">
-                     <Label htmlFor="folder-name">Name</Label>
+                     <Label htmlFor="folder-name">{t('Name')}</Label>
                      <Input
                         id="folder-name"
                         autoFocus
                         value={newFolderName}
                         onChange={(e) => setNewFolderName(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && createNewFolder()}
-                        placeholder="Meeting notes"
+                        placeholder={t('Meeting notes')}
                      />
                   </div>
                   <div className="flex flex-col gap-1.5">
-                     <Label htmlFor="folder-icon">Icon</Label>
+                     <Label htmlFor="folder-icon">{t('Icon')}</Label>
                      <Input
                         id="folder-icon"
                         value={newFolderIcon}
@@ -290,10 +286,10 @@ export default function TeamDocuments() {
                </div>
                <DialogFooter>
                   <Button variant="ghost" onClick={() => setNewFolderOpen(false)}>
-                     Cancel
+                     {t('Cancel')}
                   </Button>
                   <Button onClick={createNewFolder} disabled={!newFolderName.trim()}>
-                     Create
+                     {t('Create')}
                   </Button>
                </DialogFooter>
             </DialogContent>
@@ -302,7 +298,7 @@ export default function TeamDocuments() {
          <Dialog open={!!renamingFolder} onOpenChange={(v) => !v && setRenamingFolder(null)}>
             <DialogContent className="sm:max-w-sm">
                <DialogHeader>
-                  <DialogTitle>Rename folder</DialogTitle>
+                  <DialogTitle>{t('Rename folder')}</DialogTitle>
                </DialogHeader>
                <div className="py-2">
                   <Input
@@ -316,9 +312,9 @@ export default function TeamDocuments() {
                </div>
                <DialogFooter>
                   <Button variant="ghost" onClick={() => setRenamingFolder(null)}>
-                     Cancel
+                     {t('Cancel')}
                   </Button>
-                  <Button onClick={renameFolderSubmit}>Save</Button>
+                  <Button onClick={renameFolderSubmit}>{t('Save')}</Button>
                </DialogFooter>
             </DialogContent>
          </Dialog>
@@ -326,14 +322,16 @@ export default function TeamDocuments() {
          <AlertDialog open={!!deletingFolder} onOpenChange={(v) => !v && setDeletingFolder(null)}>
             <AlertDialogContent>
                <AlertDialogHeader>
-                  <AlertDialogTitle>Delete folder</AlertDialogTitle>
+                  <AlertDialogTitle>{t('Delete folder')}</AlertDialogTitle>
                   <AlertDialogDescription>
-                     {`Delete folder "${deletingFolder?.name}"? Only empty folders can be deleted — move or delete its documents first.`}
+                     {`${t('Delete folder')} "${deletingFolder?.name}"? ${t(
+                        'Only empty folders can be deleted — move or delete its documents first.'
+                     )}`}
                   </AlertDialogDescription>
                </AlertDialogHeader>
                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={deleteFolderSubmit}>Delete</AlertDialogAction>
+                  <AlertDialogCancel>{t('Cancel')}</AlertDialogCancel>
+                  <AlertDialogAction onClick={deleteFolderSubmit}>{t('Delete')}</AlertDialogAction>
                </AlertDialogFooter>
             </AlertDialogContent>
          </AlertDialog>

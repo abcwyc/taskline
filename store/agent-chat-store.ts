@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { toast } from 'sonner';
+import { tt } from '@/lib/i18n';
 
 export interface AgentMessage {
    id: string;
@@ -161,7 +162,7 @@ export const useAgentChatStore = create<AgentChatState>((set, get) => ({
             ),
             ...(status === 503 ? { unconfigured: message } : {}),
          }));
-         if (!get().unconfigured) toast.error('The agent could not answer. Try again.');
+         if (!get().unconfigured) toast.error(tt('The agent could not answer. Try again.'));
       };
 
       try {

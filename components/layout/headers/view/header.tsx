@@ -6,8 +6,10 @@ import { filterIssuesForView, filterProjectsForView, useViewsStore } from '@/sto
 import { useRightPanelStore } from '@/store/right-panel-store';
 import { BarChart3, MoreHorizontal, Star } from 'lucide-react';
 import { useParams } from 'next/navigation';
+import { useLanguage } from '@/components/providers/language-provider';
 
 export default function Header() {
+   const { t } = useLanguage();
    const { viewId } = useParams<{ orgId: string; viewId: string }>();
    const view = useViewsStore((s) => s.getViewById(viewId));
    const { openPanel, togglePanel } = useRightPanelStore();
@@ -32,7 +34,7 @@ export default function Header() {
          </div>
          <div className="w-full flex justify-between items-center border-b py-1.5 px-6 h-10">
             <span className="text-xs text-muted-foreground">
-               {count} {view.type === 'issue' ? 'issues' : 'projects'}
+               {count} {t(view.type === 'issue' ? 'issues' : 'projects')}
             </span>
             {view.type === 'issue' && (
                <Button

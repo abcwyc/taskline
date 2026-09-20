@@ -3,14 +3,16 @@
 import { Button } from '@/components/ui/button';
 import { SlidersHorizontal } from 'lucide-react';
 import { Filter } from './filter';
+import { useLanguage } from '@/components/providers/language-provider';
 
 export default function HeaderOptions() {
+   const { t } = useLanguage();
    return (
       <div className="w-full flex justify-between items-center border-b py-1.5 px-6 h-10">
          <Filter />
          <Button className="relative" size="xs" variant="secondary">
             <SlidersHorizontal className="size-4 mr-1" />
-            Display
+            {t('Display')}
          </Button>
       </div>
    );

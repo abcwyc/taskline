@@ -1,5 +1,6 @@
 'use client';
 
+import { useLanguage } from '@/components/providers/language-provider';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { Issue, sortIssuesByPriority } from '@/mock-data/issues';
@@ -57,21 +58,22 @@ const groupByKey = (issues: Issue[], keyOf: (issue: Issue) => string): Map<strin
 /** Footer shown when active filters hide issues — "n issues hidden by filters". */
 function HiddenByFiltersFooter({ hiddenCount }: { hiddenCount: number }) {
    const { clearFilters } = useFilterStore();
+   const { t } = useLanguage();
 
    return (
       <div className="flex items-center justify-center gap-3 py-4 text-xs text-muted-foreground">
          <span>
             <span className="font-medium text-foreground">
-               {hiddenCount} {hiddenCount === 1 ? 'issue' : 'issues'}
+               {hiddenCount} {t(hiddenCount === 1 ? 'issue' : 'issues')}
             </span>{' '}
-            hidden by filters
+            {t('hidden by filters')}
          </span>
          <button
             type="button"
             onClick={clearFilters}
             className="flex items-center gap-1 hover:text-foreground transition-colors"
          >
-            Clear filters
+            {t('Clear filters')}
             <X className="size-3" />
          </button>
       </div>
@@ -81,6 +83,7 @@ function HiddenByFiltersFooter({ hiddenCount }: { hiddenCount: number }) {
 /** Board-only list of columns fully emptied by the active filters ("0 / n"). */
 function HiddenColumns({ entries }: { entries: GroupEntry[] }) {
    const [open, setOpen] = useState(true);
+   const { t } = useLanguage();
 
    return (
       <div className="shrink-0 w-[280px] pt-1">
@@ -90,7 +93,7 @@ function HiddenColumns({ entries }: { entries: GroupEntry[] }) {
             className="flex items-center gap-1.5 px-2 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
          >
             <ChevronDown className={cn('size-3.5 transition-transform', !open && '-rotate-90')} />
-            Hidden columns
+            {t('Hidden columns')}
          </button>
          {open && (
             <div className="flex flex-col gap-1.5 mt-1">
@@ -101,7 +104,7 @@ function HiddenColumns({ entries }: { entries: GroupEntry[] }) {
                   >
                      <div className="flex items-center gap-2 min-w-0">
                         {entry.group.icon}
-                        <span className="text-sm truncate">{entry.group.name}</span>
+                        <span className="text-sm truncate">{t(entry.group.name)}</span>
                      </div>
                      <span className="text-xs text-muted-foreground whitespace-nowrap">
                         {entry.total > 0 ? `0 / ${entry.total}` : '0'}
@@ -131,6 +134,7 @@ export const GroupedIssuesView: FC<GroupedIssuesViewProps> = ({
 }) => {
    const { grouping, ordering, completedIssues, showEmptyGroups } = useDisplaySettingsStore();
    const { filters } = useFilterStore();
+   const { t } = useLanguage();
    const hasActiveFilters = filters.length > 0;
 
    const groups = useMemo<GroupEntry[]>(() => {
@@ -274,7 +278,7 @@ export const GroupedIssuesView: FC<GroupedIssuesViewProps> = ({
                      {hiddenGroups.length > 0 && <HiddenColumns entries={hiddenGroups} />}
                      {boardGroups.length === 0 && hiddenGroups.length === 0 && (
                         <div className="flex items-center justify-center w-full h-40 text-sm text-muted-foreground">
-                           No issues to show.
+                           {t('No issues to show.')}
                         </div>
                      )}
                   </div>
@@ -298,7 +302,7 @@ export const GroupedIssuesView: FC<GroupedIssuesViewProps> = ({
          <div className="h-full overflow-y-auto">
             {listGroups.length === 0 && !showFooter && (
                <div className="flex items-center justify-center h-40 text-sm text-muted-foreground">
-                  No issues to show.
+                  {t('No issues to show.')}
                </div>
             )}
             {listGroups.map((entry) => (

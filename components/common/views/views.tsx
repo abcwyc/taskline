@@ -1,5 +1,6 @@
 'use client';
 
+import { useLanguage } from '@/components/providers/language-provider';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -10,6 +11,7 @@ import {
    SelectTrigger,
    SelectValue,
 } from '@/components/ui/select';
+import { formatAppDate } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 import type { View } from '@/mock-data/views';
 import { ViewDialog } from '@/components/common/forms/view-dialog';
@@ -30,26 +32,8 @@ import { useMemo, useState } from 'react';
 
 const TABS = ['issues', 'projects'] as const;
 
-const formatDate = (iso: string): string => {
-   const [year, month, day] = iso.split('-').map(Number);
-   const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-   ];
-   return `${months[(month ?? 1) - 1]} ${day}, ${year}`;
-};
-
 function DisplayOptions() {
+   const { t } = useLanguage();
    const { ordering, displayProperties, setOrdering, toggleProperty } = useViewsDisplayStore();
 
    return (
@@ -61,7 +45,7 @@ function DisplayOptions() {
          </PopoverTrigger>
          <PopoverContent align="end" className="w-72 p-3 flex flex-col gap-3">
             <div className="flex items-center justify-between">
-               <span className="text-xs text-muted-foreground">Ordering</span>
+               <span className="text-xs text-muted-foreground">{t('Ordering')}</span>
                <Select
                   value={ordering}
                   onValueChange={(value) => setOrdering(value as ViewsOrdering)}
@@ -70,14 +54,14 @@ function DisplayOptions() {
                      <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                     <SelectItem value="name">Name</SelectItem>
-                     <SelectItem value="created">Created</SelectItem>
-                     <SelectItem value="updated">Updated</SelectItem>
+                     <SelectItem value="name">{t('Name')}</SelectItem>
+                     <SelectItem value="created">{t('Created')}</SelectItem>
+                     <SelectItem value="updated">{t('Updated')}</SelectItem>
                   </SelectContent>
                </Select>
             </div>
             <div className="flex flex-col gap-2">
-               <span className="text-xs text-muted-foreground">Display properties</span>
+               <span className="text-xs text-muted-foreground">{t('Display properties')}</span>
                <div className="flex flex-wrap gap-1.5">
                   {(
                      [
@@ -96,7 +80,7 @@ function DisplayOptions() {
                               : 'text-muted-foreground hover:bg-accent/50'
                         )}
                      >
-                        {label}
+                        {t(label)}
                      </button>
                   ))}
                </div>
@@ -107,6 +91,7 @@ function DisplayOptions() {
 }
 
 function ViewRow({ view, orgId }: { view: View; orgId: string }) {
+   const { locale, t } = useLanguage();
    const { displayProperties } = useViewsDisplayStore();
    const deleteView = useViewsStore((s) => s.deleteView);
    const [editOpen, setEditOpen] = useState(false);
@@ -124,12 +109,12 @@ function ViewRow({ view, orgId }: { view: View; orgId: string }) {
          </span>
          {displayProperties.created && (
             <span className="hidden sm:block text-xs text-muted-foreground w-24 shrink-0">
-               {formatDate(view.createdAt)}
+               {formatAppDate(locale, view.createdAt, 'MMM d, yyyy')}
             </span>
          )}
          {displayProperties.updated && (
             <span className="hidden sm:block text-xs text-muted-foreground w-24 shrink-0">
-               {formatDate(view.updatedAt)}
+               {formatAppDate(locale, view.updatedAt, 'MMM d, yyyy')}
             </span>
          )}
          {displayProperties.owner && (
@@ -157,7 +142,7 @@ function ViewRow({ view, orgId }: { view: View; orgId: string }) {
                      setEditOpen(true);
                   }}
                >
-                  Edit
+                  {t('Edit')}
                </DropdownMenuItem>
                <DropdownMenuItem
                   className="text-destructive"
@@ -166,7 +151,7 @@ function ViewRow({ view, orgId }: { view: View; orgId: string }) {
                      deleteView(view.id);
                   }}
                >
-                  Delete
+                  {t('Delete')}
                </DropdownMenuItem>
             </DropdownMenuContent>
          </DropdownMenu>
@@ -181,6 +166,7 @@ function ViewRow({ view, orgId }: { view: View; orgId: string }) {
  * workspace is shown.
  */
 export default function Views({ teamId }: { teamId?: string }) {
+   const { t } = useLanguage();
    const teams = useTeamsStore((s) => s.teams);
    const allViews = useViewsStore((s) => s.views);
    const issueViews = useMemo(() => allViews.filter((v) => v.type === 'issue'), [allViews]);
@@ -216,7 +202,7 @@ export default function Views({ teamId }: { teamId?: string }) {
                            : 'text-muted-foreground hover:bg-accent/50'
                      )}
                   >
-                     {candidate}
+                     {candidate === 'issues' ? t('Issues') : t('Projects')}
                   </button>
                ))}
             </div>
@@ -224,7 +210,7 @@ export default function Views({ teamId }: { teamId?: string }) {
          </div>
 
          <div className="flex items-center gap-1 px-6 py-1.5 text-xs text-muted-foreground border-b">
-            Name
+            {t('Name')}
             <ArrowDown className="size-3" />
          </div>
 
@@ -241,12 +227,12 @@ export default function Views({ teamId }: { teamId?: string }) {
                )}
                <span className="font-medium">{team ? team.name : 'LNDev UI'}</span>
                <span className="text-muted-foreground text-xs">
-                  · {team ? 'Team' : 'Workspace'}
+                  · {team ? t('Team') : t('Workspace')}
                </span>
             </span>
             <Button size="xs" onClick={() => setNewOpen(true)}>
                <Plus className="size-3.5" />
-               New view
+               {t('New view')}
             </Button>
          </div>
 
@@ -255,7 +241,7 @@ export default function Views({ teamId }: { teamId?: string }) {
          ))}
          {list.length === 0 && (
             <div className="flex items-center justify-center py-16 text-sm text-muted-foreground">
-               No views yet
+               {t('No views yet')}
             </div>
          )}
 

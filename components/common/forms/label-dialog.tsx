@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import type { LabelInterface } from '@/mock-data/labels';
 import { useLabelsStore } from '@/store/labels-store';
+import { useLanguage } from '@/components/providers/language-provider';
 
 export const LABEL_COLORS = [
    'red',
@@ -42,6 +43,7 @@ export function LabelDialog({
 }) {
    const createLabel = useLabelsStore((s) => s.createLabel);
    const updateLabel = useLabelsStore((s) => s.updateLabel);
+   const { t } = useLanguage();
    const [name, setName] = useState('');
    const [color, setColor] = useState<string>('gray');
 
@@ -63,22 +65,22 @@ export function LabelDialog({
       <Dialog open={open} onOpenChange={onOpenChange}>
          <DialogContent className="sm:max-w-sm">
             <DialogHeader>
-               <DialogTitle>{label ? 'Edit label' : 'New label'}</DialogTitle>
+               <DialogTitle>{label ? t('Edit label') : t('New label')}</DialogTitle>
             </DialogHeader>
             <div className="flex flex-col gap-4 py-2">
                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="label-name">Name</Label>
+                  <Label htmlFor="label-name">{t('Name')}</Label>
                   <Input
                      id="label-name"
                      value={name}
                      autoFocus
                      onChange={(e) => setName(e.target.value)}
                      onKeyDown={(e) => e.key === 'Enter' && submit()}
-                     placeholder="Bug"
+                     placeholder={t('Bug')}
                   />
                </div>
                <div className="flex flex-col gap-1.5">
-                  <Label>Color</Label>
+                  <Label>{t('Color')}</Label>
                   <div className="flex flex-wrap gap-1.5">
                      {LABEL_COLORS.map((c) => (
                         <button
@@ -90,7 +92,7 @@ export function LabelDialog({
                               color === c && 'ring-2 ring-foreground'
                            )}
                            style={{ backgroundColor: c }}
-                           aria-label={c}
+                           aria-label={t(c)}
                         />
                      ))}
                   </div>
@@ -98,10 +100,10 @@ export function LabelDialog({
             </div>
             <DialogFooter>
                <Button variant="ghost" onClick={() => onOpenChange(false)}>
-                  Cancel
+                  {t('Cancel')}
                </Button>
                <Button onClick={submit} disabled={!name.trim()}>
-                  {label ? 'Save' : 'Create'}
+                  {label ? t('Save') : t('Create')}
                </Button>
             </DialogFooter>
          </DialogContent>

@@ -18,6 +18,7 @@ import {
    SelectTrigger,
    SelectValue,
 } from '@/components/ui/select';
+import { useLanguage } from '@/components/providers/language-provider';
 import { cn } from '@/lib/utils';
 import type { Initiative, InitiativeStatus } from '@/mock-data/initiatives';
 import { INITIATIVE_STATUS_META } from '@/mock-data/initiatives';
@@ -71,6 +72,7 @@ const TAB_ITEMS: { label: string; value: (typeof TABS)[number] }[] = [
 /* --------------------------------- filter --------------------------------- */
 
 function InitiativesFilter() {
+   const { t } = useLanguage();
    const users = useMembersStore((s) => s.members);
    const [open, setOpen] = useState(false);
    const [active, setActive] = useState<InitiativesFilterType | null>(null);
@@ -99,33 +101,35 @@ function InitiativesFilter() {
          </PopoverTrigger>
          <PopoverContent align="end" className="w-60 p-0">
             <Command>
-               <CommandInput placeholder={active ? 'Filter...' : 'Add filter...'} />
+               <CommandInput placeholder={active ? t('Filter…') : t('Add filter…')} />
                <CommandList>
-                  <CommandEmpty>No results.</CommandEmpty>
+                  <CommandEmpty>{t('No results.')}</CommandEmpty>
                   {!active && (
                      <CommandGroup>
                         <CommandItem onSelect={() => setActive('status')}>
                            <BadgeCheck className="size-4 text-muted-foreground" />
-                           Status
+                           {t('Status')}
                            <ChevronRight className="ml-auto size-3.5 text-muted-foreground" />
                         </CommandItem>
                         <CommandItem onSelect={() => setActive('priority')}>
                            <SlidersHorizontal className="size-4 text-muted-foreground" />
-                           Priority
+                           {t('Priority')}
                            <ChevronRight className="ml-auto size-3.5 text-muted-foreground" />
                         </CommandItem>
                         <CommandItem onSelect={() => setActive('owner')}>
                            <UserRound className="size-4 text-muted-foreground" />
-                           Owner
+                           {t('Owner')}
                            <ChevronRight className="ml-auto size-3.5 text-muted-foreground" />
                         </CommandItem>
                         <CommandItem onSelect={() => setActive('health')}>
                            <HeartPulse className="size-4 text-muted-foreground" />
-                           Health
+                           {t('Health')}
                            <ChevronRight className="ml-auto size-3.5 text-muted-foreground" />
                         </CommandItem>
                         {count > 0 && (
-                           <CommandItem onSelect={() => clearFilters()}>Clear filters</CommandItem>
+                           <CommandItem onSelect={() => clearFilters()}>
+                              {t('Clear filters')}
+                           </CommandItem>
                         )}
                      </CommandGroup>
                   )}
@@ -138,7 +142,7 @@ function InitiativesFilter() {
                                  onSelect={() => toggleFilter('status', statusId)}
                               >
                                  <InitiativeStatusIcon status={statusId} />
-                                 {INITIATIVE_STATUS_META[statusId].label}
+                                 {t(INITIATIVE_STATUS_META[statusId].label)}
                                  {filters.status.includes(statusId) && (
                                     <CheckIcon className="ml-auto size-3.5" />
                                  )}
@@ -155,7 +159,7 @@ function InitiativesFilter() {
                               onSelect={() => toggleFilter('priority', priority.id)}
                            >
                               <priority.icon className="size-4 text-muted-foreground" />
-                              {priority.name}
+                              {t(priority.name)}
                               {filters.priority.includes(priority.id) && (
                                  <CheckIcon className="ml-auto size-3.5" />
                               )}
@@ -195,7 +199,7 @@ function InitiativesFilter() {
                                  className="size-2.5 rounded-full"
                                  style={{ backgroundColor: entry.color }}
                               />
-                              {entry.name}
+                              {t(entry.name)}
                               {filters.health.includes(entry.id) && (
                                  <CheckIcon className="ml-auto size-3.5" />
                               )}
@@ -225,6 +229,7 @@ const PROPERTY_CHIPS: { key: keyof InitiativesDisplayProperties; label: string }
 ];
 
 function InitiativesDisplayOptions() {
+   const { t } = useLanguage();
    const { grouping, ordering, displayProperties, setGrouping, setOrdering, toggleProperty } =
       useInitiativesDisplayStore();
 
@@ -237,7 +242,7 @@ function InitiativesDisplayOptions() {
          </PopoverTrigger>
          <PopoverContent align="end" className="w-80 p-3 flex flex-col gap-3">
             <div className="flex items-center justify-between">
-               <span className="text-xs text-muted-foreground">Grouping</span>
+               <span className="text-xs text-muted-foreground">{t('Grouping')}</span>
                <Select
                   value={grouping}
                   onValueChange={(value) => setGrouping(value as typeof grouping)}
@@ -246,13 +251,13 @@ function InitiativesDisplayOptions() {
                      <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                     <SelectItem value="none">No grouping</SelectItem>
-                     <SelectItem value="status">Status</SelectItem>
+                     <SelectItem value="none">{t('No grouping')}</SelectItem>
+                     <SelectItem value="status">{t('Status')}</SelectItem>
                   </SelectContent>
                </Select>
             </div>
             <div className="flex items-center justify-between">
-               <span className="text-xs text-muted-foreground">Ordering</span>
+               <span className="text-xs text-muted-foreground">{t('Ordering')}</span>
                <Select
                   value={ordering}
                   onValueChange={(value) => setOrdering(value as typeof ordering)}
@@ -261,14 +266,14 @@ function InitiativesDisplayOptions() {
                      <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                     <SelectItem value="manual">Manual</SelectItem>
-                     <SelectItem value="name">Name</SelectItem>
-                     <SelectItem value="target">Target date</SelectItem>
+                     <SelectItem value="manual">{t('Manual')}</SelectItem>
+                     <SelectItem value="name">{t('Name')}</SelectItem>
+                     <SelectItem value="target">{t('Target date')}</SelectItem>
                   </SelectContent>
                </Select>
             </div>
             <div className="flex flex-col gap-2">
-               <span className="text-xs text-muted-foreground">Display properties</span>
+               <span className="text-xs text-muted-foreground">{t('Display properties')}</span>
                <div className="flex flex-wrap gap-1.5">
                   {PROPERTY_CHIPS.map(({ key, label }) => (
                      <button
@@ -281,7 +286,7 @@ function InitiativesDisplayOptions() {
                               : 'text-muted-foreground hover:bg-accent/50'
                         )}
                      >
-                        {label}
+                        {t(label)}
                      </button>
                   ))}
                </div>
@@ -334,6 +339,7 @@ function InitiativeRow({
 }) {
    const teams = useTeamsStore((s) => s.teams);
    const deleteInitiative = useInitiativesStore((s) => s.deleteInitiative);
+   const { t } = useLanguage();
    const [editOpen, setEditOpen] = useState(false);
    const { displayProperties } = useInitiativesDisplayStore();
    const projects = getInitiativeProjects(initiative);
@@ -358,7 +364,7 @@ function InitiativeRow({
          {showStatus && displayProperties.status && (
             <span className="hidden md:flex items-center gap-1.5 w-28 shrink-0 text-xs">
                <InitiativeStatusIcon status={initiative.status} />
-               {INITIATIVE_STATUS_META[initiative.status].label}
+               {t(INITIATIVE_STATUS_META[initiative.status].label)}
             </span>
          )}
          {displayProperties.priority && (
@@ -418,7 +424,7 @@ function InitiativeRow({
                         : undefined
                   }
                />
-               {initiative.health.id === 'no-update' ? 'No updates' : initiative.health.name}
+               {initiative.health.id === 'no-update' ? t('No updates') : t(initiative.health.name)}
             </span>
          )}
          {displayProperties.activeProjects && (
@@ -440,7 +446,7 @@ function InitiativeRow({
                      setEditOpen(true);
                   }}
                >
-                  Edit
+                  {t('Edit')}
                </DropdownMenuItem>
                <DropdownMenuItem
                   className="text-destructive"
@@ -449,7 +455,7 @@ function InitiativeRow({
                      deleteInitiative(initiative.id);
                   }}
                >
-                  Delete
+                  {t('Delete')}
                </DropdownMenuItem>
             </DropdownMenuContent>
          </DropdownMenu>
@@ -462,6 +468,7 @@ function InitiativeRow({
 
 export default function Initiatives({ teamId }: { teamId?: string } = {}) {
    const { orgId } = useParams<{ orgId: string }>();
+   const { t } = useLanguage();
    const allInitiatives = useInitiativesStore((s) => s.initiatives);
    const getTeamInitiatives = useInitiativesStore((s) => s.getTeamInitiatives);
    const [tab, setTab] = useQueryState('tab', parseAsStringLiteral(TABS).withDefault('active'));
@@ -521,14 +528,14 @@ export default function Initiatives({ teamId }: { teamId?: string } = {}) {
                               : 'text-muted-foreground hover:bg-accent/50'
                         )}
                      >
-                        {item.label}
+                        {t(item.label)}
                      </button>
                   ))}
                </div>
                <div className="flex items-center gap-1">
                   <Button size="xs" onClick={() => setNewOpen(true)}>
                      <Plus className="size-3.5" />
-                     New initiative
+                     {t('New initiative')}
                   </Button>
                   <InitiativesFilter />
                   <InitiativesDisplayOptions />
@@ -543,30 +550,30 @@ export default function Initiatives({ teamId }: { teamId?: string } = {}) {
             </div>
 
             <div className="flex items-center gap-2 px-6 py-1.5 text-xs text-muted-foreground border-b">
-               <span className="flex-1">Name</span>
+               <span className="flex-1">{t('Name')}</span>
                {showStatus && displayProperties.status && (
-                  <span className="hidden md:block w-28 shrink-0">Status</span>
+                  <span className="hidden md:block w-28 shrink-0">{t('Status')}</span>
                )}
                {displayProperties.priority && (
-                  <span className="hidden sm:block w-16 shrink-0">Priority</span>
+                  <span className="hidden sm:block w-16 shrink-0">{t('Priority')}</span>
                )}
                {displayProperties.owner && (
-                  <span className="hidden sm:block w-14 shrink-0">Owner</span>
+                  <span className="hidden sm:block w-14 shrink-0">{t('Owner')}</span>
                )}
                {displayProperties.leadTeam && (
-                  <span className="hidden lg:block w-24 shrink-0">Lead team</span>
+                  <span className="hidden lg:block w-24 shrink-0">{t('Lead team')}</span>
                )}
                {displayProperties.target && (
-                  <span className="hidden md:block w-20 shrink-0">Target</span>
+                  <span className="hidden md:block w-20 shrink-0">{t('Target')}</span>
                )}
                {displayProperties.projects && (
-                  <span className="hidden md:block w-16 shrink-0">Projects</span>
+                  <span className="hidden md:block w-16 shrink-0">{t('Projects')}</span>
                )}
                {displayProperties.health && (
-                  <span className="hidden xl:block w-28 shrink-0">Health</span>
+                  <span className="hidden xl:block w-28 shrink-0">{t('Health')}</span>
                )}
                {displayProperties.activeProjects && (
-                  <span className="hidden xl:block w-24 shrink-0">Active Projects</span>
+                  <span className="hidden xl:block w-24 shrink-0">{t('Active Projects')}</span>
                )}
             </div>
 
@@ -575,7 +582,7 @@ export default function Initiatives({ teamId }: { teamId?: string } = {}) {
                     <div key={group.statusId}>
                        <div className="flex items-center gap-2 px-6 h-9 text-sm font-medium bg-[color-mix(in_oklab,var(--accent)_30%,var(--container))] border-b border-border/40">
                           <InitiativeStatusIcon status={group.statusId} />
-                          {INITIATIVE_STATUS_META[group.statusId].label}
+                          {t(INITIATIVE_STATUS_META[group.statusId].label)}
                           <span className="text-xs text-muted-foreground">
                              {group.items.length}
                           </span>

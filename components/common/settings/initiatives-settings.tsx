@@ -10,10 +10,12 @@ import { UserRound } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useEffect } from 'react';
+import { useLanguage } from '@/components/providers/language-provider';
 
 /** Workspace "Initiatives" settings: a read-only overview of every initiative.
  *  Creation and editing live on the Initiatives page. */
 export default function InitiativesSettings() {
+   const { t } = useLanguage();
    const { orgId } = useParams<{ orgId: string }>();
    const initiatives = useInitiativesStore((s) => s.initiatives);
    const hydrate = useInitiativesStore((s) => s.hydrate);
@@ -31,28 +33,30 @@ export default function InitiativesSettings() {
    return (
       <div className="w-full overflow-y-auto h-full">
          <div className="max-w-5xl mx-auto px-6 py-10 pb-20">
-            <h1 className="text-2xl font-medium">Initiatives</h1>
+            <h1 className="text-2xl font-medium">{t('Initiatives')}</h1>
             <p className="text-sm text-muted-foreground mt-1">
-               Group projects into larger bodies of work
+               {t('Group projects into larger bodies of work')}
             </p>
             <p className="text-xs text-muted-foreground mt-2">
-               Create and edit initiatives from the{' '}
+               {t('Create and edit initiatives from the')}{' '}
                <Link
                   href={`/${orgId}/initiatives`}
                   className="underline underline-offset-2 hover:text-foreground"
                >
-                  Initiatives page
+                  {t('Initiatives page')}
                </Link>
                .
             </p>
 
             <div className="mt-6 rounded-lg border bg-container">
                <div className="flex items-center px-4 py-2 text-xs text-muted-foreground border-b">
-                  <span className="flex-1 min-w-0">Name</span>
-                  <span className="w-28 shrink-0">Status</span>
-                  <span className="w-28 shrink-0">Health</span>
-                  <span className="hidden sm:flex w-32 shrink-0 items-center gap-1.5">Owner</span>
-                  <span className="w-16 shrink-0 text-right">Projects</span>
+                  <span className="flex-1 min-w-0">{t('Name')}</span>
+                  <span className="w-28 shrink-0">{t('Status')}</span>
+                  <span className="w-28 shrink-0">{t('Health')}</span>
+                  <span className="hidden sm:flex w-32 shrink-0 items-center gap-1.5">
+                     {t('Owner')}
+                  </span>
+                  <span className="w-16 shrink-0 text-right">{t('Projects')}</span>
                </div>
                {initiatives.map((initiative) => {
                   const owner = ownerOf(initiative);
@@ -73,7 +77,7 @@ export default function InitiativesSettings() {
                         </span>
                         <span className="w-28 shrink-0 flex items-center gap-1.5 text-xs text-muted-foreground">
                            <InitiativeStatusIcon status={initiative.status} />
-                           {INITIATIVE_STATUS_META[initiative.status].label}
+                           {t(INITIATIVE_STATUS_META[initiative.status].label)}
                         </span>
                         <span className="w-28 shrink-0 flex items-center gap-1.5 text-xs text-muted-foreground">
                            <span
@@ -89,8 +93,8 @@ export default function InitiativesSettings() {
                               }
                            />
                            {initiative.health.id === 'no-update'
-                              ? 'No updates'
-                              : initiative.health.name}
+                              ? t('No updates')
+                              : t(initiative.health.name)}
                         </span>
                         <span className="hidden sm:flex w-32 shrink-0 items-center gap-1.5 text-xs text-muted-foreground min-w-0">
                            {owner ? (
@@ -106,7 +110,7 @@ export default function InitiativesSettings() {
                            ) : (
                               <>
                                  <UserRound className="size-3.5 shrink-0" />
-                                 <span>No owner</span>
+                                 <span>{t('No owner')}</span>
                               </>
                            )}
                         </span>
@@ -117,7 +121,9 @@ export default function InitiativesSettings() {
                   );
                })}
                {initiatives.length === 0 && (
-                  <p className="text-sm text-muted-foreground px-4 py-6">No initiatives yet.</p>
+                  <p className="text-sm text-muted-foreground px-4 py-6">
+                     {t('No initiatives yet.')}
+                  </p>
                )}
             </div>
          </div>

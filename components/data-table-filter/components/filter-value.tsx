@@ -193,8 +193,9 @@ export function FilterValueOptionDisplay<TData>({
     )
   }
   const name = column.displayName.toLowerCase()
-  // TODO: Better pluralization for different languages
-  const pluralName = name.endsWith('s') ? `${name}es` : `${name}s`
+  // Chinese has no plural forms — keep the display name as-is
+  const pluralName =
+    locale === 'zh-CN' ? name : name.endsWith('s') ? `${name}es` : `${name}s`
 
   const hasOptionIcons = !options?.some((o) => !o.icon)
 

@@ -1,5 +1,6 @@
 'use client';
 
+import { useLanguage } from '@/components/providers/language-provider';
 import { SettingsShell } from './shared';
 import { WorkflowStatusesSection } from './workflow-statuses-section';
 
@@ -9,10 +10,13 @@ import { WorkflowStatusesSection } from './workflow-statuses-section';
  * same set of statuses as the per-team settings, from a workspace angle.
  */
 export default function ProjectStatusesSettings() {
+   const { t } = useLanguage();
    return (
       <SettingsShell
-         title="Project statuses"
-         description="Project statuses define the workflow that projects go through from start to completion"
+         title={t('Project statuses')}
+         description={t(
+            'Project statuses define the workflow that projects go through from start to completion'
+         )}
       >
          <WorkflowStatusesSection
             title="Project workflow statuses"

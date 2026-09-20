@@ -10,6 +10,7 @@ import { useAgentChatStore } from '@/store/agent-chat-store';
 import { toast } from 'sonner';
 import { ArrowUp, Bot, Loader2, Sparkles, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { useLanguage } from '@/components/providers/language-provider';
 
 function AgentMessageBody({ content, streaming }: { content: string; streaming?: boolean }) {
    const lines = content.split('\n');
@@ -62,6 +63,7 @@ function ChatComposer({
    busy?: boolean;
 }) {
    const [value, setValue] = useState('');
+   const { t } = useLanguage();
 
    const submit = () => {
       if (value.trim() === '') return;
@@ -81,7 +83,7 @@ function ChatComposer({
                   submit();
                }
             }}
-            placeholder="Ask the agent…"
+            placeholder={t('Ask the agent…')}
             className={cn(
                'w-full resize-none bg-transparent px-4 pt-3.5 text-sm outline-none placeholder:text-muted-foreground',
                large ? 'min-h-16' : 'min-h-12'
@@ -90,14 +92,14 @@ function ChatComposer({
          <div className="flex items-center justify-between px-2.5 pb-2.5">
             <span className="flex items-center gap-1.5 text-xs text-muted-foreground px-1.5">
                <Sparkles className="size-3.5" />
-               Workspace agent
+               {t('Workspace agent')}
             </span>
             <Button
                size="icon"
                className="size-7 rounded-full"
                onClick={submit}
                disabled={value.trim() === '' || busy}
-               aria-label="Send"
+               aria-label={t('Send')}
             >
                {busy ? <Loader2 className="size-4 animate-spin" /> : <ArrowUp className="size-4" />}
             </Button>
@@ -127,6 +129,7 @@ const STARTERS = [
  * shows the operator's reason instead of fabricating answers.
  */
 export default function AgentChat() {
+   const { t } = useLanguage();
    const members = useMembersStore((s) => s.members);
    const me = useMeStore((s) => s.me);
    const chats = useAgentChatStore((s) => s.chats);
@@ -163,7 +166,7 @@ export default function AgentChat() {
          <div className="w-full h-full flex flex-col items-center overflow-y-auto">
             {unconfigured && (
                <div className="mt-4 max-w-2xl mx-6 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm">
-                  <p className="font-medium">The agent is unavailable on this server</p>
+                  <p className="font-medium">{t('The agent is unavailable on this server')}</p>
                   <p className="mt-1 text-muted-foreground">{unconfigured}</p>
                </div>
             )}
@@ -178,12 +181,12 @@ export default function AgentChat() {
                   <div className="mt-6">
                      <div className="flex items-center justify-between mb-3">
                         <span className="text-sm text-muted-foreground">
-                           Get started with some examples
+                           {t('Get started with some examples')}
                         </span>
                         <button
                            onClick={() => setExamplesDismissed(true)}
                            className="text-muted-foreground hover:text-foreground transition-colors"
-                           aria-label="Dismiss examples"
+                           aria-label={t('Dismiss examples')}
                         >
                            <X className="size-4" />
                         </button>
@@ -197,9 +200,9 @@ export default function AgentChat() {
                               className="border rounded-lg p-4 text-left hover:bg-accent/40 transition-colors"
                            >
                               <Sparkles className="size-4 text-muted-foreground" />
-                              <p className="mt-6 text-sm font-medium">{example.title}</p>
+                              <p className="mt-6 text-sm font-medium">{t(example.title)}</p>
                               <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-                                 {example.description}
+                                 {t(example.description)}
                               </p>
                            </button>
                         ))}
@@ -217,7 +220,7 @@ export default function AgentChat() {
          {unconfigured && (
             <div className="shrink-0 max-w-2xl w-full mx-auto px-6 pt-4">
                <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm">
-                  <p className="font-medium">The agent is unavailable on this server</p>
+                  <p className="font-medium">{t('The agent is unavailable on this server')}</p>
                   <p className="mt-1 text-muted-foreground">{unconfigured}</p>
                </div>
             </div>
@@ -234,7 +237,7 @@ export default function AgentChat() {
                            <Avatar className="size-6 mt-1 shrink-0">
                               <AvatarImage
                                  src={meMember?.avatarUrl}
-                                 alt={meMember?.name ?? 'You'}
+                                 alt={meMember?.name ?? t('You')}
                               />
                               <AvatarFallback>{(meMember?.name ?? 'Y')[0]}</AvatarFallback>
                            </Avatar>

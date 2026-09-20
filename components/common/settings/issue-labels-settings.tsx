@@ -17,6 +17,7 @@ import { format, isValid, parseISO } from 'date-fns';
 import { MoreHorizontal, Pencil } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { SelectMenu } from './shared';
+import { useLanguage } from '@/components/providers/language-provider';
 
 const formatCount = (count: number) =>
    count >= 1000 ? `${(count / 1000).toFixed(1)}K` : String(count);
@@ -32,6 +33,7 @@ function DescriptionCell({ label }: { label: LabelInterface }) {
    const updateLabel = useLabelsStore((s) => s.updateLabel);
    const [editing, setEditing] = useState(false);
    const [draft, setDraft] = useState('');
+   const { t } = useLanguage();
 
    const start = () => {
       setDraft(label.description ?? '');
@@ -59,7 +61,7 @@ function DescriptionCell({ label }: { label: LabelInterface }) {
                }
                if (e.key === 'Escape') setEditing(false);
             }}
-            placeholder="What is this label for?"
+            placeholder={t('What is this label for?')}
             maxLength={500}
             className="h-9 min-h-0 w-full resize-none text-xs px-2 py-1.5"
          />
@@ -70,7 +72,7 @@ function DescriptionCell({ label }: { label: LabelInterface }) {
       <button
          type="button"
          onClick={start}
-         title="Edit description"
+         title={t('Edit description')}
          className="group flex w-full items-center gap-1.5 text-left"
       >
          <span className="flex-1 truncate text-xs text-muted-foreground">
@@ -89,6 +91,7 @@ export default function IssueLabelsSettings() {
    const [query, setQuery] = useState('');
    const [dialogOpen, setDialogOpen] = useState(false);
    const [editing, setEditing] = useState<LabelInterface | undefined>(undefined);
+   const { t } = useLanguage();
 
    const openCreate = () => {
       setEditing(undefined);
@@ -115,31 +118,31 @@ export default function IssueLabelsSettings() {
    return (
       <div className="w-full overflow-y-auto h-full">
          <div className="max-w-5xl mx-auto px-6 py-10 pb-20">
-            <h1 className="text-2xl font-medium mb-6">Issue labels</h1>
+            <h1 className="text-2xl font-medium mb-6">{t('Issue labels')}</h1>
 
             <div className="flex items-center justify-between gap-3 mb-6">
                <div className="flex items-center gap-2">
                   <Input
-                     placeholder="Filter by name..."
+                     placeholder={t('Filter by name...')}
                      value={query}
                      onChange={(event) => setQuery(event.target.value)}
                      className="w-64 h-8"
                   />
-                  <SelectMenu options={['Workspace', 'All teams']} />
+                  <SelectMenu options={[t('Workspace'), t('All teams')]} />
                </div>
                <div className="flex items-center gap-2">
                   <Button size="xs" onClick={openCreate}>
-                     New label
+                     {t('New label')}
                   </Button>
                </div>
             </div>
 
             {/* Header */}
             <div className="flex items-center px-2 py-1.5 text-xs text-muted-foreground border-b">
-               <div className="flex-1 min-w-0">Name ↓</div>
-               <div className="hidden md:block w-[260px]">Description</div>
-               <div className="w-[70px]">Issues</div>
-               <div className="w-[110px]">Created</div>
+               <div className="flex-1 min-w-0">{t('Name ↓')}</div>
+               <div className="hidden md:block w-[260px]">{t('Description')}</div>
+               <div className="w-[70px]">{t('Issues')}</div>
+               <div className="w-[110px]">{t('Created')}</div>
             </div>
 
             {rows.map((label) => (
@@ -168,19 +171,23 @@ export default function IssueLabelsSettings() {
                         <MoreHorizontal className="size-4" />
                      </DropdownMenuTrigger>
                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => openEdit(label)}>Edit</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => openEdit(label)}>
+                           {t('Edit')}
+                        </DropdownMenuItem>
                         <DropdownMenuItem
                            className="text-destructive"
                            onClick={() => deleteLabel(label.id)}
                         >
-                           Delete
+                           {t('Delete')}
                         </DropdownMenuItem>
                      </DropdownMenuContent>
                   </DropdownMenu>
                </div>
             ))}
             {rows.length === 0 && (
-               <p className="text-sm text-muted-foreground py-6">No labels match your filter.</p>
+               <p className="text-sm text-muted-foreground py-6">
+                  {t('No labels match your filter.')}
+               </p>
             )}
          </div>
 

@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
+import { useLanguage } from '@/components/providers/language-provider';
 import {
    Dialog,
    DialogContent,
@@ -22,6 +23,7 @@ interface ResetPasswordDialogProps {
 
 /** Admin action: generate a single-use password reset link (valid 30 minutes). */
 export function ResetPasswordDialog({ member, onClose }: ResetPasswordDialogProps) {
+   const { t } = useLanguage();
    const [busy, setBusy] = useState(false);
    const [url, setUrl] = useState<string | null>(null);
    const [copied, setCopied] = useState(false);
@@ -40,12 +42,12 @@ export function ResetPasswordDialog({ member, onClose }: ResetPasswordDialogProp
          const res = await fetch(`/api/members/${member.id}/password-reset`, { method: 'POST' });
          if (!res.ok) {
             const payload = (await res.json().catch(() => ({}))) as { error?: string };
-            throw new Error(payload.error ?? 'Could not generate reset link');
+            throw new Error(payload.error ?? t('Could not generate reset link'));
          }
          const data = (await res.json()) as { url: string };
          setUrl(data.url);
       } catch (error) {
-         toast.error(error instanceof Error ? error.message : 'Could not generate reset link');
+         toast.error(error instanceof Error ? error.message : t('Could not generate reset link'));
       } finally {
          setBusy(false);
       }
@@ -58,7 +60,7 @@ export function ResetPasswordDialog({ member, onClose }: ResetPasswordDialogProp
          setCopied(true);
          setTimeout(() => setCopied(false), 1500);
       } catch {
-         toast.error('Could not copy — select and copy manually');
+         toast.error(t('Could not copy — select and copy manually'));
       }
    };
 
@@ -66,10 +68,11 @@ export function ResetPasswordDialog({ member, onClose }: ResetPasswordDialogProp
       <Dialog open={!!member} onOpenChange={(v) => !v && onClose()}>
          <DialogContent className="sm:max-w-md">
             <DialogHeader>
-               <DialogTitle>Reset password</DialogTitle>
+               <DialogTitle>{t('Reset password')}</DialogTitle>
                <DialogDescription>
-                  Generate a single-use reset link (valid 30 minutes). Share it with the member
-                  securely.
+                  {t(
+                     'Generate a single-use reset link (valid 30 minutes). Share it with the member securely.'
+                  )}
                </DialogDescription>
             </DialogHeader>
 
@@ -83,7 +86,7 @@ export function ResetPasswordDialog({ member, onClose }: ResetPasswordDialogProp
                         variant="ghost"
                         size="icon"
                         className="size-7 shrink-0 text-muted-foreground"
-                        aria-label="Copy reset link"
+                        aria-label={t('Copy reset link')}
                         onClick={copy}
                      >
                         {copied ? (
@@ -94,24 +97,27 @@ export function ResetPasswordDialog({ member, onClose }: ResetPasswordDialogProp
                      </Button>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                     This link is shown once, stops working after use and expires in 30 minutes.
+                     {t(
+                        'This link is shown once, stops working after use and expires in 30 minutes.'
+                     )}
                   </p>
                   <DialogFooter>
-                     <Button onClick={onClose}>Done</Button>
+                     <Button onClick={onClose}>{t('Close')}</Button>
                   </DialogFooter>
                </>
             ) : (
                <>
                   <p className="py-2 text-sm text-muted-foreground">
-                     The link lets {member?.email ?? 'the member'} set a new password. Nothing is
-                     emailed — pass it along through a channel you trust.
+                     {`${t('The link lets')} ${member?.email ?? t('the member')} ${t(
+                        'set a new password. Nothing is emailed — pass it along through a channel you trust.'
+                     )}`}
                   </p>
                   <DialogFooter>
                      <Button variant="ghost" onClick={onClose}>
-                        Cancel
+                        {t('Cancel')}
                      </Button>
                      <Button onClick={generate} disabled={busy}>
-                        {busy ? 'Generating…' : 'Generate'}
+                        {busy ? t('Generating…') : t('Generate')}
                      </Button>
                   </DialogFooter>
                </>

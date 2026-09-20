@@ -2,9 +2,11 @@
 
 import { Button } from '@/components/ui/button';
 import { CycleDialog } from '@/components/common/forms/cycle-dialog';
+import { useLanguage } from '@/components/providers/language-provider';
 import { useCyclesStore } from '@/store/cycles-store';
 import { useTeamsStore } from '@/store/teams-store';
-import { format, parseISO } from 'date-fns';
+import { formatAppDate } from '@/lib/i18n';
+import { parseISO } from 'date-fns';
 import { Plus } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { Fragment, useState } from 'react';
@@ -17,6 +19,7 @@ import { CycleBurnupChart, CycleProgressLegend } from './cycle-burnup-chart';
  */
 export default function Cycles() {
    const { teamId } = useParams<{ teamId: string }>();
+   const { locale, t } = useLanguage();
    const teams = useTeamsStore((s) => s.teams);
    const allCycles = useCyclesStore((s) => s.cycles);
    const team = teams.find((t) => t.id === teamId) ?? teams[0];
@@ -30,7 +33,7 @@ export default function Cycles() {
          <div className="flex items-center justify-end px-6 pb-2">
             <Button size="xs" onClick={() => setDialogOpen(true)}>
                <Plus className="size-3.5" />
-               New cycle
+               {t('New cycle')}
             </Button>
          </div>
 
@@ -42,9 +45,9 @@ export default function Cycles() {
                      <div className="absolute right-[20.5px] top-0 bottom-0 w-px bg-border" />
                      <div className="flex items-center gap-2 h-12">
                         <span className="text-[11px] leading-tight text-muted-foreground text-right">
-                           {format(parseISO(cycle.startDate), 'MMM')}
+                           {formatAppDate(locale, parseISO(cycle.startDate), 'MMM')}
                            <br />
-                           {format(parseISO(cycle.startDate), 'd')}
+                           {formatAppDate(locale, parseISO(cycle.startDate), 'd')}
                         </span>
                         <span
                            className={
@@ -76,7 +79,7 @@ export default function Cycles() {
          ))}
 
          {cycles.length === 0 && (
-            <p className="px-6 py-10 text-sm text-muted-foreground">No cycles yet.</p>
+            <p className="px-6 py-10 text-sm text-muted-foreground">{t('No cycles yet.')}</p>
          )}
 
          {scopeKey && (

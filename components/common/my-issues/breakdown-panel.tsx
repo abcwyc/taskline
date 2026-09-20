@@ -1,5 +1,6 @@
 'use client';
 
+import { useLanguage } from '@/components/providers/language-provider';
 import { cn } from '@/lib/utils';
 import { Issue } from '@/mock-data/issues';
 import { useTeamsStore } from '@/store/teams-store';
@@ -43,6 +44,7 @@ const PRIORITY_COLORS: Record<string, string> = {
  * over the currently displayed issues (Linear side panel).
  */
 export function BreakdownPanel({ issues }: { issues: Issue[] }) {
+   const { t } = useLanguage();
    const teams = useTeamsStore((s) => s.teams);
    const { closePanel } = useRightPanelStore();
    const [tab, setTab] = useState<BreakdownTab>('labels');
@@ -106,14 +108,14 @@ export function BreakdownPanel({ issues }: { issues: Issue[] }) {
                            : 'text-muted-foreground hover:bg-accent/50'
                      )}
                   >
-                     {label}
+                     {t(label)}
                   </button>
                ))}
             </div>
             <button
                onClick={() => closePanel()}
                className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
-               aria-label="Close panel"
+               aria-label={t('Close panel')}
             >
                <X className="size-4" />
             </button>
@@ -130,12 +132,14 @@ export function BreakdownPanel({ issues }: { issues: Issue[] }) {
                         style={{ backgroundColor: row.color }}
                      />
                   )}
-                  <span className="flex-1 truncate">{row.label}</span>
+                  <span className="flex-1 truncate">{t(row.label)}</span>
                   <span className="text-muted-foreground text-xs">{row.count}</span>
                </div>
             ))}
             {rows.length === 0 && (
-               <span className="text-sm text-muted-foreground py-6 text-center">No data</span>
+               <span className="text-sm text-muted-foreground py-6 text-center">
+                  {t('No data')}
+               </span>
             )}
          </div>
       </div>

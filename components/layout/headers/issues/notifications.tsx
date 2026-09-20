@@ -1,16 +1,15 @@
 'use client';
 
 import { Bell } from 'lucide-react';
-import Link from 'next/link';
-import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState } from 'react';
 import { RiSlackLine } from '@remixicon/react';
+import { useLanguage } from '@/components/providers/language-provider';
 
 export default function Notifications() {
-   const { orgId } = useParams<{ orgId: string }>();
+   const { t } = useLanguage();
    const [notifications, setNotifications] = useState({
       teamIssueAdded: false,
       issueCompleted: false,
@@ -31,14 +30,14 @@ export default function Notifications() {
                variant="ghost"
                size="icon"
                className="h-8 w-8 relative"
-               aria-label="Notifications"
+               aria-label={t('Notifications')}
             >
                <Bell className="h-4 w-4" />
             </Button>
          </PopoverTrigger>
          <PopoverContent className="w-80 p-0" align="end">
             <div className="px-4 pt-3 pb-3">
-               <h3 className="text-sm font-medium mb-3">Inbox notifications</h3>
+               <h3 className="text-sm font-medium mb-3">{t('Inbox notifications')}</h3>
 
                <div className="space-y-4">
                   <div className="flex items-center justify-between">
@@ -46,7 +45,7 @@ export default function Notifications() {
                         htmlFor="team-issue-added"
                         className="text-xs text-muted-foreground cursor-pointer flex-1"
                      >
-                        An issue is added to the team
+                        {t('An issue is added to the team')}
                      </label>
                      <Checkbox
                         id="team-issue-added"
@@ -60,7 +59,7 @@ export default function Notifications() {
                         htmlFor="issue-completed"
                         className="text-xs text-muted-foreground cursor-pointer flex-1"
                      >
-                        An issue is marked completed or canceled
+                        {t('An issue is marked completed or canceled')}
                      </label>
                      <Checkbox
                         id="issue-completed"
@@ -74,7 +73,7 @@ export default function Notifications() {
                         htmlFor="issue-triage"
                         className="text-xs text-muted-foreground cursor-pointer flex-1"
                      >
-                        An issue is added to the triage queue
+                        {t('An issue is added to the triage queue')}
                      </label>
                      <Checkbox
                         id="issue-triage"
@@ -88,10 +87,10 @@ export default function Notifications() {
             <div className="border-t py-2 px-4 flex items-center justify-between">
                <div className="flex items-center gap-2">
                   <RiSlackLine className="size-4" />
-                  <span className="text-xs font-medium">Slack notifications</span>
+                  <span className="text-xs font-medium">{t('Slack notifications')}</span>
                </div>
                <Button size="xs" variant="outline">
-                  Configure
+                  {t('Configure')}
                </Button>
             </div>
          </PopoverContent>

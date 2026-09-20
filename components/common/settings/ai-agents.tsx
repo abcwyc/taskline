@@ -9,6 +9,7 @@ import { useMeStore } from '@/store/me-store';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { SettingsCard, SettingsRow, SettingsSection, SettingsShell } from './shared';
+import { useLanguage } from '@/components/providers/language-provider';
 
 /** Workspace "AI & Agents" settings — the workspace-level AI agent configuration. */
 export default function AiAgents() {
@@ -18,6 +19,7 @@ export default function AiAgents() {
    const [loaded, setLoaded] = useState(false);
    const [loadError, setLoadError] = useState<string | null>(null);
    const [saving, setSaving] = useState(false);
+   const { t } = useLanguage();
 
    useEffect(() => {
       let cancelled = false;
@@ -42,9 +44,9 @@ export default function AiAgents() {
       try {
          await putSetting('ai', value);
          setSaved(value);
-         toast.success('AI settings saved');
+         toast.success(t('AI settings saved'));
       } catch (err) {
-         toast.error('Failed to save AI settings');
+         toast.error(t('Failed to save AI settings'));
          console.error(err);
       } finally {
          setSaving(false);
@@ -53,9 +55,12 @@ export default function AiAgents() {
 
    if (!loaded) {
       return (
-         <SettingsShell title="AI & Agents" description="Configure the workspace AI agent">
+         <SettingsShell
+            title={t('AI & Agents')}
+            description={t('Configure the workspace AI agent')}
+         >
             <p className="text-sm text-muted-foreground">
-               {loadError ? `Failed to load AI settings: ${loadError}` : 'Loading…'}
+               {loadError ? `${t('Failed to load AI settings')}: ${loadError}` : t('Loading…')}
             </p>
          </SettingsShell>
       );
@@ -68,14 +73,18 @@ export default function AiAgents() {
 
    return (
       <SettingsShell
-         title="AI & Agents"
-         description="Configure the workspace AI agent. Only workspace admins can change these settings."
+         title={t('AI & Agents')}
+         description={t(
+            'Configure the workspace AI agent. Only workspace admins can change these settings.'
+         )}
       >
-         <SettingsSection title="Workspace AI agent">
+         <SettingsSection title={t('Workspace AI agent')}>
             <SettingsCard>
                <SettingsRow
-                  title="Enable workspace AI agent"
-                  description="The agent answers only when an LLM endpoint is configured on the server (AGENT_LLM_* env vars)."
+                  title={t('Enable workspace AI agent')}
+                  description={t(
+                     'The agent answers only when an LLM endpoint is configured on the server (AGENT_LLM_* env vars).'
+                  )}
                   trailing={
                      <Switch
                         checked={value.enabled}
@@ -88,13 +97,13 @@ export default function AiAgents() {
          </SettingsSection>
 
          <SettingsSection
-            title="Model and instructions"
-            description="The model the agent uses and the system prompt it starts from"
+            title={t('Model and instructions')}
+            description={t('The model the agent uses and the system prompt it starts from')}
          >
             <SettingsCard>
                <SettingsRow
-                  title="Model"
-                  description="For example gpt-4o-mini or your gateway model id"
+                  title={t('Model')}
+                  description={t('For example gpt-4o-mini or your gateway model id')}
                   trailing={
                      <Input
                         value={value.model}
@@ -106,15 +115,15 @@ export default function AiAgents() {
                   }
                />
                <div className="px-4 py-3">
-                  <div className="text-sm font-medium">System prompt</div>
+                  <div className="text-sm font-medium">{t('System prompt')}</div>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                     Instructions for the agent when answering questions about this workspace
+                     {t('Instructions for the agent when answering questions about this workspace')}
                   </p>
                   <Textarea
                      value={value.systemPrompt}
                      disabled={!isAdmin}
                      onChange={(e) => setValue((v) => ({ ...v, systemPrompt: e.target.value }))}
-                     placeholder="You are a helpful assistant for our team…"
+                     placeholder={t('You are a helpful assistant for our team…')}
                      className="mt-3 min-h-28"
                   />
                </div>
@@ -122,7 +131,7 @@ export default function AiAgents() {
             {isAdmin && (
                <div className="flex justify-end">
                   <Button size="sm" disabled={!dirty || saving} onClick={save}>
-                     {saving ? 'Saving…' : 'Save changes'}
+                     {saving ? t('Saving…') : t('Save changes')}
                   </Button>
                </div>
             )}

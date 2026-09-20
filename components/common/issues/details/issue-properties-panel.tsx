@@ -1,6 +1,7 @@
 'use client';
 
 import { CyclePlayIcon } from '@/components/common/cycles/cycle-line';
+import { useLanguage } from '@/components/providers/language-provider';
 import { AssigneeUser } from '../assignee-user';
 import { LabelBadge } from '../label-badge';
 import { LabelSelector } from '@/components/layout/sidebar/create-new-issue/label-selector';
@@ -78,6 +79,7 @@ function RelationRow({
    onRemove: (relationId: string) => void;
    icon?: React.ReactNode;
 }) {
+   const { t } = useLanguage();
    return (
       <div className="group/rel flex items-center gap-1.5 min-w-0">
          {icon}
@@ -87,7 +89,7 @@ function RelationRow({
          {relationId && (
             <button
                type="button"
-               aria-label={`Remove relation to ${identifier}`}
+               aria-label={`${t('Remove relation to')} ${identifier}`}
                onClick={() => onRemove(relationId)}
                className="shrink-0 p-0.5 text-muted-foreground/70 hover:text-foreground opacity-0 group-hover/rel:opacity-100 transition-opacity"
             >
@@ -109,6 +111,7 @@ function AddRelationPopover({
    const [open, setOpen] = useState(false);
    const [target, setTarget] = useState('');
    const [type, setType] = useState<RelationEntry['type']>('blocked-by');
+   const { t } = useLanguage();
 
    const close = () => {
       setOpen(false);
@@ -133,14 +136,14 @@ function AddRelationPopover({
                className="flex items-center gap-1.5 -ml-1 text-xs text-muted-foreground hover:text-foreground"
             >
                <Plus className="size-3.5" />
-               Add relation
+               {t('Add relation')}
             </button>
          </PopoverTrigger>
          <PopoverContent align="start" className="w-64">
             <div className="flex flex-col gap-3">
                <div className="flex flex-col gap-1.5">
                   <Label htmlFor="relation-target" className="text-xs">
-                     Issue
+                     {t('Issue')}
                   </Label>
                   <Input
                      id="relation-target"
@@ -157,7 +160,7 @@ function AddRelationPopover({
                   />
                </div>
                <div className="flex flex-col gap-1.5">
-                  <Label className="text-xs">Type</Label>
+                  <Label className="text-xs">{t('Type')}</Label>
                   <Select
                      value={type}
                      onValueChange={(value) => setType(value as RelationEntry['type'])}
@@ -168,7 +171,7 @@ function AddRelationPopover({
                      <SelectContent>
                         {RELATION_TYPES.map((option) => (
                            <SelectItem key={option.value} value={option.value} className="text-xs">
-                              {option.label}
+                              {t(option.label)}
                            </SelectItem>
                         ))}
                      </SelectContent>
@@ -180,7 +183,7 @@ function AddRelationPopover({
                   disabled={!target.trim()}
                   className="self-start"
                >
-                  Add
+                  {t('Add')}
                </Button>
             </div>
          </PopoverContent>
@@ -199,6 +202,7 @@ function AddPullRequestDialog({
    const [open, setOpen] = useState(false);
    const [title, setTitle] = useState('');
    const [url, setUrl] = useState('');
+   const { t } = useLanguage();
 
    const urlInvalid = url.trim().length > 0 && !url.trim().startsWith('http');
    const canSubmit = title.trim().length > 0 && url.trim().startsWith('http');
@@ -227,14 +231,14 @@ function AddPullRequestDialog({
                className="flex items-center gap-1.5 -ml-1 mt-1 text-xs text-muted-foreground hover:text-foreground"
             >
                <Plus className="size-3.5" />
-               Add pull request
+               {t('Add pull request')}
             </button>
          </DialogTrigger>
          <DialogContent className="sm:max-w-sm">
             <DialogHeader>
-               <DialogTitle>Link a pull request</DialogTitle>
+               <DialogTitle>{t('Link a pull request')}</DialogTitle>
                <DialogDescription>
-                  Add a pull request shown in the Diffs section of this issue.
+                  {t('Add a pull request shown in the Diffs section of this issue.')}
                </DialogDescription>
             </DialogHeader>
             <div className="flex flex-col gap-3">
@@ -252,7 +256,7 @@ function AddPullRequestDialog({
                </div>
                <div className="flex flex-col gap-1.5">
                   <Label htmlFor="pr-url" className="text-xs">
-                     URL
+                     {t('URL')}
                   </Label>
                   <Input
                      id="pr-url"
@@ -261,15 +265,17 @@ function AddPullRequestDialog({
                      placeholder="https://github.com/lndev/ui/pull/212"
                      className="h-7 text-xs"
                   />
-                  {urlInvalid && <p className="text-xs text-red-500">URL must start with http.</p>}
+                  {urlInvalid && (
+                     <p className="text-xs text-red-500">{t('URL must start with http.')}</p>
+                  )}
                </div>
             </div>
             <DialogFooter>
                <Button variant="outline" size="xs" onClick={close}>
-                  Cancel
+                  {t('Cancel')}
                </Button>
                <Button size="xs" onClick={() => void submit()} disabled={!canSubmit}>
-                  Add
+                  {t('Add')}
                </Button>
             </DialogFooter>
          </DialogContent>
@@ -282,6 +288,7 @@ function AddPullRequestDialog({
  * assignee), cycle, labels, project + milestone, relations and linked PRs.
  */
 export function IssuePropertiesPanel({ issue, detail }: IssuePropertiesPanelProps) {
+   const { t } = useLanguage();
    const cycle = useCyclesStore((s) => (issue.cycleId ? s.getCycleById(issue.cycleId) : undefined));
    const addRelation = useIssueDetailsStore((s) => s.addRelation);
    const removeRelation = useIssueDetailsStore((s) => s.removeRelation);
@@ -290,19 +297,21 @@ export function IssuePropertiesPanel({ issue, detail }: IssuePropertiesPanelProp
 
    return (
       <div className="flex flex-col gap-7">
-         <Section title="Properties">
+         <Section title={t('Properties')}>
             <div className="flex flex-col gap-1.5">
                <div className="flex items-center gap-1.5 -ml-1.5">
                   <StatusSelector status={issue.status} issueId={issue.id} />
-                  <span className="text-sm">{issue.status.name}</span>
+                  <span className="text-sm">{t(issue.status.name)}</span>
                </div>
                <div className="flex items-center gap-1.5 -ml-1.5">
                   <PrioritySelector priority={issue.priority} issueId={issue.id} />
-                  <span className="text-sm">{issue.priority.name}</span>
+                  <span className="text-sm">{t(issue.priority.name)}</span>
                </div>
                <div className="flex items-center gap-2 mt-0.5">
                   <AssigneeUser user={issue.assignee} />
-                  <span className="text-sm">{issue.assignee ? issue.assignee.name : 'Assign'}</span>
+                  <span className="text-sm">
+                     {issue.assignee ? issue.assignee.name : t('Assign')}
+                  </span>
                </div>
                {cycle && (
                   <div className="flex items-center gap-2 mt-0.5">
@@ -313,7 +322,7 @@ export function IssuePropertiesPanel({ issue, detail }: IssuePropertiesPanelProp
             </div>
          </Section>
 
-         <Section title="Labels">
+         <Section title={t('Labels')}>
             <div className="flex items-center flex-wrap gap-1.5">
                {issue.labels.map((label) => (
                   <LabelBadge key={label.id} label={[label]} />
@@ -323,7 +332,7 @@ export function IssuePropertiesPanel({ issue, detail }: IssuePropertiesPanelProp
          </Section>
 
          {issue.project && (
-            <Section title="Project">
+            <Section title={t('Project')}>
                <div className="flex items-center gap-2 text-sm">
                   <issue.project.icon className="size-4 text-muted-foreground shrink-0" />
                   <span className="truncate">{issue.project.name}</span>
@@ -338,7 +347,7 @@ export function IssuePropertiesPanel({ issue, detail }: IssuePropertiesPanelProp
          )}
 
          {detail.blockedByIds && detail.blockedByIds.length > 0 && (
-            <Section title="Blocked by">
+            <Section title={t('Blocked by')}>
                <div className="flex flex-col">
                   {detail.blockedByIds.map((identifier) => (
                      <RelationRow
@@ -356,7 +365,7 @@ export function IssuePropertiesPanel({ issue, detail }: IssuePropertiesPanelProp
          )}
 
          {detail.blocksIds && detail.blocksIds.length > 0 && (
-            <Section title="Blocks">
+            <Section title={t('Blocks')}>
                <div className="flex flex-col">
                   {detail.blocksIds.map((identifier) => (
                      <RelationRow
@@ -372,7 +381,7 @@ export function IssuePropertiesPanel({ issue, detail }: IssuePropertiesPanelProp
          )}
 
          {detail.relatedIds && detail.relatedIds.length > 0 && (
-            <Section title="Related">
+            <Section title={t('Related')}>
                <div className="flex flex-col">
                   {detail.relatedIds.map((identifier) => (
                      <RelationRow
@@ -391,7 +400,7 @@ export function IssuePropertiesPanel({ issue, detail }: IssuePropertiesPanelProp
 
          <AddRelationPopover issueIdentifier={issue.identifier} onAdd={addRelation} />
 
-         <Section title="Diffs">
+         <Section title={t('Diffs')}>
             <div className="flex flex-col gap-1">
                {(detail.prLinks ?? []).map((pr) => (
                   <div key={pr.id} className="group/pr flex items-center gap-2 text-sm min-w-0">
@@ -411,7 +420,7 @@ export function IssuePropertiesPanel({ issue, detail }: IssuePropertiesPanelProp
                            <span className="text-muted-foreground shrink-0">{pr.id}</span>
                            <span className="truncate">{pr.title}</span>
                            <span className="ml-auto shrink-0 text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-accent text-muted-foreground">
-                              {pr.status}
+                              {t(pr.status)}
                            </span>
                         </a>
                      ) : (
@@ -425,13 +434,13 @@ export function IssuePropertiesPanel({ issue, detail }: IssuePropertiesPanelProp
                            <span className="text-muted-foreground shrink-0">{pr.id}</span>
                            <span className="truncate">{pr.title}</span>
                            <span className="ml-auto shrink-0 text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-accent text-muted-foreground">
-                              {pr.status}
+                              {t(pr.status)}
                            </span>
                         </div>
                      )}
                      <button
                         type="button"
-                        aria-label={`Unlink pull request ${pr.id}`}
+                        aria-label={`${t('Unlink pull request')} ${pr.id}`}
                         onClick={() => removePullRequest(issue.identifier, pr.id)}
                         className="shrink-0 p-0.5 text-muted-foreground/70 hover:text-foreground opacity-0 group-hover/pr:opacity-100 transition-opacity"
                      >

@@ -15,15 +15,17 @@ import { Textarea } from '@/components/ui/textarea';
 import { createAsk, fetchMyAsks } from '@/lib/api/asks';
 import { TriageItemDTO } from '@/lib/api/types';
 import { useTeamsStore } from '@/store/teams-store';
-import { format, isValid, parseISO } from 'date-fns';
+import { isValid, parseISO } from 'date-fns';
 import { Send } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { SettingsCard, SettingsSection } from './shared';
+import { formatAppDate, type AppLocale } from '@/lib/i18n';
+import { useLanguage } from '@/components/providers/language-provider';
 
-const formatDate = (iso: string) => {
+const formatDate = (iso: string, locale: AppLocale) => {
    const date = parseISO(iso);
-   return isValid(date) ? format(date, 'MMM d, yyyy') : iso;
+   return isValid(date) ? formatAppDate(locale, date, 'MMM d, yyyy') : iso;
 };
 
 const STATUS_META: Record<string, { label: string; className: string }> = {
@@ -34,10 +36,11 @@ const STATUS_META: Record<string, { label: string; className: string }> = {
 };
 
 function AskStatusBadge({ status }: { status: string }) {
+   const { t } = useLanguage();
    const meta = STATUS_META[status] ?? STATUS_META.pending;
    return (
       <Badge variant="outline" className={`px-1.5 py-0 text-[11px] ${meta.className}`}>
-         {meta.label}
+         {t(meta.label)}
       </Badge>
    );
 }
@@ -45,6 +48,7 @@ function AskStatusBadge({ status }: { status: string }) {
 /** Workspace "Asks" settings: submit a request into a team intake queue and
  *  follow the requests you've submitted. */
 export default function AsksSettings() {
+   const { locale, t } = useLanguage();
    const teams = useTeamsStore((s) => s.teams);
    const hydrateTeams = useTeamsStore((s) => s.hydrate);
 
@@ -85,12 +89,12 @@ export default function AsksSettings() {
             description: description.trim(),
             teamId,
          });
-         toast.success(`Ask ${created.identifier} submitted`);
+         toast.success(t('Ask {id} submitted').replace('{id}', created.identifier));
          setTitle('');
          setDescription('');
          await refresh();
       } catch (err) {
-         toast.error('Failed to submit ask', {
+         toast.error(t('Failed to submit ask'), {
             description: (err as Error).message,
          });
       } finally {
@@ -103,47 +107,50 @@ export default function AsksSettings() {
    return (
       <div className="w-full overflow-y-auto h-full">
          <div className="max-w-4xl mx-auto px-6 py-10 pb-20">
-            <h1 className="text-2xl font-medium">Asks</h1>
+            <h1 className="text-2xl font-medium">{t('Asks')}</h1>
             <p className="text-sm text-muted-foreground mt-1">
-               Turn requests into actionable issues. Submissions land in the team&apos;s intake
-               queue for triage.
+               {t(
+                  "Turn requests into actionable issues. Submissions land in the team's intake queue for triage."
+               )}
             </p>
 
             <div className="flex flex-col gap-10 mt-10">
-               <SettingsSection title="Submit an ask">
+               <SettingsSection title={t('Submit an ask')}>
                   <SettingsCard className="px-4 py-4">
                      <form onSubmit={submit} className="flex flex-col gap-4">
                         <div className="flex flex-col gap-1.5">
                            <Label htmlFor="ask-title" className="text-sm">
-                              Title
+                              {t('Title')}
                            </Label>
                            <Input
                               id="ask-title"
                               value={title}
                               onChange={(event) => setTitle(event.target.value)}
-                              placeholder="What are you asking for?"
+                              placeholder={t('What are you asking for?')}
                               maxLength={300}
                               required
                            />
                         </div>
                         <div className="flex flex-col gap-1.5">
                            <Label htmlFor="ask-description" className="text-sm">
-                              Description
+                              {t('Description')}
                            </Label>
                            <Textarea
                               id="ask-description"
                               value={description}
                               onChange={(event) => setDescription(event.target.value)}
-                              placeholder="Add context, links or acceptance criteria…"
+                              placeholder={t('Add context, links or acceptance criteria…')}
                               rows={4}
                            />
                         </div>
                         <div className="flex flex-col gap-1.5">
-                           <Label className="text-sm">Team</Label>
+                           <Label className="text-sm">{t('Team')}</Label>
                            <Select value={teamId} onValueChange={setTeamId}>
                               <SelectTrigger className="w-full sm:w-64">
                                  <SelectValue
-                                    placeholder={teams.length === 0 ? 'No teams available' : 'Team'}
+                                    placeholder={
+                                       teams.length === 0 ? t('No teams available') : t('Team')
+                                    }
                                  />
                               </SelectTrigger>
                               <SelectContent>
@@ -162,7 +169,7 @@ export default function AsksSettings() {
                               disabled={submitting || !title.trim() || !teamId}
                            >
                               <Send className="size-3.5" />
-                              {submitting ? 'Submitting…' : 'Submit'}
+                              {submitting ? t('Submitting…') : t('Submit')}
                            </Button>
                         </div>
                      </form>
@@ -170,21 +177,21 @@ export default function AsksSettings() {
                </SettingsSection>
 
                <SettingsSection
-                  title="My asks"
-                  description="Requests you've submitted, in any state"
+                  title={t('My asks')}
+                  description={t("Requests you've submitted, in any state")}
                >
                   {loadingError && <p className="text-sm text-destructive">{loadingError}</p>}
                   {asks === null && !loadingError && (
-                     <p className="text-sm text-muted-foreground">Loading your asks…</p>
+                     <p className="text-sm text-muted-foreground">{t('Loading your asks…')}</p>
                   )}
                   {asks !== null && (
                      <div className="rounded-lg border bg-container">
                         <div className="flex items-center px-4 py-2 text-xs text-muted-foreground border-b">
-                           <span className="w-20 shrink-0">Request</span>
-                           <span className="flex-1 min-w-0">Title</span>
-                           <span className="hidden sm:block w-28 shrink-0">Team</span>
-                           <span className="hidden md:block w-28 shrink-0">Submitted</span>
-                           <span className="w-24 shrink-0 text-right">Status</span>
+                           <span className="w-20 shrink-0">{t('Request')}</span>
+                           <span className="flex-1 min-w-0">{t('Title')}</span>
+                           <span className="hidden sm:block w-28 shrink-0">{t('Team')}</span>
+                           <span className="hidden md:block w-28 shrink-0">{t('Submitted')}</span>
+                           <span className="w-24 shrink-0 text-right">{t('Status')}</span>
                         </div>
                         {asks.map((ask) => (
                            <div
@@ -201,7 +208,7 @@ export default function AsksSettings() {
                                  {teamName(ask.teamId)}
                               </span>
                               <span className="hidden md:block w-28 shrink-0 text-xs text-muted-foreground">
-                                 {formatDate(ask.receivedAt)}
+                                 {formatDate(ask.receivedAt, locale)}
                               </span>
                               <span className="w-24 shrink-0 flex justify-end">
                                  <AskStatusBadge status={ask.status} />
@@ -210,7 +217,7 @@ export default function AsksSettings() {
                         ))}
                         {asks.length === 0 && (
                            <p className="text-sm text-muted-foreground px-4 py-6">
-                              You haven&apos;t submitted any asks yet.
+                              {t("You haven't submitted any asks yet.")}
                            </p>
                         )}
                      </div>

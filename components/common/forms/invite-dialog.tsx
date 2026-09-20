@@ -17,6 +17,7 @@ import {
 import { createInvite, fetchInvites, revokeInvite } from '@/lib/api/invites';
 import type { InviteDTO } from '@/lib/api/types';
 import { Check, Copy, Trash2 } from 'lucide-react';
+import { useLanguage } from '@/components/providers/language-provider';
 
 export function InviteDialog({
    open,
@@ -30,6 +31,7 @@ export function InviteDialog({
    const [busy, setBusy] = useState(false);
    const [invites, setInvites] = useState<InviteDTO[]>([]);
    const [copied, setCopied] = useState<string | null>(null);
+   const { t } = useLanguage();
 
    const load = useCallback(() => {
       fetchInvites()
@@ -51,7 +53,7 @@ export function InviteDialog({
          setCopied(invite.id);
          setTimeout(() => setCopied(null), 1500);
       } catch {
-         toast.error('Could not copy — select and copy manually');
+         toast.error(t('Could not copy — select and copy manually'));
       }
    };
 
@@ -62,9 +64,9 @@ export function InviteDialog({
          setInvites((prev) => [invite, ...prev]);
          setEmail('');
          await copy(invite);
-         toast.success('Invite link created and copied');
+         toast.success(t('Invite link created and copied'));
       } catch (err) {
-         toast.error((err as Error).message.replace(/^POST .*→ \d+ /, '') || 'Failed to invite');
+         toast.error((err as Error).message.replace(/^POST .*→ \d+ /, '') || t('Failed to invite'));
       } finally {
          setBusy(false);
       }
@@ -75,7 +77,7 @@ export function InviteDialog({
       try {
          await revokeInvite(id);
       } catch {
-         toast.error('Failed to revoke');
+         toast.error(t('Failed to revoke'));
          load();
       }
    };
@@ -84,12 +86,12 @@ export function InviteDialog({
       <Dialog open={open} onOpenChange={onOpenChange}>
          <DialogContent className="sm:max-w-lg">
             <DialogHeader>
-               <DialogTitle>Invite members</DialogTitle>
+               <DialogTitle>{t('Invite members')}</DialogTitle>
             </DialogHeader>
 
             <div className="flex items-end gap-2 py-1">
                <div className="flex flex-1 flex-col gap-1.5">
-                  <Label htmlFor="invite-email">Email (optional)</Label>
+                  <Label htmlFor="invite-email">{t('Email (optional)')}</Label>
                   <Input
                      id="invite-email"
                      type="email"
@@ -100,37 +102,39 @@ export function InviteDialog({
                   />
                </div>
                <div className="flex w-28 flex-col gap-1.5">
-                  <Label>Role</Label>
+                  <Label>{t('Role')}</Label>
                   <Select value={role} onValueChange={setRole}>
                      <SelectTrigger>
                         <SelectValue />
                      </SelectTrigger>
                      <SelectContent>
-                        <SelectItem value="Member">Member</SelectItem>
-                        <SelectItem value="Guest">Guest</SelectItem>
+                        <SelectItem value="Member">{t('Member')}</SelectItem>
+                        <SelectItem value="Guest">{t('Guest')}</SelectItem>
                      </SelectContent>
                   </Select>
                </div>
                <Button onClick={create} disabled={busy}>
-                  Create link
+                  {t('Create link')}
                </Button>
             </div>
             <p className="text-xs text-muted-foreground">
-               Leave the email blank for a link anyone can use once. Links expire in 14 days.
+               {t('Leave the email blank for a link anyone can use once. Links expire in 14 days.')}
             </p>
 
             {invites.length > 0 && (
                <div className="mt-2 flex flex-col gap-1 border-t pt-3">
-                  <span className="text-xs font-medium text-muted-foreground">Pending invites</span>
+                  <span className="text-xs font-medium text-muted-foreground">
+                     {t('Pending invites')}
+                  </span>
                   {invites.map((invite) => (
                      <div
                         key={invite.id}
                         className="flex items-center gap-2 rounded-md px-1 py-1 text-sm hover:bg-accent/40"
                      >
                         <span className="min-w-0 flex-1 truncate">
-                           {invite.email ?? 'Open link'}
+                           {invite.email ?? t('Open link')}
                            <span className="ml-1.5 text-xs text-muted-foreground">
-                              {invite.role}
+                              {t(invite.role)}
                            </span>
                         </span>
                         <Button
@@ -138,7 +142,7 @@ export function InviteDialog({
                            size="icon"
                            className="size-7 text-muted-foreground"
                            onClick={() => copy(invite)}
-                           aria-label="Copy invite link"
+                           aria-label={t('Copy invite link')}
                         >
                            {copied === invite.id ? (
                               <Check className="size-3.5 text-green-600" />
@@ -151,7 +155,7 @@ export function InviteDialog({
                            size="icon"
                            className="size-7 text-muted-foreground hover:text-destructive"
                            onClick={() => revoke(invite.id)}
-                           aria-label="Revoke invite"
+                           aria-label={t('Revoke invite')}
                         >
                            <Trash2 className="size-3.5" />
                         </Button>

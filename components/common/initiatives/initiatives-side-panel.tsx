@@ -1,5 +1,6 @@
 'use client';
 
+import { useLanguage } from '@/components/providers/language-provider';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import type { Initiative } from '@/mock-data/initiatives';
@@ -22,6 +23,7 @@ interface BreakdownRow {
 
 /** Right side panel of the Initiatives page: counts by owner / team / health. */
 export function InitiativesSidePanel({ initiatives }: { initiatives: Initiative[] }) {
+   const { t } = useLanguage();
    const teams = useTeamsStore((s) => s.teams);
    const [tab, setTab] = useState<PanelTab>('owner');
 
@@ -35,7 +37,7 @@ export function InitiativesSidePanel({ initiatives }: { initiatives: Initiative[
             else
                byOwner.set(key, {
                   key,
-                  label: initiative.owner?.name ?? 'No owner',
+                  label: initiative.owner?.name ?? t('No owner'),
                   avatarUrl: initiative.owner?.avatarUrl,
                   count: 1,
                });
@@ -62,13 +64,13 @@ export function InitiativesSidePanel({ initiatives }: { initiatives: Initiative[
       return allHealth
          .map((entry) => ({
             key: entry.id,
-            label: entry.name,
+            label: t(entry.name),
             color: entry.color,
             count: initiatives.filter((initiative) => initiative.health.id === entry.id).length,
          }))
          .filter((row) => row.count > 0)
          .sort((a, b) => b.count - a.count);
-   }, [tab, initiatives, teams]);
+   }, [tab, initiatives, teams, t]);
 
    return (
       <aside className="hidden lg:flex flex-col w-72 shrink-0 border-l h-full overflow-y-auto bg-container p-4 gap-4">
@@ -90,7 +92,7 @@ export function InitiativesSidePanel({ initiatives }: { initiatives: Initiative[
                         : 'text-muted-foreground hover:bg-accent/50'
                   )}
                >
-                  {label}
+                  {t(label)}
                </button>
             ))}
          </div>

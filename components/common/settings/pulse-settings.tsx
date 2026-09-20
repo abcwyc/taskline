@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { format, startOfWeek, subWeeks } from 'date-fns';
+import { startOfWeek, subWeeks } from 'date-fns';
 import {
    Bar,
    BarChart,
@@ -18,7 +18,9 @@ import type { Issue } from '@/mock-data/issues';
 import { priorities } from '@/mock-data/priorities';
 import type { StatusCategory } from '@/mock-data/status';
 import { useIssuesStore } from '@/store/issues-store';
+import { formatAppDate } from '@/lib/i18n';
 import { SettingsCard, SettingsSection, SettingsStatCard } from './shared';
+import { useLanguage } from '@/components/providers/language-provider';
 
 /** Status categories in workflow order, with a stable chart color each. */
 const CATEGORY_ORDER: { category: StatusCategory; label: string; color: string }[] = [
@@ -54,6 +56,7 @@ const TICK = { fontSize: 11, fill: 'currentColor', opacity: 0.6 } as const;
 
 /** Workspace "Pulse" settings: analytics computed client-side from the issue cache. */
 export default function PulseSettings() {
+   const { locale, t } = useLanguage();
    const issues = useIssuesStore((s) => s.issues);
 
    const stats = useMemo(() => {
@@ -76,9 +79,9 @@ export default function PulseSettings() {
             const t = new Date(issue.createdAt).getTime();
             return t >= start.getTime() && t < end.getTime();
          }).length;
-         return { week: format(start, 'MMM d'), created };
+         return { week: formatAppDate(locale, start, 'MMM d'), created };
       });
-   }, [issues]);
+   }, [issues, locale]);
 
    const statusDistribution = useMemo(
       () =>
@@ -94,23 +97,23 @@ export default function PulseSettings() {
       const counts = new Map<string, number>();
       for (const issue of issues) {
          if (!isOpen(issue)) continue;
-         const name = issue.assignee?.name ?? 'Unassigned';
+         const name = issue.assignee?.name ?? t('Unassigned');
          counts.set(name, (counts.get(name) ?? 0) + 1);
       }
       return [...counts.entries()]
          .map(([name, count]) => ({ name, count }))
          .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
          .slice(0, 8);
-   }, [issues]);
+   }, [issues, t]);
 
    const priorityMix = useMemo(
       () =>
          priorities.map((p) => ({
             id: p.id,
-            name: p.name,
+            name: t(p.name),
             value: issues.filter((i) => i.priority.id === p.id).length,
          })),
-      [issues]
+      [issues, t]
    );
 
    const isEmpty = issues.length === 0;
@@ -118,22 +121,22 @@ export default function PulseSettings() {
    return (
       <div className="w-full overflow-y-auto h-full">
          <div className="max-w-5xl mx-auto px-6 py-10 pb-20">
-            <h1 className="text-2xl font-medium">Pulse</h1>
+            <h1 className="text-2xl font-medium">{t('Pulse')}</h1>
             <p className="text-sm text-muted-foreground mt-1">
-               Analytics across every issue in this workspace.
+               {t('Analytics across every issue in this workspace.')}
             </p>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8">
-               <SettingsStatCard label="Total issues" value={stats.total} />
-               <SettingsStatCard label="Open issues" value={stats.open} />
-               <SettingsStatCard label="Completed" value={stats.completed} />
-               <SettingsStatCard label="Unassigned" value={stats.unassigned} />
+               <SettingsStatCard label={t('Total issues')} value={stats.total} />
+               <SettingsStatCard label={t('Open issues')} value={stats.open} />
+               <SettingsStatCard label={t('Completed')} value={stats.completed} />
+               <SettingsStatCard label={t('Unassigned')} value={stats.unassigned} />
             </div>
 
             <div className="flex flex-col gap-10 mt-10">
                <SettingsSection
-                  title="Throughput"
-                  description="Issues created per week over the last 8 weeks."
+                  title={t('Throughput')}
+                  description={t('Issues created per week over the last 8 weeks.')}
                >
                   <SettingsCard className="p-4">
                      {isEmpty ? (
@@ -163,7 +166,7 @@ export default function PulseSettings() {
                               />
                               <Bar
                                  dataKey="created"
-                                 name="Created"
+                                 name={t('Created')}
                                  fill="#6771c5"
                                  maxBarSize={28}
                                  isAnimationActive={false}
@@ -175,8 +178,8 @@ export default function PulseSettings() {
                </SettingsSection>
 
                <SettingsSection
-                  title="Status distribution"
-                  description="Issues per status category."
+                  title={t('Status distribution')}
+                  description={t('Issues per status category.')}
                >
                   <SettingsCard className="p-4">
                      {isEmpty ? (
@@ -194,6 +197,7 @@ export default function PulseSettings() {
                               />
                               <XAxis
                                  dataKey="label"
+                                 tickFormatter={(label) => t(String(label))}
                                  tick={TICK}
                                  axisLine={false}
                                  tickLine={false}
@@ -208,10 +212,11 @@ export default function PulseSettings() {
                               <Tooltip
                                  cursor={{ fill: 'var(--accent)', opacity: 0.4 }}
                                  contentStyle={TOOLTIP_STYLE}
+                                 labelFormatter={(label) => t(String(label))}
                               />
                               <Bar
                                  dataKey="count"
-                                 name="Issues"
+                                 name={t('Issues')}
                                  maxBarSize={28}
                                  isAnimationActive={false}
                               >
@@ -231,8 +236,8 @@ export default function PulseSettings() {
                </SettingsSection>
 
                <SettingsSection
-                  title="Assignee load"
-                  description="Open issues per assignee (top 8)."
+                  title={t('Assignee load')}
+                  description={t('Open issues per assignee (top 8).')}
                >
                   <SettingsCard className="p-4">
                      {assigneeLoad.length === 0 ? (
@@ -273,7 +278,7 @@ export default function PulseSettings() {
                               />
                               <Bar
                                  dataKey="count"
-                                 name="Open issues"
+                                 name={t('Open issues')}
                                  fill="#facc15"
                                  maxBarSize={18}
                                  isAnimationActive={false}
@@ -284,7 +289,7 @@ export default function PulseSettings() {
                   </SettingsCard>
                </SettingsSection>
 
-               <SettingsSection title="Priority mix" description="Issues per priority.">
+               <SettingsSection title={t('Priority mix')} description={t('Issues per priority.')}>
                   <SettingsCard className="p-4">
                      {isEmpty ? (
                         <EmptyChart />
@@ -336,7 +341,7 @@ export default function PulseSettings() {
             </div>
 
             <p className="text-xs text-muted-foreground mt-10">
-               Analytics are computed from all issues in this workspace.
+               {t('Analytics are computed from all issues in this workspace.')}
             </p>
          </div>
       </div>
@@ -344,9 +349,10 @@ export default function PulseSettings() {
 }
 
 function EmptyChart() {
+   const { t } = useLanguage();
    return (
       <div className="flex items-center justify-center h-[200px] text-xs text-muted-foreground border border-dashed rounded-md">
-         No data yet
+         {t('No data yet')}
       </div>
    );
 }

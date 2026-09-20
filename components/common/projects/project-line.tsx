@@ -73,7 +73,7 @@ export default function ProjectLine({ project }: ProjectLineProps) {
             </div>
          )}
          {displayProperties.targetDate && (
-            <div className="hidden xl:block w-[110px] shrink-0">
+            <div className="hidden xl:block w-[132px] shrink-0">
                <DatePicker date={project.targetDate ? new Date(project.targetDate) : undefined} />
             </div>
          )}

@@ -12,6 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { useMembersFilterStore } from '@/store/members-filter-store';
 import { useState } from 'react';
 import { ArrowUpDown, CheckIcon, ChevronRight, ListFilter, Shield } from 'lucide-react';
+import { useLanguage } from '@/components/providers/language-provider';
 
 type FilterType = 'role' | 'sort';
 
@@ -25,6 +26,7 @@ const ROLES: Array<'Guest' | 'Member' | 'Admin' | 'Application'> = [
 export function Filter() {
    const [open, setOpen] = useState(false);
    const [active, setActive] = useState<FilterType | null>(null);
+   const { t } = useLanguage();
 
    const { filters, sort, toggleFilter, clearFilters, getActiveFiltersCount, setSort } =
       useMembersFilterStore();
@@ -34,7 +36,7 @@ export function Filter() {
          <PopoverTrigger asChild>
             <Button size="xs" variant="ghost" className="relative">
                <ListFilter className="size-4 mr-1" />
-               Filter
+               {t('Filter')}
                {getActiveFiltersCount() > 0 && (
                   <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[10px] rounded-full size-4 flex items-center justify-center">
                      {getActiveFiltersCount()}
@@ -53,7 +55,7 @@ export function Filter() {
                         >
                            <span className="flex items-center gap-2">
                               <Shield className="size-4 text-muted-foreground" />
-                              Status
+                              {t('Status')}
                            </span>
                            <div className="flex items-center">
                               {filters.role.length > 0 && (
@@ -70,7 +72,7 @@ export function Filter() {
                         >
                            <span className="flex items-center gap-2">
                               <ArrowUpDown className="size-4 text-muted-foreground" />
-                              Sort by
+                              {t('Sort by')}
                            </span>
                            <ChevronRight className="size-4" />
                         </CommandItem>
@@ -83,7 +85,7 @@ export function Filter() {
                                  onSelect={() => clearFilters()}
                                  className="cursor-pointer"
                               >
-                                 Clear all filters
+                                 {t('Clear all filters')}
                               </CommandItem>
                            </CommandGroup>
                         </>
@@ -101,7 +103,7 @@ export function Filter() {
                      >
                         <ChevronRight className="size-4 rotate-180" />
                      </Button>
-                     <span className="ml-2 font-medium">Status</span>
+                     <span className="ml-2 font-medium">{t('Status')}</span>
                   </div>
                   <CommandList>
                      <CommandGroup>
@@ -112,7 +114,7 @@ export function Filter() {
                               onSelect={() => toggleFilter('role', role)}
                               className="flex items-center justify-between"
                            >
-                              {role}
+                              {t(role)}
                               {filters.role.includes(role) && <CheckIcon size={16} />}
                            </CommandItem>
                         ))}
@@ -130,10 +132,10 @@ export function Filter() {
                      >
                         <ChevronRight className="size-4 rotate-180" />
                      </Button>
-                     <span className="ml-2 font-medium">Sort by</span>
+                     <span className="ml-2 font-medium">{t('Sort by')}</span>
                   </div>
                   <CommandList>
-                     <CommandGroup heading="Name">
+                     <CommandGroup heading={t('Name')}>
                         <CommandItem
                            onSelect={() => setSort('name-asc')}
                            className="flex items-center justify-between"
@@ -148,36 +150,36 @@ export function Filter() {
                         </CommandItem>
                      </CommandGroup>
                      <CommandSeparator />
-                     <CommandGroup heading="Joined">
+                     <CommandGroup heading={t('Joined')}>
                         <CommandItem
                            onSelect={() => setSort('joined-asc')}
                            className="flex items-center justify-between"
                         >
-                           Oldest to Newest
+                           {t('Oldest to Newest')}
                            {sort === 'joined-asc' && <CheckIcon size={16} />}
                         </CommandItem>
                         <CommandItem
                            onSelect={() => setSort('joined-desc')}
                            className="flex items-center justify-between"
                         >
-                           Newest to Oldest
+                           {t('Newest to Oldest')}
                            {sort === 'joined-desc' && <CheckIcon size={16} />}
                         </CommandItem>
                      </CommandGroup>
                      <CommandSeparator />
-                     <CommandGroup heading="Teams">
+                     <CommandGroup heading={t('Teams')}>
                         <CommandItem
                            onSelect={() => setSort('teams-asc')}
                            className="flex items-center justify-between"
                         >
-                           Lowest to Highest
+                           {t('Lowest to Highest')}
                            {sort === 'teams-asc' && <CheckIcon size={16} />}
                         </CommandItem>
                         <CommandItem
                            onSelect={() => setSort('teams-desc')}
                            className="flex items-center justify-between"
                         >
-                           Highest to Lowest
+                           {t('Highest to Lowest')}
                            {sort === 'teams-desc' && <CheckIcon size={16} />}
                         </CommandItem>
                      </CommandGroup>

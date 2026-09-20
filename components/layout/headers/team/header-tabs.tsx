@@ -3,6 +3,7 @@
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { useParams, usePathname } from 'next/navigation';
+import { useLanguage } from '@/components/providers/language-provider';
 
 const TEAM_TABS = [
    { label: 'Overview', segment: 'overview' },
@@ -11,6 +12,7 @@ const TEAM_TABS = [
 ];
 
 export default function HeaderTabs() {
+   const { t } = useLanguage();
    const { orgId, teamId } = useParams<{ orgId: string; teamId: string }>();
    const pathname = usePathname();
 
@@ -31,7 +33,7 @@ export default function HeaderTabs() {
                            : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-accent/50'
                      )}
                   >
-                     {tab.label}
+                     {t(tab.label)}
                   </Link>
                );
             })}

@@ -26,6 +26,7 @@ import { health as healthOptions } from '@/mock-data/projects';
 import { useInitiativesStore } from '@/store/initiatives-store';
 import { useMembersStore } from '@/store/members-store';
 import { useTeamsStore } from '@/store/teams-store';
+import { useLanguage } from '@/components/providers/language-provider';
 
 const STATUSES: InitiativeStatus[] = ['active', 'planned', 'completed', 'canceled'];
 const ICONS = ['🎯', '🧱', '♿', '🌱', '⚡', '🚀', '🔬', '📈', '🛡️', '🧭'];
@@ -44,6 +45,7 @@ export function InitiativeDialog({
    const updateInitiative = useInitiativesStore((s) => s.updateInitiative);
    const members = useMembersStore((s) => s.members);
    const teams = useTeamsStore((s) => s.teams);
+   const { t } = useLanguage();
 
    const [name, setName] = useState('');
    const [icon, setIcon] = useState(ICONS[0]);
@@ -98,12 +100,12 @@ export function InitiativeDialog({
       <Dialog open={open} onOpenChange={onOpenChange}>
          <DialogContent className="sm:max-w-lg">
             <DialogHeader>
-               <DialogTitle>{initiative ? 'Edit initiative' : 'New initiative'}</DialogTitle>
+               <DialogTitle>{initiative ? t('Edit initiative') : t('New initiative')}</DialogTitle>
             </DialogHeader>
             <div className="flex flex-col gap-4 py-2">
                <div className="flex gap-3">
                   <div className="flex flex-col gap-1.5">
-                     <Label>Icon</Label>
+                     <Label>{t('Icon')}</Label>
                      <Select value={icon} onValueChange={setIcon}>
                         <SelectTrigger className="w-16 text-base">
                            <SelectValue />
@@ -118,19 +120,19 @@ export function InitiativeDialog({
                      </Select>
                   </div>
                   <div className="flex flex-col gap-1.5 flex-1">
-                     <Label htmlFor="init-name">Name</Label>
+                     <Label htmlFor="init-name">{t('Name')}</Label>
                      <Input
                         id="init-name"
                         autoFocus
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        placeholder="Ship the component platform"
+                        placeholder={t('Ship the component platform')}
                      />
                   </div>
                </div>
 
                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="init-desc">Description</Label>
+                  <Label htmlFor="init-desc">{t('Description')}</Label>
                   <Textarea
                      id="init-desc"
                      value={description}
@@ -140,7 +142,7 @@ export function InitiativeDialog({
                </div>
 
                <div className="grid grid-cols-2 gap-3">
-                  <Field label="Status">
+                  <Field label={t('Status')}>
                      <Select value={status} onValueChange={(v) => setStatus(v as InitiativeStatus)}>
                         <SelectTrigger>
                            <SelectValue />
@@ -148,13 +150,13 @@ export function InitiativeDialog({
                         <SelectContent>
                            {STATUSES.map((s) => (
                               <SelectItem key={s} value={s} className="capitalize">
-                                 {s}
+                                 {t(s)}
                               </SelectItem>
                            ))}
                         </SelectContent>
                      </Select>
                   </Field>
-                  <Field label="Priority">
+                  <Field label={t('Priority')}>
                      <Select value={priorityId} onValueChange={setPriorityId}>
                         <SelectTrigger>
                            <SelectValue />
@@ -162,13 +164,13 @@ export function InitiativeDialog({
                         <SelectContent>
                            {priorities.map((p) => (
                               <SelectItem key={p.id} value={p.id}>
-                                 {p.name}
+                                 {t(p.name)}
                               </SelectItem>
                            ))}
                         </SelectContent>
                      </Select>
                   </Field>
-                  <Field label="Health">
+                  <Field label={t('Health')}>
                      <Select value={healthId} onValueChange={setHealthId}>
                         <SelectTrigger>
                            <SelectValue />
@@ -176,19 +178,19 @@ export function InitiativeDialog({
                         <SelectContent>
                            {healthOptions.map((h) => (
                               <SelectItem key={h.id} value={h.id}>
-                                 {h.name}
+                                 {t(h.name)}
                               </SelectItem>
                            ))}
                         </SelectContent>
                      </Select>
                   </Field>
-                  <Field label="Owner">
+                  <Field label={t('Owner')}>
                      <Select value={ownerId} onValueChange={setOwnerId}>
                         <SelectTrigger>
                            <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                           <SelectItem value={NONE}>No owner</SelectItem>
+                           <SelectItem value={NONE}>{t('No owner')}</SelectItem>
                            {members.map((m) => (
                               <SelectItem key={m.id} value={m.id}>
                                  {m.name}
@@ -197,13 +199,13 @@ export function InitiativeDialog({
                         </SelectContent>
                      </Select>
                   </Field>
-                  <Field label="Lead team">
+                  <Field label={t('Lead team')}>
                      <Select value={leadTeamId} onValueChange={setLeadTeamId}>
                         <SelectTrigger>
                            <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                           <SelectItem value={NONE}>No lead team</SelectItem>
+                           <SelectItem value={NONE}>{t('No lead team')}</SelectItem>
                            {teams.map((t) => (
                               <SelectItem key={t.id} value={t.id}>
                                  {t.name}
@@ -216,10 +218,10 @@ export function InitiativeDialog({
             </div>
             <DialogFooter>
                <Button variant="ghost" onClick={() => onOpenChange(false)}>
-                  Cancel
+                  {t('Cancel')}
                </Button>
                <Button onClick={submit} disabled={!name.trim()}>
-                  {initiative ? 'Save' : 'Create'}
+                  {initiative ? t('Save') : t('Create')}
                </Button>
             </DialogFooter>
          </DialogContent>

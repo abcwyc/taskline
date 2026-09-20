@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/select';
 import type { Cycle, CycleStatus } from '@/mock-data/cycles';
 import { useCyclesStore } from '@/store/cycles-store';
+import { useLanguage } from '@/components/providers/language-provider';
 
 const STATUSES: CycleStatus[] = ['planned', 'upcoming', 'current', 'completed'];
 
@@ -37,6 +38,7 @@ export function CycleDialog({
 }) {
    const createCycle = useCyclesStore((s) => s.createCycle);
    const updateCycle = useCyclesStore((s) => s.updateCycle);
+   const { t } = useLanguage();
 
    const [name, setName] = useState('');
    const [status, setStatus] = useState<CycleStatus>('planned');
@@ -72,22 +74,22 @@ export function CycleDialog({
       <Dialog open={open} onOpenChange={onOpenChange}>
          <DialogContent className="sm:max-w-md">
             <DialogHeader>
-               <DialogTitle>{cycle ? 'Edit cycle' : 'New cycle'}</DialogTitle>
+               <DialogTitle>{cycle ? t('Edit cycle') : t('New cycle')}</DialogTitle>
             </DialogHeader>
             <div className="flex flex-col gap-4 py-2">
                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="cycle-name">Name</Label>
+                  <Label htmlFor="cycle-name">{t('Name')}</Label>
                   <Input
                      id="cycle-name"
                      value={name}
                      autoFocus
                      onChange={(e) => setName(e.target.value)}
-                     placeholder="Cycle 24"
+                     placeholder={t('Cycle 24')}
                   />
                </div>
                <div className="flex gap-3">
                   <div className="flex flex-col gap-1.5 flex-1">
-                     <Label htmlFor="cycle-start">Start</Label>
+                     <Label htmlFor="cycle-start">{t('Start')}</Label>
                      <Input
                         id="cycle-start"
                         type="date"
@@ -96,7 +98,7 @@ export function CycleDialog({
                      />
                   </div>
                   <div className="flex flex-col gap-1.5 flex-1">
-                     <Label htmlFor="cycle-end">End</Label>
+                     <Label htmlFor="cycle-end">{t('End')}</Label>
                      <Input
                         id="cycle-end"
                         type="date"
@@ -107,7 +109,7 @@ export function CycleDialog({
                </div>
                <div className="flex gap-3">
                   <div className="flex flex-col gap-1.5 flex-1">
-                     <Label>Status</Label>
+                     <Label>{t('Status')}</Label>
                      <Select value={status} onValueChange={(v) => setStatus(v as CycleStatus)}>
                         <SelectTrigger>
                            <SelectValue />
@@ -115,14 +117,14 @@ export function CycleDialog({
                         <SelectContent>
                            {STATUSES.map((s) => (
                               <SelectItem key={s} value={s} className="capitalize">
-                                 {s}
+                                 {t(s)}
                               </SelectItem>
                            ))}
                         </SelectContent>
                      </Select>
                   </div>
                   <div className="flex flex-col gap-1.5 w-28">
-                     <Label htmlFor="cycle-cap">Capacity</Label>
+                     <Label htmlFor="cycle-cap">{t('Capacity')}</Label>
                      <Input
                         id="cycle-cap"
                         type="number"
@@ -135,9 +137,9 @@ export function CycleDialog({
             </div>
             <DialogFooter>
                <Button variant="ghost" onClick={() => onOpenChange(false)}>
-                  Cancel
+                  {t('Cancel')}
                </Button>
-               <Button onClick={submit}>{cycle ? 'Save' : 'Create'}</Button>
+               <Button onClick={submit}>{cycle ? t('Save') : t('Create')}</Button>
             </DialogFooter>
          </DialogContent>
       </Dialog>

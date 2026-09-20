@@ -54,6 +54,7 @@ export const metadata: Metadata = {
 };
 
 import { ThemeProvider } from '@/components/layout/theme-provider';
+import { LanguageProvider } from '@/components/providers/language-provider';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
 
 export default function RootLayout({
@@ -72,8 +73,10 @@ export default function RootLayout({
          >
             <NuqsAdapter>
                <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-                  {children}
-                  <Toaster />
+                  <LanguageProvider>
+                     {children}
+                     <Toaster />
+                  </LanguageProvider>
                </ThemeProvider>
             </NuqsAdapter>
          </body>

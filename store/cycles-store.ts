@@ -10,6 +10,7 @@ import {
    updateCycle as apiUpdateCycle,
 } from '@/lib/api/cycles';
 import type { CycleCreateBody } from '@/lib/api/types';
+import { tt } from '@/lib/i18n';
 
 interface CyclesState {
    cycles: Cycle[];
@@ -47,7 +48,7 @@ export const useCyclesStore = create<CyclesState>((set, get) => ({
          set({ cycles: await apiFetchCycles(), hydrated: true, isLoading: false });
       } catch (err) {
          set({ isLoading: false, error: (err as Error).message });
-         toast.error('Failed to load cycles');
+         toast.error(tt('Failed to load cycles'));
          throw err;
       }
    },
@@ -64,7 +65,7 @@ export const useCyclesStore = create<CyclesState>((set, get) => ({
          set({ cycles: [cycle, ...get().cycles] });
          return cycle;
       } catch (err) {
-         toast.error('Failed to create cycle');
+         toast.error(tt('Failed to create cycle'));
          console.error(err);
          return null;
       }
@@ -78,7 +79,7 @@ export const useCyclesStore = create<CyclesState>((set, get) => ({
          .then((saved) => set({ cycles: get().cycles.map((c) => (c.id === id ? saved : c)) }))
          .catch((err) => {
             set({ cycles: get().cycles.map((c) => (c.id === id ? snapshot : c)) });
-            toast.error('Failed to save changes');
+            toast.error(tt('Failed to save changes'));
             console.error(err);
          });
    },
@@ -88,7 +89,7 @@ export const useCyclesStore = create<CyclesState>((set, get) => ({
       set({ cycles: snapshot.filter((c) => c.id !== id) });
       apiDeleteCycle(id).catch((err) => {
          set({ cycles: snapshot });
-         toast.error('Failed to delete cycle');
+         toast.error(tt('Failed to delete cycle'));
          console.error(err);
       });
    },

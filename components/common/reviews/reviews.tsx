@@ -1,5 +1,6 @@
 'use client';
 
+import { useLanguage } from '@/components/providers/language-provider';
 import { Button } from '@/components/ui/button';
 import {
    Dialog,
@@ -12,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Textarea } from '@/components/ui/textarea';
+import { formatRelativeTime } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 import type { Review, ReviewList, ReviewStatus } from '@/mock-data/reviews';
 import { useReviewsStore } from '@/store/reviews-store';
@@ -42,6 +44,7 @@ function NewReviewDialog({
    onOpenChange: (open: boolean) => void;
    orgId: string;
 }) {
+   const { t } = useLanguage();
    const createReview = useReviewsStore((s) => s.createReview);
    const router = useRouter();
    const [form, setForm] = useState(EMPTY_FORM);
@@ -81,12 +84,12 @@ function NewReviewDialog({
       <Dialog open={open} onOpenChange={(value) => (value ? onOpenChange(true) : close())}>
          <DialogContent className="sm:max-w-xl">
             <DialogHeader>
-               <DialogTitle>New review</DialogTitle>
+               <DialogTitle>{t('New review')}</DialogTitle>
             </DialogHeader>
             <div className="flex flex-col gap-4">
                <div className="flex flex-col gap-2">
                   <Label htmlFor="new-review-title">
-                     Title <span className="text-red-500">*</span>
+                     {t('Review title')} <span className="text-red-500">*</span>
                   </Label>
                   <Input
                      id="new-review-title"
@@ -97,16 +100,16 @@ function NewReviewDialog({
                </div>
                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="flex flex-col gap-2">
-                     <Label htmlFor="new-review-repo">Repo</Label>
+                     <Label htmlFor="new-review-repo">{t('Repo')}</Label>
                      <Input
                         id="new-review-repo"
                         value={form.repo}
                         onChange={(event) => set('repo')(event.target.value)}
-                        placeholder="e.g. circle"
+                        placeholder={t('e.g. circle')}
                      />
                   </div>
                   <div className="flex flex-col gap-2">
-                     <Label htmlFor="new-review-target">Target branch</Label>
+                     <Label htmlFor="new-review-target">{t('Target branch')}</Label>
                      <Input
                         id="new-review-target"
                         value={form.targetBranch}
@@ -115,7 +118,7 @@ function NewReviewDialog({
                      />
                   </div>
                   <div className="flex flex-col gap-2">
-                     <Label htmlFor="new-review-source">Source branch</Label>
+                     <Label htmlFor="new-review-source">{t('Source branch')}</Label>
                      <Input
                         id="new-review-source"
                         value={form.sourceBranch}
@@ -125,34 +128,34 @@ function NewReviewDialog({
                   </div>
                </div>
                <div className="flex flex-col gap-2">
-                  <Label htmlFor="new-review-resolves">Resolves issue</Label>
+                  <Label htmlFor="new-review-resolves">{t('Resolves issue')}</Label>
                   <Input
                      id="new-review-resolves"
                      value={form.resolves}
                      onChange={(event) => set('resolves')(event.target.value)}
-                     placeholder="e.g. LNUI-701"
+                     placeholder={t('e.g. LNUI-701')}
                      className="font-mono"
                   />
                </div>
                <div className="flex flex-col gap-2">
-                  <Label htmlFor="new-review-summary">Summary</Label>
+                  <Label htmlFor="new-review-summary">{t('Summary')}</Label>
                   <Textarea
                      id="new-review-summary"
                      value={form.summary}
                      onChange={(event) => set('summary')(event.target.value)}
-                     placeholder={'One bullet per line\nWhat changed and why'}
+                     placeholder={t('One bullet per line\nWhat changed and why')}
                      className="min-h-20"
                   />
                </div>
                <div className="flex flex-col gap-2">
                   <Label htmlFor="new-review-diff">
-                     Diff <span className="text-red-500">*</span>
+                     {t('Diff')} <span className="text-red-500">*</span>
                   </Label>
                   <Textarea
                      id="new-review-diff"
                      value={form.diff}
                      onChange={(event) => set('diff')(event.target.value)}
-                     placeholder="Paste a unified git diff (git diff main...feat)"
+                     placeholder={t('Paste a unified git diff (git diff main...feat)')}
                      rows={12}
                      className="font-mono text-xs min-h-48"
                   />
@@ -160,13 +163,13 @@ function NewReviewDialog({
             </div>
             <DialogFooter>
                <Button variant="ghost" onClick={close} disabled={submitting}>
-                  Cancel
+                  {t('Cancel')}
                </Button>
                <Button
                   onClick={submit}
                   disabled={!form.title.trim() || !form.diff.trim() || submitting}
                >
-                  Create review
+                  {t('Create review')}
                </Button>
             </DialogFooter>
          </DialogContent>
@@ -205,6 +208,7 @@ function ReviewRow({
    orgId: string;
    selected: boolean;
 }) {
+   const { locale } = useLanguage();
    return (
       <Link
          href={`/${orgId}/review/${review.id}`}
@@ -215,7 +219,9 @@ function ReviewRow({
       >
          <PrIcon status={review.status} />
          <span className="flex-1 truncate">{review.title}</span>
-         <span className="text-xs text-muted-foreground shrink-0">{review.timeAgo}</span>
+         <span className="text-xs text-muted-foreground shrink-0">
+            {formatRelativeTime(locale, review.timeAgo)}
+         </span>
       </Link>
    );
 }
@@ -281,6 +287,7 @@ export default function Reviews({
    section = 'overview',
 }: ReviewsProps) {
    const { orgId } = useParams<{ orgId: string }>();
+   const { t } = useLanguage();
    const allReviews = useReviewsStore((s) => s.reviews);
    const forYouReviews = useMemo(
       () => allReviews.filter((r) => r.list === 'for-you'),
@@ -295,7 +302,8 @@ export default function Reviews({
 
    const groups = (['open', 'merged', 'closed'] as ReviewStatus[])
       .map((status) => ({
-         label: status === 'merged' && listTab === 'for-you' ? 'Completed' : GROUP_LABELS[status],
+         label:
+            status === 'merged' && listTab === 'for-you' ? t('Completed') : t(GROUP_LABELS[status]),
          items: source.filter((review) => review.status === status),
       }))
       .filter((group) => group.items.length > 0);
@@ -306,12 +314,12 @@ export default function Reviews({
             <div className="flex items-center justify-between px-4 py-1.5 h-10 border-b shrink-0">
                <div className="flex items-center gap-2">
                   <SidebarTrigger />
-                  <span className="text-sm font-medium">Reviews</span>
+                  <span className="text-sm font-medium">{t('Reviews')}</span>
                </div>
                <div className="flex items-center gap-2 text-muted-foreground">
                   <Button size="xs" onClick={() => setCreateOpen(true)}>
                      <Plus className="size-3.5" />
-                     New review
+                     {t('New review')}
                   </Button>
                   <ListFilter className="size-4" />
                   <SlidersHorizontal className="size-4" />
@@ -328,7 +336,7 @@ export default function Reviews({
                         : 'text-muted-foreground hover:bg-accent/50'
                   )}
                >
-                  For you
+                  {t('For you')}
                </Link>
                <Link
                   href={`/${orgId}/reviews/created`}
@@ -339,7 +347,7 @@ export default function Reviews({
                         : 'text-muted-foreground hover:bg-accent/50'
                   )}
                >
-                  Created
+                  {t('Created by me')}
                </Link>
             </div>
             <div className="flex-1 overflow-y-auto">
@@ -364,7 +372,9 @@ export default function Reviews({
             ) : (
                <div className="h-full flex flex-col items-center justify-center gap-4 text-muted-foreground">
                   <EmptySketch />
-                  <span className="text-sm">{source.length} reviews</span>
+                  <span className="text-sm">
+                     {source.length} {t('reviews')}
+                  </span>
                </div>
             )}
          </div>

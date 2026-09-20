@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { fetchMe, updateMe as apiUpdateMe } from '@/lib/api/me';
 import { DEFAULT_PREFERENCES, Preferences } from '@/lib/api/preferences';
 import type { MeDTO } from '@/lib/api/types';
+import { tt } from '@/lib/i18n';
 import { useMembersStore } from '@/store/members-store';
 
 /**
@@ -52,7 +53,7 @@ export const useMeStore = create<MeState>((set, get) => ({
          }
       } catch (err) {
          if (snapshot) set({ me: snapshot });
-         toast.error('Failed to save profile');
+         toast.error(tt('Failed to save profile'));
          console.error(err);
       }
    },
@@ -65,7 +66,7 @@ export const useMeStore = create<MeState>((set, get) => ({
          set({ me, preferences: me.preferences });
       } catch (err) {
          set({ preferences: snapshot });
-         toast.error('Failed to save preference');
+         toast.error(tt('Failed to save preference'));
          console.error(err);
       }
    },

@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 
-import { AppLocale, browserLocale, translate } from '@/lib/i18n';
+import { AppLocale, browserLocale, setI18nLocale, translate } from '@/lib/i18n';
 import { useMeStore } from '@/store/me-store';
 
 interface LanguageContextValue {
@@ -31,6 +31,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
    useEffect(() => {
       document.documentElement.lang = locale;
       document.documentElement.dataset.locale = locale;
+      setI18nLocale(locale);
    }, [locale]);
 
    const value = useMemo<LanguageContextValue>(

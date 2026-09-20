@@ -30,8 +30,10 @@ import { LabelSelector } from './label-selector';
 import { TemplatePicker } from './template-picker';
 import { ranks } from '@/mock-data/issues';
 import { useParams, useRouter } from 'next/navigation';
+import { useLanguage } from '@/components/providers/language-provider';
 
 export function CreateNewIssue() {
+   const { t } = useLanguage();
    const [createMore, setCreateMore] = useState<boolean>(false);
    const { isOpen, defaultStatus, parentIssue, openModal, closeModal } = useCreateIssueStore();
    const { addIssue, getAllIssues } = useIssuesStore();
@@ -80,7 +82,7 @@ export function CreateNewIssue() {
 
    const createIssue = async () => {
       if (!addIssueForm.title) {
-         toast.error('Title is required');
+         toast.error(t('Title is required'));
          return;
       }
       const saved = await addIssue(addIssueForm, parentIssue?.identifier);
@@ -88,9 +90,9 @@ export function CreateNewIssue() {
          // Point the user at what was just created: the identifier plus a
          // one-click jump — new issues are unassigned by default, so the
          // previously visible list may not have shown them.
-         toast.success(`${saved.identifier} created`, {
+         toast.success(`${saved.identifier} ${t('has been created')}`, {
             action: {
-               label: 'View',
+               label: t('View'),
                onClick: () => router.push(`/${orgId}/issue/${saved.identifier}`),
             },
          });
@@ -118,7 +120,7 @@ export function CreateNewIssue() {
                      </Button>
                      {parentIssue && (
                         <span className="text-xs text-muted-foreground">
-                           Sub-issue of{' '}
+                           {t('Sub-issue of')}{' '}
                            <span className="font-medium text-foreground">
                               {parentIssue.identifier}
                            </span>
@@ -131,14 +133,14 @@ export function CreateNewIssue() {
             <div className="px-4 pb-0 space-y-3 w-full">
                <Input
                   className="border-none w-full shadow-none outline-none text-2xl font-medium px-0 h-auto focus-visible:ring-0 overflow-hidden text-ellipsis whitespace-normal break-words"
-                  placeholder="Issue title"
+                  placeholder={t('Issue title')}
                   value={addIssueForm.title}
                   onChange={(e) => setAddIssueForm({ ...addIssueForm, title: e.target.value })}
                />
 
                <Textarea
                   className="border-none w-full shadow-none outline-none resize-none px-0 min-h-16 focus-visible:ring-0 break-words whitespace-normal overflow-wrap"
-                  placeholder="Add description..."
+                  placeholder={t('Add description…')}
                   value={addIssueForm.description}
                   onChange={(e) =>
                      setAddIssueForm({ ...addIssueForm, description: e.target.value })
@@ -196,7 +198,7 @@ export function CreateNewIssue() {
                         checked={createMore}
                         onCheckedChange={setCreateMore}
                      />
-                     <Label htmlFor="create-more">Create more</Label>
+                     <Label htmlFor="create-more">{t('Create more')}</Label>
                   </div>
                </div>
                <Button
@@ -205,7 +207,7 @@ export function CreateNewIssue() {
                      void createIssue();
                   }}
                >
-                  Create issue
+                  {t('Create issue')}
                </Button>
             </div>
          </DialogContent>

@@ -39,8 +39,10 @@ import IssueLine from './issue-line';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ChevronLeft } from 'lucide-react';
+import { useLanguage } from '@/components/providers/language-provider';
 
 export default function Inbox() {
+   const { t } = useLanguage();
    const {
       notifications,
       selectedNotification,
@@ -98,7 +100,7 @@ export default function Inbox() {
          <div className="flex items-center justify-between px-4 h-10 border-b border-border">
             <div className="flex items-center gap-2">
                <SidebarTrigger className="inline-flex lg:hidden" />
-               <h2 className="text-lg font-semibold">Inbox</h2>
+               <h2 className="text-lg font-semibold">{t('Inbox')}</h2>
                <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                      <Button variant="ghost" size="xs">
@@ -108,15 +110,15 @@ export default function Inbox() {
                   <DropdownMenuContent align="start">
                      <DropdownMenuItem onClick={handleDeleteAllNotifications}>
                         <Trash2 className="w-4 h-4 mr-2" />
-                        Delete all notifications
+                        {t('Delete all notifications')}
                      </DropdownMenuItem>
                      <DropdownMenuItem onClick={handleDeleteReadNotifications}>
                         <CheckCheck className="w-4 h-4 mr-2" />
-                        Delete all read notifications
+                        {t('Delete all read notifications')}
                      </DropdownMenuItem>
                      <DropdownMenuItem onClick={handleDeleteCompletedIssues}>
                         <Archive className="w-4 h-4 mr-2" />
-                        Delete notifications for completed issues
+                        {t('Delete notifications for completed issues')}
                      </DropdownMenuItem>
                   </DropdownMenuContent>
                </DropdownMenu>
@@ -136,28 +138,29 @@ export default function Inbox() {
                      <Button
                         variant="ghost"
                         size="xs"
-                        title="Clear all"
+                        title={t('Clear all')}
                         disabled={notifications.length === 0}
                      >
                         <Trash2 className="w-4 h-4" />
-                        <span className="sr-only">Clear all</span>
+                        <span className="sr-only">{t('Clear all')}</span>
                      </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                      <AlertDialogHeader>
-                        <AlertDialogTitle>Clear all notifications</AlertDialogTitle>
+                        <AlertDialogTitle>{t('Clear all notifications')}</AlertDialogTitle>
                         <AlertDialogDescription>
-                           This will permanently remove every notification from your inbox. This
-                           action cannot be undone.
+                           {t(
+                              'This will permanently remove every notification from your inbox. This action cannot be undone.'
+                           )}
                         </AlertDialogDescription>
                      </AlertDialogHeader>
                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogCancel>{t('Cancel')}</AlertDialogCancel>
                         <AlertDialogAction
                            onClick={clearAll}
                            className="bg-destructive text-white hover:bg-destructive/90"
                         >
-                           Clear all
+                           {t('Clear all')}
                         </AlertDialogAction>
                      </AlertDialogFooter>
                   </AlertDialogContent>
@@ -171,19 +174,19 @@ export default function Inbox() {
                   <DropdownMenuContent align="end" className="w-64">
                      <DropdownMenuLabel className="flex items-center gap-2">
                         <ArrowUpDown className="w-4 h-4" />
-                        Ordering
+                        {t('Ordering')}
                      </DropdownMenuLabel>
                      <DropdownMenuCheckboxItem
                         checked={ordering === 'newest'}
                         onCheckedChange={() => setOrdering('newest')}
                      >
-                        Newest
+                        {t('Newest')}
                      </DropdownMenuCheckboxItem>
                      <DropdownMenuCheckboxItem
                         checked={ordering === 'oldest'}
                         onCheckedChange={() => setOrdering('oldest')}
                      >
-                        Oldest
+                        {t('Oldest')}
                      </DropdownMenuCheckboxItem>
 
                      <DropdownMenuSeparator />
@@ -191,7 +194,7 @@ export default function Inbox() {
                      <div className="p-2 space-y-3">
                         <div className="flex items-center justify-between">
                            <Label htmlFor="show-snoozed" className="text-sm">
-                              Show snoozed
+                              {t('Show snoozed')}
                            </Label>
                            <Switch
                               id="show-snoozed"
@@ -201,7 +204,7 @@ export default function Inbox() {
                         </div>
                         <div className="flex items-center justify-between">
                            <Label htmlFor="show-read" className="text-sm">
-                              Show read
+                              {t('Show read')}
                            </Label>
                            <Switch
                               id="show-read"
@@ -211,7 +214,7 @@ export default function Inbox() {
                         </div>
                         <div className="flex items-center justify-between">
                            <Label htmlFor="show-unread-first" className="text-sm">
-                              Show unread first
+                              {t('Show unread first')}
                            </Label>
                            <Switch
                               id="show-unread-first"
@@ -223,17 +226,17 @@ export default function Inbox() {
 
                      <DropdownMenuSeparator />
 
-                     <DropdownMenuLabel>Display properties</DropdownMenuLabel>
+                     <DropdownMenuLabel>{t('Display properties')}</DropdownMenuLabel>
                      <div className="p-2 space-y-3">
                         <div className="flex items-center justify-between">
                            <Label htmlFor="show-id" className="text-sm">
-                              ID
+                              {t('ID')}
                            </Label>
                            <Switch id="show-id" checked={showId} onCheckedChange={setShowId} />
                         </div>
                         <div className="flex items-center justify-between">
                            <Label htmlFor="show-status-icon" className="text-sm">
-                              Status and icon
+                              {t('Status and icon')}
                            </Label>
                            <Switch
                               id="show-status-icon"
@@ -269,7 +272,7 @@ export default function Inbox() {
                className="flex items-center gap-1 px-4 h-10 border-b border-border text-sm text-muted-foreground hover:text-foreground shrink-0"
             >
                <ChevronLeft className="size-4" />
-               Inbox
+               {t('Inbox')}
             </button>
             <div className="flex-1 min-h-0">
                <NotificationPreview notification={selectedNotification} onMarkAsRead={markAsRead} />

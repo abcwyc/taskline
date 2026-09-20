@@ -2,6 +2,7 @@
 
 import { Issue } from '@/mock-data/issues';
 import { Status } from '@/mock-data/status';
+import { useLanguage } from '@/components/providers/language-provider';
 import { useIssuesStore } from '@/store/issues-store';
 import { useViewStore } from '@/store/view-store';
 import { useCreateIssueStore } from '@/store/create-issue-store';
@@ -35,6 +36,7 @@ interface GroupIssuesProps {
 }
 
 export function GroupIssues({ group, issues, count }: GroupIssuesProps) {
+   const { t } = useLanguage();
    const { viewType } = useViewStore();
    const isViewTypeGrid = viewType === 'grid';
    const { openModal } = useCreateIssueStore();
@@ -65,7 +67,7 @@ export function GroupIssues({ group, issues, count }: GroupIssuesProps) {
             >
                <div className="flex items-center gap-2">
                   {group.icon}
-                  <span className="text-sm font-medium">{group.name}</span>
+                  <span className="text-sm font-medium">{t(group.name)}</span>
                   <span className="text-sm text-muted-foreground">{count}</span>
                </div>
 
@@ -97,6 +99,7 @@ export function GroupIssues({ group, issues, count }: GroupIssuesProps) {
 }
 
 const IssueGridList: FC<{ issues: Issue[]; status?: Status }> = ({ issues, status }) => {
+   const { t } = useLanguage();
    const ref = useRef<HTMLDivElement>(null);
    const { updateIssueStatus } = useIssuesStore();
 
@@ -135,7 +138,7 @@ const IssueGridList: FC<{ issues: Issue[]; status?: Status }> = ({ issues, statu
                   }}
                >
                   <div className="bg-background border border-border rounded-md p-3 shadow-md max-w-[90%]">
-                     <p className="text-sm font-medium text-center">Drop to update status</p>
+                     <p className="text-sm font-medium text-center">{t('Drop to update status')}</p>
                   </div>
                </motion.div>
             )}

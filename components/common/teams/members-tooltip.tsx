@@ -2,6 +2,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useLanguage } from '@/components/providers/language-provider';
 import { User } from '@/mock-data/users';
 
 interface MembersTooltipProps {
@@ -9,6 +10,7 @@ interface MembersTooltipProps {
 }
 
 export function MembersTooltip({ members }: MembersTooltipProps) {
+   const { t } = useLanguage();
    const displayedMembers = members.slice(0, 3);
    const remainingCount = members.length - displayedMembers.length;
 
@@ -44,7 +46,7 @@ export function MembersTooltip({ members }: MembersTooltipProps) {
                            - {member.email}
                         </span>
                         <span className="text-xs text-muted-foreground mt-[1px]">
-                           ( {member.role} )
+                           ( {t(member.role)} )
                         </span>
                      </div>
                   ))}

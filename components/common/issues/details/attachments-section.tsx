@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 
+import { useLanguage } from '@/components/providers/language-provider';
 import { useCurrentUser, useCurrentUserId } from '@/lib/hooks/use-current-user';
 import { useAttachmentsStore } from '@/store/attachments-store';
 import { Download, Loader2, Paperclip, X } from 'lucide-react';
@@ -14,6 +15,7 @@ function humanSize(bytes: number): string {
 
 /** Issue attachments: upload button + list with download / delete. */
 export function AttachmentsSection({ issueIdentifier }: { issueIdentifier: string }) {
+   const { t } = useLanguage();
    const inputRef = useRef<HTMLInputElement>(null);
    const meId = useCurrentUserId();
    const isAdmin = useCurrentUser()?.role === 'Admin';
@@ -39,7 +41,7 @@ export function AttachmentsSection({ issueIdentifier }: { issueIdentifier: strin
       <div className="mt-6">
          <div className="flex items-center justify-between">
             <h2 className="text-sm font-medium">
-               Attachments
+               {t('Attachments')}
                {list.length > 0 && <span className="text-muted-foreground"> {list.length}</span>}
             </h2>
             <button
@@ -53,7 +55,7 @@ export function AttachmentsSection({ issueIdentifier }: { issueIdentifier: strin
                ) : (
                   <Paperclip className="size-3.5" />
                )}
-               {uploading ? 'Uploading…' : 'Add file'}
+               {uploading ? t('Uploading…') : t('Add file')}
             </button>
             <input
                ref={inputRef}
@@ -78,7 +80,7 @@ export function AttachmentsSection({ issueIdentifier }: { issueIdentifier: strin
                         target="_blank"
                         rel="noreferrer"
                         className="shrink-0 text-muted-foreground hover:text-foreground"
-                        aria-label={`Download ${file.filename}`}
+                        aria-label={`${t('Download')} ${file.filename}`}
                      >
                         <Download className="size-4" />
                      </a>
@@ -87,7 +89,7 @@ export function AttachmentsSection({ issueIdentifier }: { issueIdentifier: strin
                            type="button"
                            onClick={() => remove(issueIdentifier, file.id)}
                            className="shrink-0 text-muted-foreground hover:text-destructive"
-                           aria-label={`Delete ${file.filename}`}
+                           aria-label={`${t('Delete')} ${file.filename}`}
                         >
                            <X className="size-4" />
                         </button>

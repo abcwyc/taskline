@@ -1,9 +1,11 @@
 'use client';
 
+import { useLanguage } from '@/components/providers/language-provider';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
+import { formatRelativeTime } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 import { Review, ReviewFileCategory } from '@/mock-data/reviews';
 import { useMeStore } from '@/store/me-store';
@@ -18,7 +20,6 @@ import {
    Plus,
    Send,
    Trash2,
-   UserPlus,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -31,6 +32,7 @@ const CATEGORY_LABELS: Record<ReviewFileCategory, string> = {
 };
 
 function FilesPanel({ review }: { review: Review }) {
+   const { t } = useLanguage();
    const categories = (['implementation', 'tests'] as ReviewFileCategory[])
       .map((category) => ({
          category,
@@ -40,7 +42,9 @@ function FilesPanel({ review }: { review: Review }) {
 
    return (
       <div className="flex flex-col gap-2">
-         <span className="text-sm font-medium">{review.files.length} files changed</span>
+         <span className="text-sm font-medium">
+            {review.files.length} {t('files changed')}
+         </span>
          {categories.map((group) => {
             const additions = group.files.reduce((acc, file) => acc + file.additions, 0);
             const deletions = group.files.reduce((acc, file) => acc + file.deletions, 0);
@@ -48,7 +52,7 @@ function FilesPanel({ review }: { review: Review }) {
                <div key={group.category} className="flex flex-col gap-1">
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                      <span className="font-medium text-foreground">
-                        {CATEGORY_LABELS[group.category]}
+                        {t(CATEGORY_LABELS[group.category])}
                      </span>
                      {group.files.length}
                      <ChevronDown className="size-3" />
@@ -77,6 +81,7 @@ function FilesPanel({ review }: { review: Review }) {
 
 /** Discussion under the overview: persisted comments + a composer. */
 function ReviewComments({ review }: { review: Review }) {
+   const { locale, t } = useLanguage();
    const addComment = useReviewsStore((s) => s.addComment);
    const deleteComment = useReviewsStore((s) => s.deleteComment);
    const getMemberById = useMembersStore((s) => s.getMemberById);
@@ -104,9 +109,11 @@ function ReviewComments({ review }: { review: Review }) {
 
    return (
       <div className="flex flex-col gap-3">
-         <h2 className="text-lg font-semibold">Comments</h2>
+         <h2 className="text-lg font-semibold">{t('Comments')}</h2>
          {comments.length === 0 && (
-            <p className="text-sm text-muted-foreground">No comments yet — start the discussion.</p>
+            <p className="text-sm text-muted-foreground">
+               {t('No comments yet — start the discussion.')}
+            </p>
          )}
          <div className="flex flex-col gap-2.5">
             {comments.map((comment) => {
@@ -131,9 +138,12 @@ function ReviewComments({ review }: { review: Review }) {
                               {author?.name ?? comment.authorId}
                            </span>
                            <span className="text-xs text-muted-foreground">
-                              {formatDistanceToNowStrict(new Date(comment.createdAt), {
-                                 addSuffix: true,
-                              })}
+                              {formatRelativeTime(
+                                 locale,
+                                 formatDistanceToNowStrict(new Date(comment.createdAt), {
+                                    addSuffix: true,
+                                 })
+                              )}
                            </span>
                            {comment.filePath && (
                               <span className="inline-flex items-center gap-1 rounded border border-border/60 bg-muted/60 px-1.5 py-px font-mono text-[11px] text-muted-foreground max-w-56">
@@ -149,7 +159,7 @@ function ReviewComments({ review }: { review: Review }) {
                      {canDelete && (
                         <button
                            type="button"
-                           aria-label="Delete comment"
+                           aria-label={t('Delete comment')}
                            onClick={() => deleteComment(review.id, comment.id)}
                            className="mt-0.5 shrink-0 text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-red-500 transition-[color,opacity]"
                         >
@@ -165,15 +175,15 @@ function ReviewComments({ review }: { review: Review }) {
                value={draft}
                onChange={(event) => setDraft(event.target.value)}
                onKeyDown={onKeyDown}
-               placeholder="Leave a comment..."
+               placeholder={t('Leave a comment…')}
                rows={2}
                className="min-h-0 resize-none"
             />
             <div className="flex items-center justify-end gap-2">
-               <span className="mr-auto text-xs text-muted-foreground">⌘↵ to submit</span>
+               <span className="mr-auto text-xs text-muted-foreground">{t('⌘↵ to submit')}</span>
                <Button size="xs" onClick={() => void submit()} disabled={!draft.trim() || posting}>
                   <Send className="size-3.5" />
-                  Comment
+                  {t('Comment')}
                </Button>
             </div>
          </div>
@@ -183,6 +193,7 @@ function ReviewComments({ review }: { review: Review }) {
 
 /** Overview tab: description + timeline on the left, properties on the right. */
 export function ReviewOverview({ review }: { review: Review }) {
+   const { locale, t } = useLanguage();
    const { orgId } = useParams<{ orgId: string }>();
 
    return (
@@ -205,10 +216,10 @@ export function ReviewOverview({ review }: { review: Review }) {
 
                <div className="flex flex-col gap-3">
                   <div className="flex items-center gap-1 text-sm font-medium">
-                     Description
+                     {t('Description')}
                      <ChevronDown className="size-3.5 text-muted-foreground" />
                   </div>
-                  <h2 className="text-lg font-semibold">Summary</h2>
+                  <h2 className="text-lg font-semibold">{t('Summary')}</h2>
                   <ul className="flex flex-col gap-2 list-disc pl-5 text-sm leading-relaxed">
                      {review.summary.map((bullet, index) => (
                         <li key={index}>
@@ -219,7 +230,7 @@ export function ReviewOverview({ review }: { review: Review }) {
                </div>
 
                <div className="flex flex-col gap-2">
-                  <h2 className="text-lg font-semibold">Ticket</h2>
+                  <h2 className="text-lg font-semibold">{t('Ticket')}</h2>
                   <Link
                      href={`/${orgId}/issue/${review.resolves.identifier}`}
                      className="inline-flex items-center gap-2 rounded-md bg-muted/60 border border-border/60 px-2 py-1.5 text-sm hover:bg-muted transition-colors self-start"
@@ -231,7 +242,7 @@ export function ReviewOverview({ review }: { review: Review }) {
                </div>
 
                <div className="flex flex-col gap-2">
-                  <h2 className="text-lg font-semibold">Test plan</h2>
+                  <h2 className="text-lg font-semibold">{t('Test plan')}</h2>
                   <div className="flex flex-col gap-1.5">
                      {review.testPlan.map((item, index) => (
                         <label key={index} className="flex items-start gap-2 text-sm">
@@ -247,9 +258,9 @@ export function ReviewOverview({ review }: { review: Review }) {
                {review.deployment && (
                   <div className="rounded-lg border overflow-hidden text-sm">
                      <div className="grid grid-cols-3 gap-2 px-3 py-2 border-b bg-sidebar/50 text-xs text-muted-foreground">
-                        <span>Project</span>
-                        <span>Deployment</span>
-                        <span>Actions</span>
+                        <span>{t('Project')}</span>
+                        <span>{t('Deployment')}</span>
+                        <span>{t('Actions')}</span>
                      </div>
                      <div className="grid grid-cols-3 gap-2 px-3 py-2 items-center">
                         <span className="font-medium">{review.deployment.project}</span>
@@ -262,10 +273,10 @@ export function ReviewOverview({ review }: { review: Review }) {
                                     : 'bg-muted-foreground/50'
                               )}
                            />
-                           {review.deployment.state}
+                           {t(review.deployment.state)}
                         </span>
                         <button className="text-primary text-left hover:underline">
-                           {review.deployment.action}
+                           {t(review.deployment.action)}
                         </button>
                      </div>
                   </div>
@@ -274,10 +285,10 @@ export function ReviewOverview({ review }: { review: Review }) {
                <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <GitCommitHorizontal className="size-3.5 shrink-0" />
                   <span className="truncate">
-                     Atlas committed via LNDev Agent{' '}
+                     {t('Atlas committed via LNDev Agent')}{' '}
                      <span className="font-mono">{review.commits.at(-1)?.sha}</span>{' '}
                      {review.commits.at(-1)?.message} ({review.resolves.identifier}) ·{' '}
-                     {review.commits.at(-1)?.timeAgo}
+                     {formatRelativeTime(locale, review.commits.at(-1)?.timeAgo ?? '')}
                   </span>
                </div>
 
@@ -288,9 +299,9 @@ export function ReviewOverview({ review }: { review: Review }) {
                         <span className="font-medium text-foreground">
                            {review.reviewNote.author}
                         </span>
-                        {review.reviewNote.timeAgo}
+                        {formatRelativeTime(locale, review.reviewNote.timeAgo)}
                      </div>
-                     <h3 className="text-base font-semibold">Review results</h3>
+                     <h3 className="text-base font-semibold">{t('Review results')}</h3>
                      <blockquote className="border-l-2 border-emerald-500 pl-3 text-sm leading-relaxed">
                         {review.reviewNote.verdictLine}
                      </blockquote>
@@ -299,18 +310,18 @@ export function ReviewOverview({ review }: { review: Review }) {
                      </p>
                      <div className="rounded-md border overflow-hidden text-sm">
                         <div className="grid grid-cols-5 gap-2 px-3 py-1.5 border-b bg-sidebar/50 text-xs text-muted-foreground">
-                           <span>Review</span>
-                           <span>Verdict</span>
-                           <span>Critical</span>
-                           <span>High</span>
-                           <span>Medium</span>
+                           <span>{t('Review')}</span>
+                           <span>{t('Verdict')}</span>
+                           <span>{t('Critical')}</span>
+                           <span>{t('High')}</span>
+                           <span>{t('Medium')}</span>
                         </div>
                         {review.reviewNote.rows.map((row) => (
                            <div
                               key={row.review}
                               className="grid grid-cols-5 gap-2 px-3 py-2 border-b last:border-b-0 text-xs items-start"
                            >
-                              <span className="font-medium">{row.review}</span>
+                              <span className="font-medium">{t(row.review)}</span>
                               <span>{row.verdict}</span>
                               <span>{row.critical}</span>
                               <span>{row.high}</span>
@@ -332,19 +343,19 @@ export function ReviewOverview({ review }: { review: Review }) {
 
          <aside className="hidden lg:flex flex-col w-72 shrink-0 border-l h-full overflow-y-auto p-5 gap-6">
             <div className="flex flex-col gap-2">
-               <span className="text-sm font-medium">Status</span>
+               <span className="text-sm font-medium">{t('Status')}</span>
                <span className="inline-flex items-center gap-1.5 text-sm">
                   <PrIcon status={review.status} />
                   {review.status === 'merged'
-                     ? 'Merged'
+                     ? t('Merged')
                      : review.status === 'closed'
-                       ? 'Closed'
-                       : 'Open'}
+                       ? t('Closed')
+                       : t('Open')}
                </span>
             </div>
             <div className="flex flex-col gap-2">
                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Resolves</span>
+                  <span className="text-sm font-medium">{t('Resolves')}</span>
                   <Plus className="size-3.5 text-muted-foreground" />
                </div>
                <Link
@@ -356,16 +367,16 @@ export function ReviewOverview({ review }: { review: Review }) {
                </Link>
             </div>
             <div className="flex flex-col gap-2">
-               <span className="text-sm font-medium">Reviewers</span>
+               <span className="text-sm font-medium">{t('Reviewers')}</span>
                <span className="text-xs text-muted-foreground">
-                  All workspace members can review.
+                  {t('All workspace members can review.')}
                </span>
             </div>
             <div className="flex flex-col gap-2">
-               <span className="text-sm font-medium">Checks</span>
+               <span className="text-sm font-medium">{t('Checks')}</span>
                <span className="inline-flex items-center gap-1.5 text-sm">
                   <ChevronRight className="size-3.5 text-muted-foreground" />
-                  {review.checksPassed} / {review.checksTotal} passed
+                  {review.checksPassed} / {review.checksTotal} {t('passed')}
                </span>
                <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
                   <span className="size-3.5 rounded-full border-2 border-muted-foreground/50 inline-block" />

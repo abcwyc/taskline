@@ -50,6 +50,7 @@ import {
 import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
+import { useLanguage } from '@/components/providers/language-provider';
 
 type PaletteRoute =
    | 'root'
@@ -80,6 +81,7 @@ function Keys({ keys }: { keys: string[] }) {
 
 /** ⌘K command palette — Linear-style, aware of the issue in context. */
 export function CommandPalette() {
+   const { t } = useLanguage();
    const teams = useTeamsStore((s) => s.teams);
    const allLabels = useLabelsStore((s) => s.labels);
    const users = useMembersStore((s) => s.members);
@@ -165,13 +167,13 @@ export function CommandPalette() {
       async (label: string, text: string) => {
          try {
             await navigator.clipboard.writeText(text);
-            toast.success(`${label} copied to clipboard`);
+            toast.success(`${label} ${t('copied to clipboard')}`);
          } catch {
-            toast.error('Could not access the clipboard');
+            toast.error(t('Could not access the clipboard'));
          }
          close();
       },
-      [close]
+      [close, t]
    );
 
    const issueUrl = issue
@@ -194,7 +196,7 @@ export function CommandPalette() {
       <div className="relative">
          <CommandInput
             autoFocus
-            placeholder="Type a command or search…"
+            placeholder={t('Type a command or search…')}
             value={query}
             onValueChange={setQuery}
             onKeyDown={(event) => {
@@ -215,7 +217,7 @@ export function CommandPalette() {
          />
          {route === 'root' && (
             <span className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5 text-xs text-muted-foreground pointer-events-none">
-               Ask Agent
+               {t('Ask Agent')}
                <kbd className="h-5 px-1.5 inline-flex items-center rounded border bg-muted/50 text-[11px] font-sans">
                   Tab
                </kbd>
@@ -236,8 +238,10 @@ export function CommandPalette() {
             showCloseButton={false}
             className="overflow-hidden p-0 sm:max-w-2xl top-[22%] translate-y-0 gap-0"
          >
-            <DialogTitle className="sr-only">Command menu</DialogTitle>
-            <DialogDescription className="sr-only">Type a command or search</DialogDescription>
+            <DialogTitle className="sr-only">{t('Command menu')}</DialogTitle>
+            <DialogDescription className="sr-only">
+               {t('Type a command or search')}
+            </DialogDescription>
             <Command className="[&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group]]:px-2 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-2.5">
                {issue && (
                   <div className="flex items-center gap-1.5 px-3 pt-3 pb-1">
@@ -248,7 +252,7 @@ export function CommandPalette() {
                            tabIndex={-1}
                            onClick={() => setContextCleared(true)}
                            className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
-                           aria-label="Clear issue context"
+                           aria-label={t('Clear issue context')}
                         >
                            ⌫
                         </button>
@@ -257,10 +261,10 @@ export function CommandPalette() {
                )}
                {input}
                <CommandList className="max-h-96">
-                  <CommandEmpty>No results found.</CommandEmpty>
+                  <CommandEmpty>{t('No results found.')}</CommandEmpty>
 
                   {route === 'root' && results && (
-                     <CommandGroup heading="Search results">
+                     <CommandGroup heading={t('Search results')}>
                         {results.issues.map((r) => (
                            <CommandItem
                               key={`i-${r.identifier}`}
@@ -284,7 +288,9 @@ export function CommandPalette() {
                            >
                               <Box className="text-muted-foreground" />
                               <span className="truncate">{r.name}</span>
-                              <span className="ml-auto text-xs text-muted-foreground">Project</span>
+                              <span className="ml-auto text-xs text-muted-foreground">
+                                 {t('Project')}
+                              </span>
                            </CommandItem>
                         ))}
                         {results.initiatives.map((r) => (
@@ -297,7 +303,7 @@ export function CommandPalette() {
                               <Compass className="text-muted-foreground" />
                               <span className="truncate">{r.name}</span>
                               <span className="ml-auto text-xs text-muted-foreground">
-                                 Initiative
+                                 {t('Initiative')}
                               </span>
                            </CommandItem>
                         ))}
@@ -312,7 +318,7 @@ export function CommandPalette() {
                                  <FileText className="text-muted-foreground" />
                                  <span className="truncate">{r.title}</span>
                                  <span className="ml-auto text-xs text-muted-foreground">
-                                    Document
+                                    {t('Document')}
                                  </span>
                               </CommandItem>
                            ))}
@@ -321,7 +327,7 @@ export function CommandPalette() {
 
                   {route === 'root' && issue && (
                      <>
-                        <CommandGroup heading="Issue">
+                        <CommandGroup heading={t('Issue')}>
                            <CommandItem
                               onSelect={() => {
                                  setRoute('assign');
@@ -329,18 +335,18 @@ export function CommandPalette() {
                               }}
                            >
                               <UserRoundPlus className="text-muted-foreground" />
-                              Assign to…
+                              {t('Assign to...')}
                               <Keys keys={['A']} />
                            </CommandItem>
                            <CommandItem
                               onSelect={() => {
                                  updateIssueAssignee(issue.id, null);
-                                 toast.success('Un-assigned');
+                                 toast.success(t('Un-assigned'));
                                  close();
                               }}
                            >
                               <UserRoundMinus className="text-muted-foreground" />
-                              Un-assign from me
+                              {t('Un-assign from me')}
                               <Keys keys={['I']} />
                            </CommandItem>
                            <CommandItem
@@ -350,7 +356,7 @@ export function CommandPalette() {
                               }}
                            >
                               <CircleDot className="text-muted-foreground" />
-                              Change status…
+                              {t('Change status…')}
                               <Keys keys={['S']} />
                            </CommandItem>
                            <CommandItem
@@ -360,7 +366,7 @@ export function CommandPalette() {
                               }}
                            >
                               <Layers className="text-muted-foreground" />
-                              Set priority…
+                              {t('Set priority…')}
                               <Keys keys={['P']} />
                            </CommandItem>
                            <CommandItem
@@ -370,7 +376,7 @@ export function CommandPalette() {
                               }}
                            >
                               <Box className="text-muted-foreground" />
-                              Move to project…
+                              {t('Move to project…')}
                               <Keys keys={['⇧', 'P']} />
                            </CommandItem>
                            <CommandItem
@@ -380,7 +386,7 @@ export function CommandPalette() {
                               }}
                            >
                               <Tags className="text-muted-foreground" />
-                              Change or add labels…
+                              {t('Change or add labels…')}
                               <Keys keys={['L']} />
                            </CommandItem>
                            <CommandItem
@@ -390,17 +396,17 @@ export function CommandPalette() {
                               }}
                            >
                               <CircleDot className="text-muted-foreground" />
-                              Move to cycle…
+                              {t('Move to cycle…')}
                               <Keys keys={['⇧', 'C']} />
                            </CommandItem>
                            <CommandItem
                               onSelect={() => {
-                                 toast.success('Added to the next release');
+                                 toast.success(t('Added to the next release'));
                                  close();
                               }}
                            >
                               <PackagePlus className="text-muted-foreground" />
-                              Add to release…
+                              {t('Add to release…')}
                               <Keys keys={['⌥', 'R']} />
                            </CommandItem>
                            <CommandItem
@@ -410,7 +416,7 @@ export function CommandPalette() {
                               }}
                            >
                               <Users className="text-muted-foreground" />
-                              Move to a different team…
+                              {t('Move to a different team…')}
                               <Keys keys={['⌘', '⇧', 'M']} />
                            </CommandItem>
                            <CommandItem
@@ -420,71 +426,73 @@ export function CommandPalette() {
                               }}
                            >
                               <CalendarPlus className="text-muted-foreground" />
-                              Set due date…
+                              {t('Set due date...')}
                               <Keys keys={['⇧', 'D']} />
                            </CommandItem>
                         </CommandGroup>
-                        <CommandGroup heading="Copy">
-                           <CommandItem onSelect={() => copy('Issue ID', issue.identifier)}>
+                        <CommandGroup heading={t('Copy')}>
+                           <CommandItem onSelect={() => copy(t('Issue ID'), issue.identifier)}>
                               <Clipboard className="text-muted-foreground" />
-                              Copy issue ID
+                              {t('Copy issue ID')}
                               <Keys keys={['⌘', '.']} />
                            </CommandItem>
-                           <CommandItem onSelect={() => copy('Issue URL', issueUrl)}>
+                           <CommandItem onSelect={() => copy(t('Issue URL'), issueUrl)}>
                               <Link2 className="text-muted-foreground" />
-                              Copy issue URL
+                              {t('Copy issue URL')}
                               <Keys keys={['⌘', '⇧', ',']} />
                            </CommandItem>
-                           <CommandItem onSelect={() => copy('Issue title', issue.title)}>
+                           <CommandItem onSelect={() => copy(t('Issue title'), issue.title)}>
                               <Type className="text-muted-foreground" />
-                              Copy issue title
+                              {t('Copy issue title')}
                               <Keys keys={['⌘', '⇧', "'"]} />
                            </CommandItem>
                            <CommandItem
                               onSelect={() =>
                                  copy(
-                                    'Title link',
+                                    t('Title link'),
                                     `[${issue.identifier}: ${issue.title}](${issueUrl})`
                                  )
                               }
                            >
                               <Link2 className="text-muted-foreground" />
-                              Copy title as link
+                              {t('Copy title as link')}
                               <Keys keys={['⌘', 'C']} />
                            </CommandItem>
                            <CommandItem
-                              onSelect={() => copy('Description', issue.description || issue.title)}
+                              onSelect={() =>
+                                 copy(t('Issue description'), issue.description || issue.title)
+                              }
                            >
                               <FileText className="text-muted-foreground" />
-                              Copy issue description as Markdown
+                              {t('Copy issue description as Markdown')}
                            </CommandItem>
                            <CommandItem
                               onSelect={() =>
                                  copy(
-                                    'Issue content',
+                                    t('Issue content'),
                                     `# ${issue.identifier}: ${issue.title}\n\n${issue.description || ''}\n\n- Status: ${issue.status.name}\n- Priority: ${issue.priority.name}\n- Assignee: ${issue.assignee?.name ?? 'Unassigned'}`
                                  )
                               }
                            >
                               <ClipboardType className="text-muted-foreground" />
-                              Copy issue content as Markdown
+                              {t('Copy issue content as Markdown')}
                               <Keys keys={['⌘', '⌥', 'C']} />
                            </CommandItem>
-                           <CommandItem onSelect={() => copy('Branch name', branchName)}>
+                           <CommandItem onSelect={() => copy(t('Branch name'), branchName)}>
                               <GitBranch className="text-muted-foreground" />
-                              Copy git branch name
+                              {t('Copy git branch name')}
                               <Keys keys={['⌘', '⇧', '.']} />
                            </CommandItem>
                            <CommandItem
                               onSelect={() =>
                                  copy(
-                                    'Prompt',
+                                    t('Prompt'),
                                     `Work on the following issue.\n\nIssue ${issue.identifier}: ${issue.title}\n${issue.description || ''}\nStatus: ${issue.status.name} — Priority: ${issue.priority.name}`
                                  )
                               }
                            >
                               <ClipboardList className="text-muted-foreground" />
-                              Copy as prompt
+                              {t('Copy as prompt')}
                               <Keys keys={['⌘', '⌥', 'P']} />
                            </CommandItem>
                         </CommandGroup>
@@ -493,7 +501,7 @@ export function CommandPalette() {
 
                   {route === 'root' && !issue && (
                      <>
-                        <CommandGroup heading="Actions">
+                        <CommandGroup heading={t('Actions')}>
                            <CommandItem
                               onSelect={() => {
                                  openModal();
@@ -501,40 +509,40 @@ export function CommandPalette() {
                               }}
                            >
                               <SquarePen className="text-muted-foreground" />
-                              Create new issue
+                              {t('Create new issue')}
                               <Keys keys={['C']} />
                            </CommandItem>
                         </CommandGroup>
-                        <CommandGroup heading="Go to">
+                        <CommandGroup heading={t('Go to')}>
                            <CommandItem onSelect={() => go('/inbox')}>
-                              <Inbox className="text-muted-foreground" /> Inbox
+                              <Inbox className="text-muted-foreground" /> {t('Inbox')}
                               <Keys keys={['G', 'I']} />
                            </CommandItem>
                            <CommandItem onSelect={() => go('/my-issues')}>
-                              <ClipboardList className="text-muted-foreground" /> My issues
+                              <ClipboardList className="text-muted-foreground" /> {t('My issues')}
                               <Keys keys={['G', 'M']} />
                            </CommandItem>
                            <CommandItem onSelect={() => go('/reviews')}>
-                              <GitBranch className="text-muted-foreground" /> Reviews
+                              <GitBranch className="text-muted-foreground" /> {t('Reviews')}
                            </CommandItem>
                            <CommandItem onSelect={() => go('/initiatives')}>
-                              <Compass className="text-muted-foreground" /> Initiatives
+                              <Compass className="text-muted-foreground" /> {t('Initiatives')}
                            </CommandItem>
                            <CommandItem onSelect={() => go('/projects')}>
-                              <Box className="text-muted-foreground" /> Projects
+                              <Box className="text-muted-foreground" /> {t('Projects')}
                               <Keys keys={['G', 'P']} />
                            </CommandItem>
                            <CommandItem onSelect={() => go('/views')}>
-                              <Layers className="text-muted-foreground" /> Views
+                              <Layers className="text-muted-foreground" /> {t('Views')}
                            </CommandItem>
                            <CommandItem onSelect={() => go('/teams')}>
-                              <ContactRound className="text-muted-foreground" /> Teams
+                              <ContactRound className="text-muted-foreground" /> {t('Teams')}
                            </CommandItem>
                            <CommandItem onSelect={() => go('/members')}>
-                              <UserRound className="text-muted-foreground" /> Members
+                              <UserRound className="text-muted-foreground" /> {t('Members')}
                            </CommandItem>
                            <CommandItem onSelect={() => go('/settings')}>
-                              <FileText className="text-muted-foreground" /> Settings
+                              <FileText className="text-muted-foreground" /> {t('Settings')}
                               <Keys keys={['G', 'S']} />
                            </CommandItem>
                         </CommandGroup>
@@ -542,13 +550,13 @@ export function CommandPalette() {
                   )}
 
                   {route === 'assign' && issue && (
-                     <CommandGroup heading="Assign to…">
+                     <CommandGroup heading={t('Assign to...')}>
                         {users.slice(0, 12).map((user) => (
                            <CommandItem
                               key={user.id}
                               onSelect={() => {
                                  updateIssueAssignee(issue.id, user);
-                                 toast.success(`Assigned to ${user.name}`);
+                                 toast.success(`${t('Assigned to')} ${user.name}`);
                                  close();
                               }}
                            >
@@ -568,18 +576,18 @@ export function CommandPalette() {
                   )}
 
                   {route === 'status' && issue && (
-                     <CommandGroup heading="Change status…">
+                     <CommandGroup heading={t('Change status…')}>
                         {allStatus.map((candidate) => (
                            <CommandItem
                               key={candidate.id}
                               onSelect={() => {
                                  updateIssueStatus(issue.id, candidate);
-                                 toast.success(`Status set to ${candidate.name}`);
+                                 toast.success(`${t('Status set to')} ${t(candidate.name)}`);
                                  close();
                               }}
                            >
                               <candidate.icon />
-                              {candidate.name}
+                              {t(candidate.name)}
                               {issue.status.id === candidate.id && (
                                  <Check className="ml-auto size-4" />
                               )}
@@ -589,18 +597,18 @@ export function CommandPalette() {
                   )}
 
                   {route === 'priority' && issue && (
-                     <CommandGroup heading="Set priority…">
+                     <CommandGroup heading={t('Set priority…')}>
                         {priorities.map((candidate) => (
                            <CommandItem
                               key={candidate.id}
                               onSelect={() => {
                                  updateIssuePriority(issue.id, candidate);
-                                 toast.success(`Priority set to ${candidate.name}`);
+                                 toast.success(`${t('Priority set to')} ${t(candidate.name)}`);
                                  close();
                               }}
                            >
                               <candidate.icon className="text-muted-foreground" />
-                              {candidate.name}
+                              {t(candidate.name)}
                               {issue.priority.id === candidate.id && (
                                  <Check className="ml-auto size-4" />
                               )}
@@ -610,7 +618,7 @@ export function CommandPalette() {
                   )}
 
                   {route === 'labels' && issue && (
-                     <CommandGroup heading="Change or add labels…">
+                     <CommandGroup heading={t('Change or add labels…')}>
                         {allLabels.map((label) => {
                            const active = issue.labels.some(
                               (candidate) => candidate.id === label.id
@@ -623,8 +631,8 @@ export function CommandPalette() {
                                     else addIssueLabel(issue.id, label);
                                     toast.success(
                                        active
-                                          ? `Label ${label.name} removed`
-                                          : `Label ${label.name} added`
+                                          ? `${t('Removed label:')} ${t(label.name)}`
+                                          : `${t('Added label:')} ${t(label.name)}`
                                     );
                                  }}
                               >
@@ -632,7 +640,7 @@ export function CommandPalette() {
                                     className="size-3 rounded-full"
                                     style={{ backgroundColor: label.color }}
                                  />
-                                 {label.name}
+                                 {t(label.name)}
                                  {active && <Check className="ml-auto size-4" />}
                               </CommandItem>
                            );
@@ -641,23 +649,23 @@ export function CommandPalette() {
                   )}
 
                   {route === 'project' && issue && (
-                     <CommandGroup heading="Move to project…">
+                     <CommandGroup heading={t('Move to project…')}>
                         <CommandItem
                            onSelect={() => {
                               updateIssueProject(issue.id, undefined);
-                              toast.success('Removed from project');
+                              toast.success(t('Removed from project'));
                               close();
                            }}
                         >
                            <Box className="text-muted-foreground" />
-                           No project
+                           {t('No project')}
                         </CommandItem>
                         {allProjects.map((project) => (
                            <CommandItem
                               key={project.id}
                               onSelect={() => {
                                  updateIssueProject(issue.id, project);
-                                 toast.success(`Moved to ${project.name}`);
+                                 toast.success(`${t('Moved to')} ${project.name}`);
                                  close();
                               }}
                            >
@@ -672,23 +680,23 @@ export function CommandPalette() {
                   )}
 
                   {route === 'cycle' && issue && (
-                     <CommandGroup heading="Move to cycle…">
+                     <CommandGroup heading={t('Move to cycle…')}>
                         <CommandItem
                            onSelect={() => {
                               updateIssue(issue.id, { cycleId: '' });
-                              toast.success('Removed from cycle');
+                              toast.success(t('Removed from cycle'));
                               close();
                            }}
                         >
                            <CircleDot className="text-muted-foreground" />
-                           No cycle
+                           {t('No cycle')}
                         </CommandItem>
                         {cycles.slice(0, 6).map((cycle) => (
                            <CommandItem
                               key={cycle.id}
                               onSelect={() => {
                                  updateIssue(issue.id, { cycleId: cycle.id });
-                                 toast.success(`Moved to ${cycle.name}`);
+                                 toast.success(`${t('Moved to')} ${cycle.name}`);
                                  close();
                               }}
                            >
@@ -704,14 +712,14 @@ export function CommandPalette() {
                   )}
 
                   {route === 'team' && issue && (
-                     <CommandGroup heading="Move to a different team…">
+                     <CommandGroup heading={t('Move to a different team…')}>
                         {teams
                            .filter((team) => team.joined)
                            .map((team) => (
                               <CommandItem
                                  key={team.id}
                                  onSelect={() => {
-                                    toast.success(`Moved to ${team.name}`);
+                                    toast.success(`${t('Moved to')} ${team.name}`);
                                     close();
                                  }}
                               >
@@ -723,7 +731,7 @@ export function CommandPalette() {
                   )}
 
                   {route === 'due-date' && issue && (
-                     <CommandGroup heading="Set due date…">
+                     <CommandGroup heading={t('Set due date...')}>
                         {(
                            [
                               ['Today', '2026-08-04'],
@@ -736,23 +744,23 @@ export function CommandPalette() {
                               key={label}
                               onSelect={() => {
                                  updateIssue(issue.id, { dueDate: date });
-                                 toast.success(`Due date set to ${label.toLowerCase()}`);
+                                 toast.success(`${t('Due date set to')} ${t(label).toLowerCase()}`);
                                  close();
                               }}
                            >
                               <CalendarPlus className="text-muted-foreground" />
-                              {label}
+                              {t(label)}
                            </CommandItem>
                         ))}
                         <CommandItem
                            onSelect={() => {
                               updateIssue(issue.id, { dueDate: undefined });
-                              toast.success('Due date cleared');
+                              toast.success(t('Due date cleared'));
                               close();
                            }}
                         >
                            <CalendarPlus className="text-muted-foreground" />
-                           Clear due date
+                           {t('Clear due date')}
                         </CommandItem>
                      </CommandGroup>
                   )}

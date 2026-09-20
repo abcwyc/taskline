@@ -30,6 +30,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { SettingsCard, SettingsRow, SettingsSection, SettingsShell } from './shared';
+import { useLanguage } from '@/components/providers/language-provider';
 
 interface PasskeyRow {
    id: string;
@@ -59,6 +60,7 @@ const fmtDate = (iso: string) => format(parseISO(iso), 'MMM d, yyyy');
 /** Copy-to-clipboard button with transient check feedback. */
 function CopyButton({ value, label }: { value: string; label: string }) {
    const [copied, setCopied] = useState(false);
+   const { t } = useLanguage();
    return (
       <Button
          variant="ghost"
@@ -71,7 +73,7 @@ function CopyButton({ value, label }: { value: string; label: string }) {
                setCopied(true);
                setTimeout(() => setCopied(false), 1500);
             } catch {
-               toast.error('Could not copy — select and copy manually');
+               toast.error(t('Could not copy — select and copy manually'));
             }
          }}
       >
@@ -90,6 +92,7 @@ function TotpSection() {
    const [disableOpen, setDisableOpen] = useState(false);
    const [password, setPassword] = useState('');
    const [disableBusy, setDisableBusy] = useState(false);
+   const { t } = useLanguage();
 
    const startSetup = async () => {
       setSetupBusy(true);
@@ -98,14 +101,17 @@ function TotpSection() {
          if (res.status === 409) {
             // Setup refuses when two-factor is already on — that's our signal.
             setEnabled(true);
-            toast('Two-factor is already enabled');
+            toast(t('Two-factor is already enabled'));
             return;
          }
-         if (!res.ok) throw new Error(await responseError(res, 'Could not start two-factor setup'));
+         if (!res.ok)
+            throw new Error(await responseError(res, t('Could not start two-factor setup')));
          setSetup(await res.json());
          setCode('');
       } catch (error) {
-         toast.error(error instanceof Error ? error.message : 'Could not start two-factor setup');
+         toast.error(
+            error instanceof Error ? error.message : t('Could not start two-factor setup')
+         );
       } finally {
          setSetupBusy(false);
       }
@@ -120,13 +126,13 @@ function TotpSection() {
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify({ code }),
          });
-         if (!res.ok) throw new Error(await responseError(res, 'Could not enable two-factor'));
+         if (!res.ok) throw new Error(await responseError(res, t('Could not enable two-factor')));
          setEnabled(true);
          setSetup(null);
          setCode('');
-         toast.success('Two-factor authentication enabled');
+         toast.success(t('Two-factor authentication enabled'));
       } catch (error) {
-         toast.error(error instanceof Error ? error.message : 'Could not enable two-factor');
+         toast.error(error instanceof Error ? error.message : t('Could not enable two-factor'));
       } finally {
          setVerifyBusy(false);
       }
@@ -141,13 +147,13 @@ function TotpSection() {
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify({ password }),
          });
-         if (!res.ok) throw new Error(await responseError(res, 'Could not disable two-factor'));
+         if (!res.ok) throw new Error(await responseError(res, t('Could not disable two-factor')));
          setEnabled(false);
          setDisableOpen(false);
          setPassword('');
-         toast.success('Two-factor authentication disabled');
+         toast.success(t('Two-factor authentication disabled'));
       } catch (error) {
-         toast.error(error instanceof Error ? error.message : 'Could not disable two-factor');
+         toast.error(error instanceof Error ? error.message : t('Could not disable two-factor'));
       } finally {
          setDisableBusy(false);
       }
@@ -155,46 +161,48 @@ function TotpSection() {
 
    return (
       <SettingsSection
-         title="Two-factor authentication"
-         description="Require a code from your authenticator app in addition to your password."
+         title={t('Two-factor authentication')}
+         description={t('Require a code from your authenticator app in addition to your password.')}
       >
          <div className="flex items-center gap-2">
             {enabled && (
                <Badge variant="secondary" className="px-1.5 py-0 text-[10px]">
-                  Enabled
+                  {t('Enabled')}
                </Badge>
             )}
             <Button size="sm" onClick={startSetup} disabled={setupBusy}>
-               {setupBusy ? 'Starting…' : 'Enable two-factor'}
+               {setupBusy ? t('Starting…') : t('Enable two-factor')}
             </Button>
             <Button size="sm" variant="outline" onClick={() => setDisableOpen(true)}>
-               Disable
+               {t('Disable')}
             </Button>
          </div>
          <p className="text-xs text-muted-foreground">
-            If enabled, a 6-digit code is required at sign-in.
+            {t('If enabled, a 6-digit code is required at sign-in.')}
          </p>
 
          <Dialog open={!!setup} onOpenChange={(v) => !v && setSetup(null)}>
             <DialogContent className="sm:max-w-md">
                <DialogHeader>
-                  <DialogTitle>Enable two-factor authentication</DialogTitle>
+                  <DialogTitle>{t('Enable two-factor authentication')}</DialogTitle>
                   <DialogDescription>
-                     Add the secret to your authenticator app, then enter the current 6-digit code.
+                     {t(
+                        'Add the secret to your authenticator app, then enter the current 6-digit code.'
+                     )}
                   </DialogDescription>
                </DialogHeader>
                <div className="flex flex-col gap-4 py-2">
                   <div className="flex flex-col gap-1.5">
-                     <Label>Secret</Label>
+                     <Label>{t('Secret')}</Label>
                      <div className="flex items-center gap-2">
                         <code className="min-w-0 flex-1 truncate rounded-md border bg-muted/50 px-3 py-2 font-mono text-sm">
                            {setup?.secret}
                         </code>
-                        <CopyButton value={setup?.secret ?? ''} label="Copy secret" />
+                        <CopyButton value={setup?.secret ?? ''} label={t('Copy secret')} />
                      </div>
                   </div>
                   <div className="flex flex-col gap-1.5">
-                     <Label htmlFor="totp-verify-code">Current code</Label>
+                     <Label htmlFor="totp-verify-code">{t('Current code')}</Label>
                      <Input
                         id="totp-verify-code"
                         type="text"
@@ -209,10 +217,10 @@ function TotpSection() {
                </div>
                <DialogFooter>
                   <Button variant="ghost" onClick={() => setSetup(null)}>
-                     Cancel
+                     {t('Cancel')}
                   </Button>
                   <Button onClick={verify} disabled={verifyBusy || !/^\d{6}$/.test(code)}>
-                     {verifyBusy ? 'Verifying…' : 'Verify'}
+                     {verifyBusy ? t('Verifying…') : t('Verify')}
                   </Button>
                </DialogFooter>
             </DialogContent>
@@ -227,13 +235,13 @@ function TotpSection() {
          >
             <DialogContent className="sm:max-w-md">
                <DialogHeader>
-                  <DialogTitle>Disable two-factor authentication</DialogTitle>
+                  <DialogTitle>{t('Disable two-factor authentication')}</DialogTitle>
                   <DialogDescription>
-                     Enter your account password to turn off two-factor.
+                     {t('Enter your account password to turn off two-factor.')}
                   </DialogDescription>
                </DialogHeader>
                <div className="flex flex-col gap-1.5 py-2">
-                  <Label htmlFor="totp-password">Password</Label>
+                  <Label htmlFor="totp-password">{t('Password')}</Label>
                   <Input
                      id="totp-password"
                      type="password"
@@ -244,10 +252,10 @@ function TotpSection() {
                </div>
                <DialogFooter>
                   <Button variant="ghost" onClick={() => setDisableOpen(false)}>
-                     Cancel
+                     {t('Cancel')}
                   </Button>
                   <Button onClick={disable} disabled={disableBusy || !password}>
-                     {disableBusy ? 'Disabling…' : 'Disable two-factor'}
+                     {disableBusy ? t('Disabling…') : t('Disable two-factor')}
                   </Button>
                </DialogFooter>
             </DialogContent>
@@ -265,19 +273,20 @@ function PasskeysSection() {
    const [addBusy, setAddBusy] = useState(false);
    const [deleting, setDeleting] = useState<PasskeyRow | null>(null);
    const [deleteBusy, setDeleteBusy] = useState(false);
+   const { t } = useLanguage();
 
    const load = useCallback(() => {
       fetch('/api/me/passkeys')
          .then(async (res) => {
-            if (!res.ok) throw new Error(await responseError(res, 'Could not load passkeys'));
+            if (!res.ok) throw new Error(await responseError(res, t('Could not load passkeys')));
             return (await res.json()) as PasskeyRow[];
          })
          .then(setPasskeys)
          .catch((error) => {
-            toast.error(error instanceof Error ? error.message : 'Could not load passkeys');
+            toast.error(error instanceof Error ? error.message : t('Could not load passkeys'));
          })
          .finally(() => setLoaded(true));
-   }, []);
+   }, [t]);
 
    useEffect(() => {
       load();
@@ -287,7 +296,7 @@ function PasskeysSection() {
       setAddBusy(true);
       try {
          const res = await fetch('/api/me/passkeys/options', { method: 'POST' });
-         if (!res.ok) throw new Error(await responseError(res, 'Could not start passkey setup'));
+         if (!res.ok) throw new Error(await responseError(res, t('Could not start passkey setup')));
          const options = (await res.json()) as Parameters<
             typeof startRegistration
          >[0]['optionsJSON'];
@@ -296,17 +305,17 @@ function PasskeysSection() {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify({
-               label: label.trim() || 'Passkey',
+               label: label.trim() || t('Passkey'),
                attestation: JSON.stringify(attestation),
             }),
          });
-         if (!save.ok) throw new Error(await responseError(save, 'Could not save passkey'));
-         toast.success('Passkey added');
+         if (!save.ok) throw new Error(await responseError(save, t('Could not save passkey')));
+         toast.success(t('Passkey added'));
          setAddOpen(false);
          setLabel('');
          load();
       } catch (error) {
-         toast.error(error instanceof Error ? error.message : 'Could not add passkey');
+         toast.error(error instanceof Error ? error.message : t('Could not add passkey'));
       } finally {
          setAddBusy(false);
       }
@@ -317,12 +326,12 @@ function PasskeysSection() {
       setDeleteBusy(true);
       try {
          const res = await fetch(`/api/me/passkeys/${deleting.id}`, { method: 'DELETE' });
-         if (!res.ok) throw new Error(await responseError(res, 'Could not delete passkey'));
-         toast.success('Passkey removed');
+         if (!res.ok) throw new Error(await responseError(res, t('Could not delete passkey')));
+         toast.success(t('Passkey removed'));
          setDeleting(null);
          load();
       } catch (error) {
-         toast.error(error instanceof Error ? error.message : 'Could not delete passkey');
+         toast.error(error instanceof Error ? error.message : t('Could not delete passkey'));
       } finally {
          setDeleteBusy(false);
       }
@@ -330,8 +339,8 @@ function PasskeysSection() {
 
    return (
       <SettingsSection
-         title={`${passkeys.length} passkeys`}
-         description="Sign in with a fingerprint, face or hardware security key."
+         title={`${passkeys.length} ${t('passkeys')}`}
+         description={t('Sign in with a fingerprint, face or hardware security key.')}
          action={
             <Button
                size="xs"
@@ -340,7 +349,7 @@ function PasskeysSection() {
                   setAddOpen(true);
                }}
             >
-               Add passkey
+               {t('Add passkey')}
             </Button>
          }
       >
@@ -350,21 +359,21 @@ function PasskeysSection() {
                   key={passkey.id}
                   icon={<Fingerprint className="size-4" />}
                   title={passkey.label}
-                  description={`Added ${fmtDate(passkey.createdAt)} · Last used ${
-                     passkey.lastUsedAt ? fmtDate(passkey.lastUsedAt) : 'Never'
+                  description={`${t('Added')} ${fmtDate(passkey.createdAt)} · ${t('Last used')} ${
+                     passkey.lastUsedAt ? fmtDate(passkey.lastUsedAt) : t('Never')
                   }`}
                   trailing={
                      <>
                         {passkey.backedUp && (
                            <Badge variant="secondary" className="px-1.5 py-0 text-[10px]">
-                              Synced
+                              {t('Synced')}
                            </Badge>
                         )}
                         <Button
                            variant="ghost"
                            size="icon"
                            className="size-7 text-muted-foreground hover:text-destructive"
-                           aria-label={`Remove ${passkey.label}`}
+                           aria-label={t('Remove {name}').replace('{name}', passkey.label)}
                            onClick={() => setDeleting(passkey)}
                         >
                            <Trash2 className="size-3.5" />
@@ -375,7 +384,7 @@ function PasskeysSection() {
             ))}
             {loaded && passkeys.length === 0 && (
                <div className="px-4 py-3 text-sm text-muted-foreground">
-                  No passkeys yet — add one to sign in without a password.
+                  {t('No passkeys yet — add one to sign in without a password.')}
                </div>
             )}
          </SettingsCard>
@@ -389,13 +398,15 @@ function PasskeysSection() {
          >
             <DialogContent className="sm:max-w-md">
                <DialogHeader>
-                  <DialogTitle>Add passkey</DialogTitle>
+                  <DialogTitle>{t('Add passkey')}</DialogTitle>
                   <DialogDescription>
-                     Name this passkey so you can recognize it later, then confirm with your device.
+                     {t(
+                        'Name this passkey so you can recognize it later, then confirm with your device.'
+                     )}
                   </DialogDescription>
                </DialogHeader>
                <div className="flex flex-col gap-1.5 py-2">
-                  <Label htmlFor="passkey-label">Label</Label>
+                  <Label htmlFor="passkey-label">{t('Label')}</Label>
                   <Input
                      id="passkey-label"
                      autoFocus
@@ -407,10 +418,10 @@ function PasskeysSection() {
                </div>
                <DialogFooter>
                   <Button variant="ghost" onClick={() => setAddOpen(false)}>
-                     Cancel
+                     {t('Cancel')}
                   </Button>
                   <Button onClick={add} disabled={addBusy}>
-                     {addBusy ? 'Waiting for device…' : 'Continue'}
+                     {addBusy ? t('Waiting for device…') : t('Continue')}
                   </Button>
                </DialogFooter>
             </DialogContent>
@@ -419,19 +430,22 @@ function PasskeysSection() {
          <AlertDialog open={!!deleting} onOpenChange={(v) => !v && setDeleting(null)}>
             <AlertDialogContent>
                <AlertDialogHeader>
-                  <AlertDialogTitle>Remove passkey</AlertDialogTitle>
+                  <AlertDialogTitle>{t('Remove passkey')}</AlertDialogTitle>
                   <AlertDialogDescription>
-                     {`Remove "${deleting?.label}"? You will no longer be able to sign in with it.`}
+                     {t('Remove "{name}"? You will no longer be able to sign in with it.').replace(
+                        '{name}',
+                        deleting?.label ?? ''
+                     )}
                   </AlertDialogDescription>
                </AlertDialogHeader>
                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogCancel>{t('Cancel')}</AlertDialogCancel>
                   <AlertDialogAction
                      className="bg-destructive text-white hover:bg-destructive/90"
                      onClick={remove}
                      disabled={deleteBusy}
                   >
-                     Remove
+                     {t('Remove')}
                   </AlertDialogAction>
                </AlertDialogFooter>
             </AlertDialogContent>
@@ -450,19 +464,20 @@ function ApiKeysSection() {
    const [newKey, setNewKey] = useState<string | null>(null);
    const [revoking, setRevoking] = useState<ApiKeyRow | null>(null);
    const [revokeBusy, setRevokeBusy] = useState(false);
+   const { t } = useLanguage();
 
    const load = useCallback(() => {
       fetch('/api/me/api-keys')
          .then(async (res) => {
-            if (!res.ok) throw new Error(await responseError(res, 'Could not load API keys'));
+            if (!res.ok) throw new Error(await responseError(res, t('Could not load API keys')));
             return (await res.json()) as ApiKeyRow[];
          })
          .then(setKeys)
          .catch((error) => {
-            toast.error(error instanceof Error ? error.message : 'Could not load API keys');
+            toast.error(error instanceof Error ? error.message : t('Could not load API keys'));
          })
          .finally(() => setLoaded(true));
-   }, []);
+   }, [t]);
 
    useEffect(() => {
       load();
@@ -477,13 +492,13 @@ function ApiKeysSection() {
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify({ name: name.trim() }),
          });
-         if (!res.ok) throw new Error(await responseError(res, 'Could not create API key'));
+         if (!res.ok) throw new Error(await responseError(res, t('Could not create API key')));
          const created = (await res.json()) as ApiKeyRow & { key: string };
          setNewKey(created.key);
          setName('');
          load();
       } catch (error) {
-         toast.error(error instanceof Error ? error.message : 'Could not create API key');
+         toast.error(error instanceof Error ? error.message : t('Could not create API key'));
       } finally {
          setCreateBusy(false);
       }
@@ -494,12 +509,12 @@ function ApiKeysSection() {
       setRevokeBusy(true);
       try {
          const res = await fetch(`/api/me/api-keys/${revoking.id}`, { method: 'DELETE' });
-         if (!res.ok) throw new Error(await responseError(res, 'Could not revoke API key'));
-         toast.success('API key revoked');
+         if (!res.ok) throw new Error(await responseError(res, t('Could not revoke API key')));
+         toast.success(t('API key revoked'));
          setRevoking(null);
          load();
       } catch (error) {
-         toast.error(error instanceof Error ? error.message : 'Could not revoke API key');
+         toast.error(error instanceof Error ? error.message : t('Could not revoke API key'));
       } finally {
          setRevokeBusy(false);
       }
@@ -507,11 +522,12 @@ function ApiKeysSection() {
 
    return (
       <SettingsSection
-         title={`${keys.length} API keys`}
+         title={`${keys.length} ${t('API keys')}`}
          description={
             <>
-               Use with <code className="font-mono text-xs">Authorization: Bearer {'<key>'}</code>{' '}
-               against the REST API; keys act with your role.
+               {t('Use with')}{' '}
+               <code className="font-mono text-xs">Authorization: Bearer {'<key>'}</code>{' '}
+               {t('against the REST API; keys act with your role.')}
             </>
          }
          action={
@@ -523,7 +539,7 @@ function ApiKeysSection() {
                   setCreateOpen(true);
                }}
             >
-               Create key
+               {t('Create key')}
             </Button>
          }
       >
@@ -538,21 +554,21 @@ function ApiKeysSection() {
                         {key.name}
                         {key.revokedAt && (
                            <Badge variant="secondary" className="px-1.5 py-0 text-[10px]">
-                              Revoked
+                              {t('Revoked')}
                            </Badge>
                         )}
                      </>
                   }
-                  description={`${key.prefix}… · Created ${fmtDate(key.createdAt)} · Last used ${
-                     key.lastUsedAt ? fmtDate(key.lastUsedAt) : 'Never'
-                  }`}
+                  description={`${key.prefix}… · ${t('Created')} ${fmtDate(key.createdAt)} · ${t(
+                     'Last used'
+                  )} ${key.lastUsedAt ? fmtDate(key.lastUsedAt) : t('Never')}`}
                   trailing={
                      !key.revokedAt && (
                         <Button
                            variant="ghost"
                            size="icon"
                            className="size-7 text-muted-foreground hover:text-destructive"
-                           aria-label={`Revoke ${key.name}`}
+                           aria-label={t('Revoke {name}').replace('{name}', key.name)}
                            onClick={() => setRevoking(key)}
                         >
                            <Trash2 className="size-3.5" />
@@ -563,7 +579,7 @@ function ApiKeysSection() {
             ))}
             {loaded && keys.length === 0 && (
                <div className="px-4 py-3 text-sm text-muted-foreground">
-                  No API keys yet — create one to call the REST API.
+                  {t('No API keys yet — create one to call the REST API.')}
                </div>
             )}
          </SettingsCard>
@@ -582,19 +598,21 @@ function ApiKeysSection() {
                {newKey ? (
                   <>
                      <DialogHeader>
-                        <DialogTitle>API key created</DialogTitle>
+                        <DialogTitle>{t('API key created')}</DialogTitle>
                         <DialogDescription>
-                           Copy it now — you won&apos;t see this again.
+                           {t("Copy it now — you won't see this again.")}
                         </DialogDescription>
                      </DialogHeader>
                      <div className="flex items-center gap-2 py-2">
                         <code className="min-w-0 flex-1 truncate rounded-md border bg-muted/50 px-3 py-2 font-mono text-xs">
                            {newKey}
                         </code>
-                        <CopyButton value={newKey} label="Copy API key" />
+                        <CopyButton value={newKey} label={t('Copy API key')} />
                      </div>
                      <p className="text-xs text-muted-foreground">
-                        Treat this key like a password — requests made with it act with your role.
+                        {t(
+                           'Treat this key like a password — requests made with it act with your role.'
+                        )}
                      </p>
                      <DialogFooter>
                         <Button
@@ -603,35 +621,35 @@ function ApiKeysSection() {
                               setNewKey(null);
                            }}
                         >
-                           Acknowledge
+                           {t('Acknowledge')}
                         </Button>
                      </DialogFooter>
                   </>
                ) : (
                   <>
                      <DialogHeader>
-                        <DialogTitle>Create API key</DialogTitle>
+                        <DialogTitle>{t('Create API key')}</DialogTitle>
                         <DialogDescription>
-                           The full key is shown exactly once, right after it is created.
+                           {t('The full key is shown exactly once, right after it is created.')}
                         </DialogDescription>
                      </DialogHeader>
                      <div className="flex flex-col gap-1.5 py-2">
-                        <Label htmlFor="api-key-name">Name</Label>
+                        <Label htmlFor="api-key-name">{t('Name')}</Label>
                         <Input
                            id="api-key-name"
                            autoFocus
                            maxLength={80}
                            value={name}
                            onChange={(e) => setName(e.target.value)}
-                           placeholder="CI pipeline"
+                           placeholder={t('CI pipeline')}
                         />
                      </div>
                      <DialogFooter>
                         <Button variant="ghost" onClick={() => setCreateOpen(false)}>
-                           Cancel
+                           {t('Cancel')}
                         </Button>
                         <Button onClick={create} disabled={createBusy || !name.trim()}>
-                           {createBusy ? 'Creating…' : 'Create key'}
+                           {createBusy ? t('Creating…') : t('Create key')}
                         </Button>
                      </DialogFooter>
                   </>
@@ -642,19 +660,21 @@ function ApiKeysSection() {
          <AlertDialog open={!!revoking} onOpenChange={(v) => !v && setRevoking(null)}>
             <AlertDialogContent>
                <AlertDialogHeader>
-                  <AlertDialogTitle>Revoke API key</AlertDialogTitle>
+                  <AlertDialogTitle>{t('Revoke API key')}</AlertDialogTitle>
                   <AlertDialogDescription>
-                     {`Revoke "${revoking?.name}"? Requests using it will stop working immediately.`}
+                     {t(
+                        'Revoke "{name}"? Requests using it will stop working immediately.'
+                     ).replace('{name}', revoking?.name ?? '')}
                   </AlertDialogDescription>
                </AlertDialogHeader>
                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogCancel>{t('Cancel')}</AlertDialogCancel>
                   <AlertDialogAction
                      className="bg-destructive text-white hover:bg-destructive/90"
                      onClick={revoke}
                      disabled={revokeBusy}
                   >
-                     Revoke
+                     {t('Revoke')}
                   </AlertDialogAction>
                </AlertDialogFooter>
             </AlertDialogContent>
@@ -667,33 +687,35 @@ function ApiKeysSection() {
 function SessionsSection() {
    const [open, setOpen] = useState(false);
    const [busy, setBusy] = useState(false);
+   const { t } = useLanguage();
 
    const revokeAll = async () => {
       setBusy(true);
       try {
          const res = await fetch('/api/me/sessions/revoke-all', { method: 'POST' });
-         if (!res.ok) throw new Error(await responseError(res, 'Could not sign out all sessions'));
+         if (!res.ok)
+            throw new Error(await responseError(res, t('Could not sign out all sessions')));
          setOpen(false);
          await signOut({ callbackUrl: '/sign-in' });
       } catch (error) {
-         toast.error(error instanceof Error ? error.message : 'Could not sign out all sessions');
+         toast.error(error instanceof Error ? error.message : t('Could not sign out all sessions'));
          setBusy(false);
       }
    };
 
    return (
       <SettingsSection
-         title="Sessions"
-         description="Stay signed in everywhere until you sign out of all devices at once."
+         title={t('Sessions')}
+         description={t('Stay signed in everywhere until you sign out of all devices at once.')}
       >
          <SettingsCard>
             <SettingsRow
                icon={<LogOut className="size-4" />}
-               title="All devices"
-               description="Signs out of every session, including this one."
+               title={t('All devices')}
+               description={t('Signs out of every session, including this one.')}
                trailing={
                   <Button variant="destructive" size="sm" onClick={() => setOpen(true)}>
-                     Sign out all sessions
+                     {t('Sign out all sessions')}
                   </Button>
                }
             />
@@ -702,13 +724,15 @@ function SessionsSection() {
          <AlertDialog open={open} onOpenChange={(v) => !busy && setOpen(v)}>
             <AlertDialogContent>
                <AlertDialogHeader>
-                  <AlertDialogTitle>Sign out all sessions</AlertDialogTitle>
+                  <AlertDialogTitle>{t('Sign out all sessions')}</AlertDialogTitle>
                   <AlertDialogDescription>
-                     You will be signed out immediately and need to sign in again to continue.
+                     {t(
+                        'You will be signed out immediately and need to sign in again to continue.'
+                     )}
                   </AlertDialogDescription>
                </AlertDialogHeader>
                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogCancel>{t('Cancel')}</AlertDialogCancel>
                   <AlertDialogAction
                      className="bg-destructive text-white hover:bg-destructive/90"
                      onClick={(e) => {
@@ -717,7 +741,7 @@ function SessionsSection() {
                      }}
                      disabled={busy}
                   >
-                     {busy ? 'Signing out…' : 'Sign out everywhere'}
+                     {busy ? t('Signing out…') : t('Sign out everywhere')}
                   </AlertDialogAction>
                </AlertDialogFooter>
             </AlertDialogContent>
@@ -731,11 +755,12 @@ export default function AccountSecurity() {
    const [newPassword, setNewPassword] = useState('');
    const [confirmPassword, setConfirmPassword] = useState('');
    const [busy, setBusy] = useState(false);
+   const { t } = useLanguage();
 
    async function submit(event: React.FormEvent<HTMLFormElement>) {
       event.preventDefault();
       if (newPassword !== confirmPassword) {
-         toast.error('New passwords do not match');
+         toast.error(t('New passwords do not match'));
          return;
       }
       setBusy(true);
@@ -747,12 +772,12 @@ export default function AccountSecurity() {
          });
          if (!response.ok) {
             const payload = (await response.json().catch(() => ({}))) as { error?: string };
-            throw new Error(payload.error ?? 'Could not change password');
+            throw new Error(payload.error ?? t('Could not change password'));
          }
-         toast.success('Password changed. Sign in again on this device.');
+         toast.success(t('Password changed. Sign in again on this device.'));
          window.location.assign('/sign-in?error=PasswordChanged');
       } catch (error) {
-         toast.error(error instanceof Error ? error.message : 'Could not change password');
+         toast.error(error instanceof Error ? error.message : t('Could not change password'));
       } finally {
          setBusy(false);
       }
@@ -760,19 +785,21 @@ export default function AccountSecurity() {
 
    return (
       <SettingsShell
-         title="Security & access"
-         description="Manage your password, two-factor authentication, passkeys, API keys and sessions."
+         title={t('Security & access')}
+         description={t(
+            'Manage your password, two-factor authentication, passkeys, API keys and sessions.'
+         )}
       >
          <SettingsSection
-            title="Password"
-            description="Changing your password signs out all sessions."
+            title={t('Password')}
+            description={t('Changing your password signs out all sessions.')}
          >
             <form
                onSubmit={submit}
                className="max-w-md space-y-4 rounded-lg border bg-container p-4"
             >
                <div className="space-y-1.5">
-                  <Label htmlFor="current-password">Current password</Label>
+                  <Label htmlFor="current-password">{t('Current password')}</Label>
                   <Input
                      id="current-password"
                      type="password"
@@ -783,7 +810,7 @@ export default function AccountSecurity() {
                   />
                </div>
                <div className="space-y-1.5">
-                  <Label htmlFor="new-password">New password</Label>
+                  <Label htmlFor="new-password">{t('New password')}</Label>
                   <Input
                      id="new-password"
                      type="password"
@@ -795,7 +822,7 @@ export default function AccountSecurity() {
                   />
                </div>
                <div className="space-y-1.5">
-                  <Label htmlFor="confirm-password">Confirm new password</Label>
+                  <Label htmlFor="confirm-password">{t('Confirm new password')}</Label>
                   <Input
                      id="confirm-password"
                      type="password"
@@ -807,7 +834,7 @@ export default function AccountSecurity() {
                   />
                </div>
                <Button type="submit" disabled={busy}>
-                  {busy ? 'Changing…' : 'Change password'}
+                  {busy ? t('Changing…') : t('Change password')}
                </Button>
             </form>
          </SettingsSection>

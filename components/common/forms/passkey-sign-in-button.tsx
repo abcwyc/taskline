@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
+import { useLanguage } from '@/components/providers/language-provider';
 
 /**
  * Secondary sign-in option on the credentials form: asks the browser for a
@@ -14,6 +15,7 @@ import { Button } from '@/components/ui/button';
  */
 export function PasskeySignInButton({ callbackUrl }: { callbackUrl: string }) {
    const [busy, setBusy] = useState(false);
+   const { t } = useLanguage();
 
    const signInWithPasskey = async () => {
       setBusy(true);
@@ -34,7 +36,7 @@ export function PasskeySignInButton({ callbackUrl }: { callbackUrl: string }) {
          });
       } catch (error) {
          console.error(error);
-         toast.error('Passkey sign-in failed');
+         toast.error(t('Passkey sign-in failed'));
       } finally {
          setBusy(false);
       }
@@ -49,7 +51,7 @@ export function PasskeySignInButton({ callbackUrl }: { callbackUrl: string }) {
          onClick={signInWithPasskey}
       >
          <Fingerprint className="size-4" />
-         {busy ? 'Waiting for passkey…' : 'Sign in with a passkey'}
+         {busy ? t('Waiting for passkey…') : t('Sign in with a passkey')}
       </Button>
    );
 }

@@ -11,6 +11,7 @@ import {
    updateInitiative as apiUpdate,
 } from '@/lib/api/initiatives';
 import type { InitiativeCreateBody } from '@/lib/api/types';
+import { tt } from '@/lib/i18n';
 import { useProjectsStore } from '@/store/projects-store';
 
 interface InitiativesState {
@@ -58,7 +59,7 @@ export const useInitiativesStore = create<InitiativesState>((set, get) => ({
          set({ initiatives: await apiFetch(), hydrated: true, isLoading: false });
       } catch (err) {
          set({ isLoading: false, error: (err as Error).message });
-         toast.error('Failed to load initiatives');
+         toast.error(tt('Failed to load initiatives'));
          throw err;
       }
    },
@@ -81,7 +82,7 @@ export const useInitiativesStore = create<InitiativesState>((set, get) => ({
          set({ initiatives: [...get().initiatives, initiative] });
          return initiative;
       } catch (err) {
-         toast.error('Failed to create initiative');
+         toast.error(tt('Failed to create initiative'));
          console.error(err);
          return null;
       }
@@ -97,7 +98,7 @@ export const useInitiativesStore = create<InitiativesState>((set, get) => ({
          )
          .catch((err) => {
             set({ initiatives: get().initiatives.map((i) => (i.id === id ? snapshot : i)) });
-            toast.error('Failed to save changes');
+            toast.error(tt('Failed to save changes'));
             console.error(err);
          });
    },
@@ -107,7 +108,7 @@ export const useInitiativesStore = create<InitiativesState>((set, get) => ({
       set({ initiatives: snapshot.filter((i) => i.id !== id) });
       apiDelete(id).catch((err) => {
          set({ initiatives: snapshot });
-         toast.error('Failed to delete initiative');
+         toast.error(tt('Failed to delete initiative'));
          console.error(err);
       });
    },

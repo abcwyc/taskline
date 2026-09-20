@@ -7,6 +7,7 @@ import { IssueFilterBar } from '@/components/common/issues/issue-filter-bar';
 import { SearchIssues } from '@/components/common/issues/search-issues';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useLanguage } from '@/components/providers/language-provider';
 import { Issue } from '@/mock-data/issues';
 import { useLabelsStore } from '@/store/labels-store';
 import { priorities } from '@/mock-data/priorities';
@@ -19,6 +20,7 @@ import { useIssuesStore } from '@/store/issues-store';
 import { useRightPanelStore } from '@/store/right-panel-store';
 import { useSearchStore } from '@/store/search-store';
 import { useViewStore } from '@/store/view-store';
+import { formatRelativeTime } from '@/lib/i18n';
 import { formatDistanceToNowStrict } from 'date-fns';
 import { parseAsString, useQueryState } from 'nuqs';
 import { useEffect, useMemo, useState } from 'react';
@@ -47,8 +49,9 @@ function countBy(issues: Issue[], keyOf: (issue: Issue) => string[]): Map<string
 }
 
 function BreakdownList({ rows }: { rows: BreakdownRow[] }) {
+   const { t } = useLanguage();
    if (rows.length === 0) {
-      return <p className="text-xs text-muted-foreground px-1 py-3">Nothing to show yet.</p>;
+      return <p className="text-xs text-muted-foreground px-1 py-3">{t('Nothing to show yet.')}</p>;
    }
    return (
       <div className="flex flex-col">
@@ -56,7 +59,7 @@ function BreakdownList({ rows }: { rows: BreakdownRow[] }) {
             <div key={row.key} className="flex items-center justify-between gap-3 py-2">
                <div className="flex items-center gap-2 min-w-0">
                   {row.leading}
-                  <span className="text-sm truncate">{row.label}</span>
+                  <span className="text-sm truncate">{t(row.label)}</span>
                </div>
                <span className="text-sm text-muted-foreground shrink-0">{row.count}</span>
             </div>
@@ -100,6 +103,7 @@ function useClientTimes(member: User) {
  * per-label / priority / project / team breakdowns.
  */
 export default function MemberProfile({ member }: { member: User }) {
+   const { locale, t } = useLanguage();
    const teams = useTeamsStore((s) => s.teams);
    const labels = useLabelsStore((s) => s.labels);
    const { issues } = useIssuesStore();
@@ -248,7 +252,7 @@ export default function MemberProfile({ member }: { member: User }) {
                         <div className="min-w-0">
                            <h2 className="text-base font-semibold truncate">{member.name}</h2>
                            <p className="text-xs text-muted-foreground truncate">
-                              {member.name} · {presenceLabel[member.status]}
+                              {member.name} · {t(presenceLabel[member.status])}
                            </p>
                         </div>
                      </div>
@@ -256,23 +260,23 @@ export default function MemberProfile({ member }: { member: User }) {
 
                   <div className="px-5 py-4 border-b flex flex-col gap-2.5 text-sm">
                      <div className="flex items-start justify-between gap-4">
-                        <span className="text-muted-foreground shrink-0">Email</span>
+                        <span className="text-muted-foreground shrink-0">{t('Email')}</span>
                         <span className="truncate">{member.email}</span>
                      </div>
                      <div className="flex items-start justify-between gap-4">
-                        <span className="text-muted-foreground shrink-0">Local time</span>
+                        <span className="text-muted-foreground shrink-0">{t('Local time')}</span>
                         <span>{localTime ?? '—'}</span>
                      </div>
                      <div className="flex items-start justify-between gap-4">
-                        <span className="text-muted-foreground shrink-0">Joined</span>
-                        <span>{joinedAgo ?? '—'}</span>
+                        <span className="text-muted-foreground shrink-0">{t('Joined')}</span>
+                        <span>{joinedAgo ? formatRelativeTime(locale, joinedAgo) : '—'}</span>
                      </div>
                      <div className="flex items-start justify-between gap-4">
-                        <span className="text-muted-foreground shrink-0">Role</span>
-                        <span>{member.role}</span>
+                        <span className="text-muted-foreground shrink-0">{t('Role')}</span>
+                        <span>{t(member.role)}</span>
                      </div>
                      <div className="flex items-start justify-between gap-4">
-                        <span className="text-muted-foreground shrink-0 pt-0.5">Teams</span>
+                        <span className="text-muted-foreground shrink-0 pt-0.5">{t('Teams')}</span>
                         <div className="flex flex-wrap justify-end gap-1.5">
                            {memberTeams.map((team) => (
                               <span
@@ -285,7 +289,9 @@ export default function MemberProfile({ member }: { member: User }) {
                         </div>
                      </div>
                      <div className="flex items-start justify-between gap-4">
-                        <span className="text-muted-foreground shrink-0 pt-0.5">Projects</span>
+                        <span className="text-muted-foreground shrink-0 pt-0.5">
+                           {t('Projects')}
+                        </span>
                         <div className="flex flex-col items-end gap-1 min-w-0">
                            {memberProjects.slice(0, 4).map((project) => (
                               <span
@@ -298,7 +304,7 @@ export default function MemberProfile({ member }: { member: User }) {
                            ))}
                            {memberProjects.length > 4 && (
                               <span className="text-xs text-muted-foreground">
-                                 +{memberProjects.length - 4} more
+                                 {`+${memberProjects.length - 4} ${t('more')}`}
                               </span>
                            )}
                         </div>
@@ -309,16 +315,16 @@ export default function MemberProfile({ member }: { member: User }) {
                      <Tabs defaultValue="labels">
                         <TabsList className="h-8 bg-transparent gap-1 p-0">
                            <TabsTrigger value="labels" className="text-xs px-2.5 rounded-full">
-                              Labels
+                              {t('Labels')}
                            </TabsTrigger>
                            <TabsTrigger value="priority" className="text-xs px-2.5 rounded-full">
-                              Priority
+                              {t('Priority')}
                            </TabsTrigger>
                            <TabsTrigger value="projects" className="text-xs px-2.5 rounded-full">
-                              Projects
+                              {t('Projects')}
                            </TabsTrigger>
                            <TabsTrigger value="teams" className="text-xs px-2.5 rounded-full">
-                              Teams
+                              {t('Teams')}
                            </TabsTrigger>
                         </TabsList>
                         <TabsContent value="labels">

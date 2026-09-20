@@ -8,8 +8,10 @@ import { useRightPanelStore } from '@/store/right-panel-store';
 import { BarChart3, PanelRight } from 'lucide-react';
 import { DisplayOptions } from '../display-options';
 import { CycleView } from '@/components/common/issues/cycle-issues';
+import { useLanguage } from '@/components/providers/language-provider';
 
 export default function HeaderOptions({ cycleView }: { cycleView: CycleView }) {
+   const { t } = useLanguage();
    const { openPanel, togglePanel } = useRightPanelStore();
    const { issues } = useIssuesStore();
 
@@ -22,7 +24,7 @@ export default function HeaderOptions({ cycleView }: { cycleView: CycleView }) {
       <div className="w-full flex justify-between items-center border-b py-1.5 px-6 h-10">
          <div className="flex items-center gap-3">
             <span className="text-sm text-muted-foreground">
-               {count} {count === 1 ? 'issue' : 'issues'}
+               {count} {t(count === 1 ? 'issue' : 'issues')}
             </span>
          </div>
 
@@ -32,7 +34,7 @@ export default function HeaderOptions({ cycleView }: { cycleView: CycleView }) {
                size="xs"
                variant={openPanel === 'insights' ? 'secondary' : 'ghost'}
                onClick={() => togglePanel('insights')}
-               aria-label="Toggle insights panel"
+               aria-label={t('Toggle insights panel')}
             >
                <BarChart3 className="size-4" />
             </Button>
@@ -40,7 +42,7 @@ export default function HeaderOptions({ cycleView }: { cycleView: CycleView }) {
                size="xs"
                variant={openPanel === 'cycle-details' ? 'secondary' : 'ghost'}
                onClick={() => togglePanel('cycle-details')}
-               aria-label="Toggle cycle details panel"
+               aria-label={t('Toggle cycle details panel')}
             >
                <PanelRight className="size-4" />
             </Button>

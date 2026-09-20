@@ -32,6 +32,7 @@ import {
    UserRound,
 } from 'lucide-react';
 import { useRef, useState } from 'react';
+import { useLanguage } from '@/components/providers/language-provider';
 
 interface ItemConfig {
    key: SidebarItemKey;
@@ -71,16 +72,17 @@ function VisibilityDropdown({
    options: SidebarVisibility[];
    onChange: (value: SidebarVisibility) => void;
 }) {
+   const { t } = useLanguage();
    return (
       <DropdownMenu>
          <DropdownMenuTrigger className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors outline-none">
-            {VISIBILITY_LABELS[value]}
+            {t(VISIBILITY_LABELS[value])}
             <ChevronDown className="size-3.5" />
          </DropdownMenuTrigger>
          <DropdownMenuContent align="end" className="min-w-44">
             {options.map((option) => (
                <DropdownMenuItem key={option} onClick={() => onChange(option)}>
-                  {VISIBILITY_LABELS[option]}
+                  {t(VISIBILITY_LABELS[option])}
                   {value === option && <Check className="ml-auto size-3.5" />}
                </DropdownMenuItem>
             ))}
@@ -92,6 +94,7 @@ function VisibilityDropdown({
 /** One section (Personal / Workspace): rows reorderable by dragging the grip. */
 function ItemSection({ section, items }: { section: SidebarSection; items: ItemConfig[] }) {
    const { visibility, order, setVisibility, moveItem } = useSidebarPrefsStore();
+   const { t } = useLanguage();
    const [dragIndex, setDragIndex] = useState<number | null>(null);
    const [overIndex, setOverIndex] = useState<number | null>(null);
    /** Only start a drag when it was initiated from the grip handle. */
@@ -155,7 +158,7 @@ function ItemSection({ section, items }: { section: SidebarSection; items: ItemC
                      onMouseDown={() => (dragFromGrip.current = true)}
                      onMouseUp={() => (dragFromGrip.current = false)}
                      className="cursor-grab active:cursor-grabbing text-muted-foreground/50 hover:text-muted-foreground shrink-0"
-                     aria-label={`Reorder ${item.label}`}
+                     aria-label={`${t('Reorder')} ${t(item.label)}`}
                   >
                      <GripVertical className="size-3.5" />
                   </span>
@@ -171,7 +174,7 @@ function ItemSection({ section, items }: { section: SidebarSection; items: ItemC
                         current === 'never' && 'text-muted-foreground/60'
                      )}
                   >
-                     {item.label}
+                     {t(item.label)}
                   </span>
                   <VisibilityDropdown
                      value={current}
@@ -194,16 +197,17 @@ export function CustomizeSidebarDialog({
    onOpenChange: (open: boolean) => void;
 }) {
    const { badgeStyle, setBadgeStyle } = useSidebarPrefsStore();
+   const { t } = useLanguage();
 
    return (
       <Dialog open={open} onOpenChange={onOpenChange}>
          <DialogContent className="sm:max-w-md p-0 gap-0">
             <DialogHeader className="px-5 pt-5 pb-3">
-               <DialogTitle className="text-base">Customize sidebar</DialogTitle>
+               <DialogTitle className="text-base">{t('Customize sidebar')}</DialogTitle>
             </DialogHeader>
             <div className="px-5 pb-5 flex flex-col gap-5 overflow-y-auto max-h-[70vh]">
                <div className="flex items-center justify-between rounded-lg border px-3 py-2.5">
-                  <span className="text-sm">Default badge style</span>
+                  <span className="text-sm">{t('Default badge style')}</span>
                   <DropdownMenu>
                      <DropdownMenuTrigger className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors outline-none">
                         {badgeStyle === 'count' ? (
@@ -211,13 +215,13 @@ export function CustomizeSidebarDialog({
                         ) : (
                            <span className="size-1.5 rounded-full bg-muted-foreground inline-block" />
                         )}
-                        {badgeStyle === 'count' ? 'Count' : 'Dot'}
+                        {badgeStyle === 'count' ? t('Count') : t('Dot')}
                         <ChevronDown className="size-3.5" />
                      </DropdownMenuTrigger>
                      <DropdownMenuContent align="end" className="min-w-32">
                         {(['count', 'dot'] as SidebarBadgeStyle[]).map((style) => (
                            <DropdownMenuItem key={style} onClick={() => setBadgeStyle(style)}>
-                              {style === 'count' ? 'Count' : 'Dot'}
+                              {style === 'count' ? t('Count') : t('Dot')}
                               {badgeStyle === style && <Check className="ml-auto size-3.5" />}
                            </DropdownMenuItem>
                         ))}
@@ -226,12 +230,12 @@ export function CustomizeSidebarDialog({
                </div>
 
                <div className="flex flex-col gap-2">
-                  <span className="text-sm font-medium">Personal</span>
+                  <span className="text-sm font-medium">{t('Personal')}</span>
                   <ItemSection section="personal" items={PERSONAL_ITEMS} />
                </div>
 
                <div className="flex flex-col gap-2">
-                  <span className="text-sm font-medium">Workspace</span>
+                  <span className="text-sm font-medium">{t('Workspace')}</span>
                   <ItemSection section="workspace" items={WORKSPACE_ITEMS} />
                </div>
             </div>

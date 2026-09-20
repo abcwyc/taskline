@@ -11,7 +11,9 @@ import type { Issue } from '@/mock-data/issues';
 import { priorities } from '@/mock-data/priorities';
 import { useIssuesStore } from '@/store/issues-store';
 import { useMeStore } from '@/store/me-store';
+import { formatRelativeTime } from '@/lib/i18n';
 import { apiErrorMessage, SettingsCard, SettingsSection, SettingsStatCard } from './shared';
+import { useLanguage } from '@/components/providers/language-provider';
 
 /** Server defaults, used until the stored document arrives (and as a fallback). */
 const DEFAULT_SLAS: SlaPolicy[] = [
@@ -37,6 +39,7 @@ const isOpen = (issue: Issue) =>
 
 /** Workspace "SLAs" settings: policy editor (admin) + live breach monitor (everyone). */
 export default function SlasSettings() {
+   const { locale, t } = useLanguage();
    const { orgId } = useParams<{ orgId: string }>();
    const isAdmin = useMeStore((s) => s.me?.role === 'Admin');
    const issues = useIssuesStore((s) => s.issues);
@@ -93,7 +96,7 @@ export default function SlasSettings() {
             resolve < 1 ||
             resolve > 10_000
          ) {
-            toast.error('Hours must be whole numbers (respond 1–2000, resolve 1–10000).');
+            toast.error(t('Hours must be whole numbers (respond 1–2000, resolve 1–10000).'));
             return;
          }
          rows.push({ priority: row.priority, respondHours: respond, resolveHours: resolve });
@@ -103,9 +106,9 @@ export default function SlasSettings() {
          await putSetting('slas', rows);
          setSaved(rows);
          setDraft(rows.map(toDraft));
-         toast.success('SLAs saved');
+         toast.success(t('SLAs saved'));
       } catch (err) {
-         toast.error(apiErrorMessage(err, 'Failed to save SLAs'));
+         toast.error(apiErrorMessage(err, t('Failed to save SLAs')));
          console.error(err);
       } finally {
          setSaving(false);
@@ -145,9 +148,9 @@ export default function SlasSettings() {
    return (
       <div className="w-full overflow-y-auto h-full">
          <div className="max-w-3xl mx-auto px-6 py-10 pb-20">
-            <h1 className="text-2xl font-medium">SLAs</h1>
+            <h1 className="text-2xl font-medium">{t('SLAs')}</h1>
             <p className="text-sm text-muted-foreground mt-1">
-               Automatically apply deadlines to issues based on their priority.
+               {t('Automatically apply deadlines to issues based on their priority.')}
             </p>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8">
@@ -156,9 +159,9 @@ export default function SlasSettings() {
                   return (
                      <SettingsStatCard
                         key={priority}
-                        label={meta?.name ?? priority}
+                        label={t(meta?.name ?? priority)}
                         value={open}
-                        detail={`${breached} breached`}
+                        detail={`${breached} ${t('breached')}`}
                         detailClassName={breached > 0 ? 'text-red-500' : undefined}
                      />
                   );
@@ -167,21 +170,21 @@ export default function SlasSettings() {
 
             <div className="flex flex-col gap-10 mt-10">
                <SettingsSection
-                  title="Policies"
-                  description="Response and resolution targets, in hours, per priority."
+                  title={t('Policies')}
+                  description={t('Response and resolution targets, in hours, per priority.')}
                   action={
                      isAdmin ? (
                         <Button size="xs" onClick={handleSave} disabled={saving}>
-                           {saving ? 'Saving…' : 'Save'}
+                           {saving ? t('Saving…') : t('Save')}
                         </Button>
                      ) : undefined
                   }
                >
                   <SettingsCard>
                      <div className="flex items-center px-4 py-2 text-xs text-muted-foreground">
-                        <div className="flex-1">Priority</div>
-                        <div className="w-32">Respond within</div>
-                        <div className="w-32">Resolve within</div>
+                        <div className="flex-1">{t('Priority')}</div>
+                        <div className="w-32">{t('Respond within')}</div>
+                        <div className="w-32">{t('Resolve within')}</div>
                      </div>
                      {draft.map((row) => {
                         const meta = priorities.find((p) => p.id === row.priority);
@@ -193,7 +196,7 @@ export default function SlasSettings() {
                            >
                               <div className="flex-1 flex items-center gap-2 capitalize">
                                  {Icon && <Icon className="size-3.5 text-muted-foreground" />}
-                                 {row.priority}
+                                 {t(meta?.name ?? row.priority)}
                               </div>
                               <div className="w-32">
                                  {isAdmin ? (
@@ -209,7 +212,8 @@ export default function SlasSettings() {
                                     />
                                  ) : (
                                     <span className="text-muted-foreground">
-                                       {row.respondHours}h
+                                       {row.respondHours}
+                                       {t('h')}
                                     </span>
                                  )}
                               </div>
@@ -227,7 +231,8 @@ export default function SlasSettings() {
                                     />
                                  ) : (
                                     <span className="text-muted-foreground">
-                                       {row.resolveHours}h
+                                       {row.resolveHours}
+                                       {t('h')}
                                     </span>
                                  )}
                               </div>
@@ -237,19 +242,21 @@ export default function SlasSettings() {
                   </SettingsCard>
                   {!isAdmin && (
                      <p className="text-xs text-muted-foreground">
-                        Read-only — only workspace admins can edit SLA policies.
+                        {t('Read-only — only workspace admins can edit SLA policies.')}
                      </p>
                   )}
                </SettingsSection>
 
                <SettingsSection
-                  title="Resolution breaches"
-                  description={`Open issues older than their resolve target (${monitor.totalBreached} total).`}
+                  title={t('Resolution breaches')}
+                  description={t(
+                     'Open issues older than their resolve target ({count} total).'
+                  ).replace('{count}', String(monitor.totalBreached))}
                >
                   <SettingsCard>
                      {monitor.worst.length === 0 ? (
                         <p className="px-4 py-3 text-sm text-muted-foreground">
-                           No resolution breaches — every open issue is within its target.
+                           {t('No resolution breaches — every open issue is within its target.')}
                         </p>
                      ) : (
                         monitor.worst.map(({ issue, days }) => (
@@ -263,7 +270,7 @@ export default function SlasSettings() {
                               </span>
                               <span className="truncate">{issue.title}</span>
                               <span className="ml-auto shrink-0 text-xs text-muted-foreground">
-                                 created {days}d ago
+                                 {t('created')} {formatRelativeTime(locale, `${days}d ago`)}
                               </span>
                            </Link>
                         ))

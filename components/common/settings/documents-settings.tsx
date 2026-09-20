@@ -17,6 +17,7 @@ import { Plus } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { apiErrorMessage, SettingsCard, SettingsSection, SettingsShell } from './shared';
+import { useLanguage } from '@/components/providers/language-provider';
 
 /** "New folder" dialog: name + emoji, created via the folders API. */
 function NewFolderDialog({
@@ -28,6 +29,7 @@ function NewFolderDialog({
    onOpenChange: (v: boolean) => void;
    onCreated: () => Promise<void>;
 }) {
+   const { t } = useLanguage();
    const [name, setName] = useState('');
    const [icon, setIcon] = useState('📁');
 
@@ -45,7 +47,7 @@ function NewFolderDialog({
          await onCreated();
          onOpenChange(false);
       } catch (err) {
-         toast.error(apiErrorMessage(err, 'Failed to create folder'));
+         toast.error(apiErrorMessage(err, t('Failed to create folder')));
          console.error(err);
       }
    };
@@ -54,12 +56,12 @@ function NewFolderDialog({
       <Dialog open={open} onOpenChange={onOpenChange}>
          <DialogContent className="sm:max-w-sm">
             <DialogHeader>
-               <DialogTitle>New folder</DialogTitle>
+               <DialogTitle>{t('New folder')}</DialogTitle>
             </DialogHeader>
             <div className="flex flex-col gap-4 py-2">
                <div className="flex items-end gap-4">
                   <div className="flex flex-col gap-1.5 w-20">
-                     <Label htmlFor="folder-icon">Icon</Label>
+                     <Label htmlFor="folder-icon">{t('Icon')}</Label>
                      <Input
                         id="folder-icon"
                         value={icon}
@@ -69,24 +71,24 @@ function NewFolderDialog({
                      />
                   </div>
                   <div className="flex flex-col gap-1.5 flex-1">
-                     <Label htmlFor="folder-name">Name</Label>
+                     <Label htmlFor="folder-name">{t('Name')}</Label>
                      <Input
                         id="folder-name"
                         autoFocus
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && submit()}
-                        placeholder="Roadmap docs"
+                        placeholder={t('Roadmap docs')}
                      />
                   </div>
                </div>
             </div>
             <DialogFooter>
                <Button variant="ghost" onClick={() => onOpenChange(false)}>
-                  Cancel
+                  {t('Cancel')}
                </Button>
                <Button onClick={submit} disabled={!name.trim()}>
-                  Create
+                  {t('Create')}
                </Button>
             </DialogFooter>
          </DialogContent>
@@ -99,6 +101,7 @@ function NewFolderDialog({
  * grouped by folder. Documents are managed on each team's documents page.
  */
 export default function DocumentsSettings() {
+   const { t } = useLanguage();
    const members = useMembersStore((s) => s.members);
    const [folders, setFolders] = useState<DocumentFolder[] | null>(null);
    const [dialogOpen, setDialogOpen] = useState(false);
@@ -108,10 +111,10 @@ export default function DocumentsSettings() {
          setFolders(await fetchFolders());
       } catch (err) {
          console.error(err);
-         toast.error(apiErrorMessage(err, 'Failed to load documents'));
+         toast.error(apiErrorMessage(err, t('Failed to load documents')));
          setFolders([]);
       }
-   }, []);
+   }, [t]);
 
    useEffect(() => {
       void load();
@@ -121,20 +124,30 @@ export default function DocumentsSettings() {
 
    return (
       <SettingsShell
-         title="Documents"
-         description="Every document in the workspace, grouped by folder. Documents are created and edited on each team's documents page."
+         title={t('Documents')}
+         description={t(
+            "Every document in the workspace, grouped by folder. Documents are created and edited on each team's documents page."
+         )}
       >
          <SettingsSection
-            title={folders ? `${documentCount} documents in ${folders.length} folders` : undefined}
+            title={
+               folders
+                  ? t('{documents} documents in {folders} folders')
+                       .replace('{documents}', String(documentCount))
+                       .replace('{folders}', String(folders.length))
+                  : undefined
+            }
             action={
                <Button size="xs" onClick={() => setDialogOpen(true)}>
                   <Plus className="size-4 md:mr-1" />
-                  New folder
+                  {t('New folder')}
                </Button>
             }
          >
             {folders === null && (
-               <div className="px-4 py-3 text-sm text-muted-foreground">Loading documents…</div>
+               <div className="px-4 py-3 text-sm text-muted-foreground">
+                  {t('Loading documents…')}
+               </div>
             )}
             {folders?.map((folder) => (
                <SettingsCard key={folder.id}>
@@ -143,7 +156,7 @@ export default function DocumentsSettings() {
                      <span className="text-sm font-medium truncate">{folder.name}</span>
                      <span className="ml-auto text-xs text-muted-foreground shrink-0">
                         {folder.documents.length}{' '}
-                        {folder.documents.length === 1 ? 'document' : 'documents'}
+                        {folder.documents.length === 1 ? t('document') : t('documents')}
                      </span>
                   </div>
                   {folder.documents.map((doc) => {
@@ -154,23 +167,25 @@ export default function DocumentsSettings() {
                            <div className="flex-1 min-w-0">
                               <div className="text-sm font-medium truncate">{doc.name}</div>
                               <div className="text-xs text-muted-foreground mt-0.5">
-                                 Created by {creator.name}
+                                 {t('Created by')} {creator.name}
                               </div>
                            </div>
                            <div className="shrink-0 text-xs text-muted-foreground">
-                              Updated {doc.updatedAt.slice(0, 10)}
+                              {t('Updated')} {doc.updatedAt.slice(0, 10)}
                            </div>
                         </div>
                      );
                   })}
                   {folder.documents.length === 0 && (
-                     <div className="px-4 py-3 text-xs text-muted-foreground">No documents</div>
+                     <div className="px-4 py-3 text-xs text-muted-foreground">
+                        {t('No documents')}
+                     </div>
                   )}
                </SettingsCard>
             ))}
             {folders?.length === 0 && (
                <div className="px-4 py-3 text-sm text-muted-foreground">
-                  No folders yet — create one to organize documents.
+                  {t('No folders yet — create one to organize documents.')}
                </div>
             )}
          </SettingsSection>

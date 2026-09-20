@@ -1,6 +1,7 @@
 import type { Review, ReviewCommentItem } from '@/mock-data/reviews';
 import { create } from 'zustand';
 import { toast } from 'sonner';
+import { tt } from '@/lib/i18n';
 
 const BASE = '/api/reviews';
 
@@ -70,7 +71,7 @@ export const useReviewsStore = create<ReviewsState>((set, get) => ({
          set((s) => ({ reviews: [created, ...s.reviews] }));
          return created;
       } catch (err) {
-         toast.error((err as Error).message.split('→')[1]?.trim() || 'Failed to create review');
+         toast.error((err as Error).message.split('→')[1]?.trim() || tt('Failed to create review'));
          console.error(err);
          return null;
       }
@@ -90,7 +91,7 @@ export const useReviewsStore = create<ReviewsState>((set, get) => ({
          }));
          return true;
       } catch (err) {
-         toast.error('Failed to post the comment');
+         toast.error(tt('Failed to post the comment'));
          console.error(err);
          return false;
       }
@@ -111,7 +112,7 @@ export const useReviewsStore = create<ReviewsState>((set, get) => ({
          }
       ).catch((err) => {
          set({ reviews: snapshot });
-         toast.error('Failed to delete the comment');
+         toast.error(tt('Failed to delete the comment'));
          console.error(err);
       });
    },
@@ -128,7 +129,7 @@ export const useReviewsStore = create<ReviewsState>((set, get) => ({
          .then((saved) => set((s) => ({ reviews: patchReview(s.reviews, reviewId, () => saved) })))
          .catch((err) => {
             set({ reviews: snapshot });
-            toast.error('Failed to record the verdict');
+            toast.error(tt('Failed to record the verdict'));
             console.error(err);
          });
    },
@@ -143,7 +144,7 @@ export const useReviewsStore = create<ReviewsState>((set, get) => ({
          .then((saved) => set((s) => ({ reviews: patchReview(s.reviews, reviewId, () => saved) })))
          .catch((err) => {
             set({ reviews: snapshot });
-            toast.error('Failed to update the review status');
+            toast.error(tt('Failed to update the review status'));
             console.error(err);
          });
    },
@@ -153,7 +154,7 @@ export const useReviewsStore = create<ReviewsState>((set, get) => ({
       set((s) => ({ reviews: s.reviews.filter((r) => r.id !== reviewId) }));
       http<void>(`${BASE}/${encodeURIComponent(reviewId)}`, { method: 'DELETE' }).catch((err) => {
          set({ reviews: snapshot });
-         toast.error('Failed to delete the review');
+         toast.error(tt('Failed to delete the review'));
          console.error(err);
       });
    },

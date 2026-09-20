@@ -8,11 +8,14 @@ import { useCreateIssueStore } from '@/store/create-issue-store';
 import { cn } from '@/lib/utils';
 import { Inbox, Plus, TriangleAlert } from 'lucide-react';
 import { TriageDetails } from './triage-details';
+import { useLanguage } from '@/components/providers/language-provider';
+import { formatRelativeTime } from '@/lib/i18n';
 
 /* --------------------------------- list row -------------------------------- */
 
 function TriageRow({ item, selected }: { item: TriageItem; selected: boolean }) {
    const { select } = useTriageStore();
+   const { locale } = useLanguage();
 
    return (
       <button
@@ -47,7 +50,7 @@ function TriageRow({ item, selected }: { item: TriageItem; selected: boolean }) 
                </span>
             )}
             <span className="ml-auto text-xs text-muted-foreground shrink-0">
-               {item.receivedAgo}
+               {formatRelativeTime(locale, item.receivedAgo)}
             </span>
          </div>
       </button>
@@ -58,15 +61,16 @@ function TriageRow({ item, selected }: { item: TriageItem; selected: boolean }) 
 
 function EmptyState({ count }: { count: number }) {
    const openModal = useCreateIssueStore((s) => s.openModal);
+   const { t } = useLanguage();
    return (
       <div className="flex-1 h-full hidden lg:flex flex-col items-center justify-center gap-3">
          <Inbox className="size-10 text-muted-foreground/40" strokeWidth={1.2} />
          <span className="text-sm text-muted-foreground">
-            {count} issue{count === 1 ? '' : 's'} to triage
+            {count} {t(count === 1 ? 'issue to triage' : 'issues to triage')}
          </span>
          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => openModal()}>
             <Plus className="size-4" />
-            Create triage issue
+            {t('Create triage issue')}
          </Button>
       </div>
    );
@@ -80,6 +84,7 @@ function EmptyState({ count }: { count: number }) {
  */
 export default function Triage({ teamId }: { teamId: string }) {
    const { items, selectedId } = useTriageStore();
+   const { t } = useLanguage();
    const scoped = items.filter((item) => item.teamId === teamId);
    const selected = scoped.find((item) => item.id === selectedId) ?? null;
 
@@ -93,7 +98,7 @@ export default function Triage({ teamId }: { teamId: string }) {
          >
             {scoped.length === 0 && (
                <div className="px-4 py-8 text-sm text-muted-foreground">
-                  Nothing to triage — new reports land here first.
+                  {t('Nothing to triage — new reports land here first.')}
                </div>
             )}
             {scoped.map((item) => (

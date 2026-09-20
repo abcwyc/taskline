@@ -27,6 +27,7 @@ import {
    LayoutList,
    SlidersHorizontal,
 } from 'lucide-react';
+import { useLanguage } from '@/components/providers/language-provider';
 
 const GROUPINGS: { value: GroupingKey; label: string }[] = [
    { value: 'status', label: 'Status' },
@@ -65,6 +66,7 @@ export function DisplayOptions() {
       toggleDisplayProperty,
       resetDisplaySettings,
    } = useDisplaySettingsStore();
+   const { t } = useLanguage();
 
    const isDefault =
       grouping === 'status' &&
@@ -77,7 +79,7 @@ export function DisplayOptions() {
          <PopoverTrigger asChild>
             <Button className="relative" size="xs" variant="secondary">
                <SlidersHorizontal className="size-4 mr-1" />
-               Display
+               {t('Display')}
                {(!isDefault || viewType === 'grid') && (
                   <span className="absolute right-0 top-0 w-2 h-2 bg-orange-500 rounded-full" />
                )}
@@ -95,7 +97,7 @@ export function DisplayOptions() {
                      )}
                   >
                      <LayoutList className="size-3.5" />
-                     List
+                     {t('List')}
                   </button>
                   <button
                      onClick={() => setViewType('grid')}
@@ -105,7 +107,7 @@ export function DisplayOptions() {
                      )}
                   >
                      <LayoutGrid className="size-3.5" />
-                     Board
+                     {t('Board')}
                   </button>
                </div>
             </div>
@@ -115,7 +117,7 @@ export function DisplayOptions() {
                <div className="flex items-center justify-between gap-2">
                   <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
                      <ArrowUpDown className="size-3.5" />
-                     Grouping
+                     {t('Grouping')}
                   </span>
                   <Select value={grouping} onValueChange={(v) => setGrouping(v as GroupingKey)}>
                      <SelectTrigger className="h-7 w-36 text-xs">
@@ -124,7 +126,7 @@ export function DisplayOptions() {
                      <SelectContent>
                         {GROUPINGS.map((option) => (
                            <SelectItem key={option.value} value={option.value} className="text-xs">
-                              {option.label}
+                              {t(option.label)}
                            </SelectItem>
                         ))}
                      </SelectContent>
@@ -132,14 +134,14 @@ export function DisplayOptions() {
                </div>
 
                <div className="flex items-center justify-between gap-2">
-                  <span className="text-xs text-muted-foreground pl-5">Sub-grouping</span>
+                  <span className="text-xs text-muted-foreground pl-5">{t('Sub-grouping')}</span>
                   <Select value="none" disabled>
                      <SelectTrigger className="h-7 w-36 text-xs">
-                        <SelectValue placeholder="No grouping" />
+                        <SelectValue placeholder={t('No grouping')} />
                      </SelectTrigger>
                      <SelectContent>
                         <SelectItem value="none" className="text-xs">
-                           No grouping
+                           {t('No grouping')}
                         </SelectItem>
                      </SelectContent>
                   </Select>
@@ -148,7 +150,7 @@ export function DisplayOptions() {
                <div className="flex items-center justify-between gap-2">
                   <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
                      <ArrowUpNarrowWide className="size-3.5" />
-                     Ordering
+                     {t('Ordering')}
                   </span>
                   <Select value={ordering} onValueChange={(v) => setOrdering(v as OrderingKey)}>
                      <SelectTrigger className="h-7 w-36 text-xs">
@@ -157,7 +159,7 @@ export function DisplayOptions() {
                      <SelectContent>
                         {ORDERINGS.map((option) => (
                            <SelectItem key={option.value} value={option.value} className="text-xs">
-                              {option.label}
+                              {t(option.label)}
                            </SelectItem>
                         ))}
                      </SelectContent>
@@ -169,7 +171,7 @@ export function DisplayOptions() {
                      htmlFor="order-completed-recency"
                      className="text-xs text-muted-foreground font-normal"
                   >
-                     Order completed by recency
+                     {t('Order completed by recency')}
                   </Label>
                   <Switch
                      id="order-completed-recency"
@@ -181,7 +183,7 @@ export function DisplayOptions() {
 
             <div className="border-t px-3 py-3 flex flex-col gap-2.5">
                <div className="flex items-center justify-between gap-2">
-                  <span className="text-xs text-muted-foreground">Completed issues</span>
+                  <span className="text-xs text-muted-foreground">{t('Completed issues')}</span>
                   <Select
                      value={completedIssues}
                      onValueChange={(v) => setCompletedIssues(v as CompletedIssuesFilter)}
@@ -191,10 +193,10 @@ export function DisplayOptions() {
                      </SelectTrigger>
                      <SelectContent>
                         <SelectItem value="all" className="text-xs">
-                           All
+                           {t('All')}
                         </SelectItem>
                         <SelectItem value="none" className="text-xs">
-                           None
+                           {t('None')}
                         </SelectItem>
                      </SelectContent>
                   </Select>
@@ -205,7 +207,7 @@ export function DisplayOptions() {
                      htmlFor="show-sub-issues"
                      className="text-xs text-muted-foreground font-normal"
                   >
-                     Show sub-issues
+                     {t('Show sub-issues')}
                   </Label>
                   <Switch
                      id="show-sub-issues"
@@ -216,13 +218,13 @@ export function DisplayOptions() {
             </div>
 
             <div className="border-t px-3 py-3 flex flex-col gap-2.5">
-               <span className="text-xs font-medium">List options</span>
+               <span className="text-xs font-medium">{t('List options')}</span>
                <div className="flex items-center justify-between">
                   <Label
                      htmlFor="show-empty-groups"
                      className="text-xs text-muted-foreground font-normal"
                   >
-                     Show empty groups
+                     {t('Show empty groups')}
                   </Label>
                   <Switch
                      id="show-empty-groups"
@@ -231,7 +233,7 @@ export function DisplayOptions() {
                   />
                </div>
 
-               <span className="text-xs text-muted-foreground mt-1">Display properties</span>
+               <span className="text-xs text-muted-foreground mt-1">{t('Display properties')}</span>
                <div className="flex flex-wrap gap-1.5">
                   {DISPLAY_PROPERTIES.map((property) => (
                      <button
@@ -244,7 +246,7 @@ export function DisplayOptions() {
                               : 'border-transparent bg-accent/40 text-muted-foreground hover:text-foreground'
                         )}
                      >
-                        {property.label}
+                        {t(property.label)}
                      </button>
                   ))}
                </div>
@@ -255,10 +257,10 @@ export function DisplayOptions() {
                   onClick={resetDisplaySettings}
                   className="text-xs text-muted-foreground hover:text-foreground"
                >
-                  Reset
+                  {t('Reset')}
                </button>
                <button className="text-xs text-indigo-500 dark:text-indigo-400 hover:underline">
-                  Set default for everyone
+                  {t('Set default for everyone')}
                </button>
             </div>
          </PopoverContent>

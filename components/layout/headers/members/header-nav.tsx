@@ -8,19 +8,21 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useCurrentUser } from '@/lib/hooks/use-current-user';
 import { useMembersStore } from '@/store/members-store';
 import { Plus } from 'lucide-react';
+import { useLanguage } from '@/components/providers/language-provider';
 
 export default function HeaderNav() {
    const users = useMembersStore((s) => s.members);
    const me = useCurrentUser();
    const isAdmin = me?.role === 'Admin';
    const [open, setOpen] = useState(false);
+   const { t } = useLanguage();
 
    return (
       <div className="w-full flex justify-between items-center border-b py-1.5 px-6 h-10">
          <div className="flex items-center gap-2">
             <SidebarTrigger className="" />
             <div className="flex items-center gap-1">
-               <span className="text-sm font-medium">Members</span>
+               <span className="text-sm font-medium">{t('Members')}</span>
                <span className="text-xs bg-accent rounded-md px-1.5 py-1">{users.length}</span>
             </div>
          </div>
@@ -33,7 +35,7 @@ export default function HeaderNav() {
                   onClick={() => setOpen(true)}
                >
                   <Plus className="size-4" />
-                  Invite
+                  {t('Invite')}
                </Button>
             </div>
          )}

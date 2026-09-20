@@ -3,22 +3,24 @@
 import { Switch } from '@/components/ui/switch';
 import { useMeStore } from '@/store/me-store';
 import { SettingsCard, SettingsRow, SettingsSection, SettingsShell } from './shared';
+import { useLanguage } from '@/components/providers/language-provider';
 
 /** Personal "Code & reviews" settings. */
 export default function AccountCodeReviews() {
    const notifyReviews = useMeStore((s) => s.preferences.reviewNotifications);
    const setPreference = useMeStore((s) => s.setPreference);
+   const { t } = useLanguage();
 
    return (
       <SettingsShell
-         title="Code & reviews"
-         description="Review code and track review requests inside your workspace"
+         title={t('Code & reviews')}
+         description={t('Review code and track review requests inside your workspace')}
       >
-         <SettingsSection title="Notifications">
+         <SettingsSection title={t('Notifications')}>
             <SettingsCard>
                <SettingsRow
-                  title="Review requests"
-                  description="Notify me about review requests"
+                  title={t('Review requests')}
+                  description={t('Notify me about review requests')}
                   trailing={
                      <Switch
                         checked={notifyReviews}
@@ -29,9 +31,9 @@ export default function AccountCodeReviews() {
             </SettingsCard>
          </SettingsSection>
 
-         <SettingsSection title="Reviews">
+         <SettingsSection title={t('Reviews')}>
             <p className="text-sm text-muted-foreground">
-               Reviews live under /{'{org}'}/reviews and are created from the Reviews page.
+               {t('Reviews live under /{org}/reviews and are created from the Reviews page.')}
             </p>
          </SettingsSection>
       </SettingsShell>

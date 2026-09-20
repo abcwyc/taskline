@@ -8,6 +8,7 @@ import { create } from 'zustand';
 import { toast } from 'sonner';
 
 import { createMutationGuard } from '@/lib/client-mutation';
+import { tt } from '@/lib/i18n';
 import { useIssueDetailsStore } from '@/store/issue-details-store';
 import { useMeStore } from '@/store/me-store';
 import { useMembersStore } from '@/store/members-store';
@@ -49,7 +50,7 @@ interface IssuesState {
    addIssue: (issue: Issue, parentId?: string) => Promise<Issue | null>;
    /** Insert an issue that was already created server-side (no POST). */
    receiveIssue: (issue: Issue) => void;
-   updateIssue: (id: string, updatedIssue: Partial<Issue>) => void;
+   updateIssue: (id: string, updatedIssue: Partial<Issue>) => Promise<void>;
    deleteIssue: (id: string) => void;
 
    // Filters (pure, client-side — unchanged)
@@ -101,7 +102,7 @@ export const useIssuesStore = create<IssuesState>((set, get) => {
          } catch (err) {
             set({ isLoading: false, error: (err as Error).message });
             if (firstLoad) {
-               toast.error('Failed to load issues');
+               toast.error(tt('Failed to load issues'));
                throw err;
             }
          }
@@ -127,7 +128,7 @@ export const useIssuesStore = create<IssuesState>((set, get) => {
                   set(withDerived(get().issues.filter((i) => i.id !== issue.id)));
                   mutations.finish(issue.id, version);
                }
-               toast.error('Failed to create issue');
+               toast.error(tt('Failed to create issue'));
                console.error(err);
                return null;
             });
@@ -140,11 +141,11 @@ export const useIssuesStore = create<IssuesState>((set, get) => {
 
       updateIssue: (id: string, updatedIssue: Partial<Issue>) => {
          const snapshot = get().issues.find((i) => i.id === id);
-         if (!snapshot) return;
+         if (!snapshot) return Promise.resolve();
 
          set(withDerived(get().issues.map((i) => (i.id === id ? { ...i, ...updatedIssue } : i))));
          const version = mutations.begin(id);
-         apiUpdateIssue(id, issuePatchToBody(updatedIssue))
+         return apiUpdateIssue(id, issuePatchToBody(updatedIssue))
             .then((saved) => {
                if (!mutations.isCurrent(id, version)) return;
                set(withDerived(get().issues.map((i) => (i.id === id ? saved : i))));
@@ -153,7 +154,7 @@ export const useIssuesStore = create<IssuesState>((set, get) => {
             .catch((err) => {
                if (!mutations.isCurrent(id, version)) return;
                set(withDerived(get().issues.map((i) => (i.id === id ? snapshot : i))));
-               toast.error('Failed to save changes');
+               toast.error(tt('Failed to save changes'));
                console.error(err);
                mutations.finish(id, version);
             });
@@ -168,7 +169,7 @@ export const useIssuesStore = create<IssuesState>((set, get) => {
             .catch((err) => {
                if (!mutations.isCurrent(id, version)) return;
                set(withDerived(snapshot));
-               toast.error('Failed to delete issue');
+               toast.error(tt('Failed to delete issue'));
                console.error(err);
                mutations.finish(id, version);
             });

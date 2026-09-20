@@ -6,8 +6,10 @@ import { useTeamsStore } from '@/store/teams-store';
 import { ChevronRight, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { useLanguage } from '@/components/providers/language-provider';
 
 export default function Header() {
+   const { t } = useLanguage();
    const teams = useTeamsStore((s) => s.teams);
    const { orgId, teamId } = useParams<{ orgId: string; teamId: string }>();
    const team = teams.find((t) => t.id === teamId) ?? teams[0];
@@ -26,11 +28,11 @@ export default function Header() {
                <span className="text-sm font-medium truncate">{team.name}</span>
             </Link>
             <ChevronRight className="size-3.5 text-muted-foreground shrink-0" />
-            <span className="text-sm font-medium">Initiatives</span>
+            <span className="text-sm font-medium">{t('Initiatives')}</span>
          </div>
          <Button size="xs" variant="ghost" className="gap-1 text-muted-foreground">
             <Plus className="size-4" />
-            New initiative
+            {t('New initiative')}
          </Button>
       </div>
    );

@@ -1,6 +1,7 @@
 'use client';
 
 import { Checkbox } from '@/components/ui/checkbox';
+import { useLanguage } from '@/components/providers/language-provider';
 import { cn } from '@/lib/utils';
 import { FileDiff } from '@/mock-data/reviews';
 import { ArrowDownToLine, FileCode2, MoreHorizontal } from 'lucide-react';
@@ -9,6 +10,7 @@ import { DiffStat } from './review-shared';
 
 /** One file diff: header (name, path, stats, Reviewed) + unified code view. */
 export function DiffView({ diff, actions }: { diff: FileDiff; actions?: ReactNode }) {
+   const { t } = useLanguage();
    return (
       <div className="rounded-lg border overflow-hidden bg-container">
          <div className="flex items-center gap-2 px-3 py-2 border-b bg-sidebar/50 text-sm">
@@ -20,7 +22,7 @@ export function DiffView({ diff, actions }: { diff: FileDiff; actions?: ReactNod
             <DiffStat additions={diff.additions} deletions={diff.deletions} />
             <label className="inline-flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer">
                <Checkbox className="size-3.5" />
-               Reviewed
+               {t('Reviewed')}
             </label>
             <MoreHorizontal className="size-4 text-muted-foreground" />
          </div>
@@ -37,7 +39,7 @@ export function DiffView({ diff, actions }: { diff: FileDiff; actions?: ReactNod
                         ) : (
                            <>
                               <ArrowDownToLine className="size-3" />
-                              {line.count} unchanged lines
+                              {line.count} {t('unchanged lines')}
                            </>
                         )}
                      </div>

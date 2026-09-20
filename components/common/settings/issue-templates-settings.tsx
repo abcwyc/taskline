@@ -52,6 +52,7 @@ import {
    SettingsSection,
    SettingsShell,
 } from './shared';
+import { useLanguage } from '@/components/providers/language-provider';
 
 const ALL_TEAMS = '__all__';
 
@@ -74,6 +75,7 @@ function TemplateDialog({
    const [title, setTitle] = useState('');
    const [body, setBody] = useState('');
    const [teamValue, setTeamValue] = useState<string>(ALL_TEAMS);
+   const { t } = useLanguage();
 
    useEffect(() => {
       if (open) {
@@ -102,7 +104,7 @@ function TemplateDialog({
          await onSaved();
          onOpenChange(false);
       } catch (err) {
-         toast.error(apiErrorMessage(err, 'Failed to save template'));
+         toast.error(apiErrorMessage(err, t('Failed to save template')));
          console.error(err);
       }
    };
@@ -111,31 +113,31 @@ function TemplateDialog({
       <Dialog open={open} onOpenChange={onOpenChange}>
          <DialogContent className="sm:max-w-md">
             <DialogHeader>
-               <DialogTitle>{editing ? 'Edit template' : 'New template'}</DialogTitle>
+               <DialogTitle>{editing ? t('Edit template') : t('New template')}</DialogTitle>
             </DialogHeader>
             <div className="flex flex-col gap-4 py-2">
                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="template-name">Name</Label>
+                  <Label htmlFor="template-name">{t('Name')}</Label>
                   <Input
                      id="template-name"
                      autoFocus
                      value={name}
                      onChange={(e) => setName(e.target.value)}
-                     placeholder="Bug report"
+                     placeholder={t('Bug report')}
                   />
                </div>
                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="template-description">Description</Label>
+                  <Label htmlFor="template-description">{t('Description')}</Label>
                   <Input
                      id="template-description"
                      value={description}
                      onChange={(e) => setDescription(e.target.value)}
-                     placeholder="What this template is for"
+                     placeholder={t('What this template is for')}
                   />
                </div>
                <div className="flex items-end gap-4">
                   <div className="flex flex-col gap-1.5 w-20">
-                     <Label htmlFor="template-icon">Icon</Label>
+                     <Label htmlFor="template-icon">{t('Icon')}</Label>
                      <Input
                         id="template-icon"
                         value={icon}
@@ -145,13 +147,13 @@ function TemplateDialog({
                      />
                   </div>
                   <div className="flex flex-col gap-1.5 flex-1">
-                     <Label htmlFor="template-team">Team</Label>
+                     <Label htmlFor="template-team">{t('Team')}</Label>
                      <Select value={teamValue} onValueChange={setTeamValue}>
                         <SelectTrigger id="template-team">
                            <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                           <SelectItem value={ALL_TEAMS}>All teams</SelectItem>
+                           <SelectItem value={ALL_TEAMS}>{t('All teams')}</SelectItem>
                            {teams.map((team) => (
                               <SelectItem key={team.id} value={team.id}>
                                  {team.name}
@@ -162,7 +164,7 @@ function TemplateDialog({
                   </div>
                </div>
                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="template-title">Title prefill</Label>
+                  <Label htmlFor="template-title">{t('Title prefill')}</Label>
                   <Input
                      id="template-title"
                      value={title}
@@ -171,22 +173,22 @@ function TemplateDialog({
                   />
                </div>
                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="template-body">Description prefill</Label>
+                  <Label htmlFor="template-body">{t('Description prefill')}</Label>
                   <Textarea
                      id="template-body"
                      value={body}
                      onChange={(e) => setBody(e.target.value)}
-                     placeholder="Steps to reproduce…"
+                     placeholder={t('Steps to reproduce…')}
                      className="min-h-24"
                   />
                </div>
             </div>
             <DialogFooter>
                <Button variant="ghost" onClick={() => onOpenChange(false)}>
-                  Cancel
+                  {t('Cancel')}
                </Button>
                <Button onClick={submit} disabled={!name.trim()}>
-                  {editing ? 'Save' : 'Create'}
+                  {editing ? t('Save') : t('Create')}
                </Button>
             </DialogFooter>
          </DialogContent>
@@ -202,16 +204,17 @@ export default function IssueTemplatesSettings() {
    const [dialogOpen, setDialogOpen] = useState(false);
    const [editing, setEditing] = useState<IssueTemplateDTO | undefined>(undefined);
    const [deleting, setDeleting] = useState<IssueTemplateDTO | null>(null);
+   const { t } = useLanguage();
 
    useEffect(() => {
       fetchIssueTemplates()
          .then(setTemplates)
          .catch((err) => {
             console.error(err);
-            toast.error(apiErrorMessage(err, 'Failed to load templates'));
+            toast.error(apiErrorMessage(err, t('Failed to load templates')));
          })
          .finally(() => setLoaded(true));
-   }, []);
+   }, [t]);
 
    const refresh = async () => {
       setTemplates(await fetchIssueTemplates());
@@ -234,24 +237,26 @@ export default function IssueTemplatesSettings() {
          await deleteIssueTemplate(target.id);
          await refresh();
       } catch (err) {
-         toast.error(apiErrorMessage(err, 'Failed to delete template'));
+         toast.error(apiErrorMessage(err, t('Failed to delete template')));
          console.error(err);
       }
    };
 
    const teamName = (teamId: string | null) =>
-      (teamId && teams.find((team) => team.id === teamId)?.name) || 'All teams';
+      (teamId && teams.find((team) => team.id === teamId)?.name) || t('All teams');
 
    return (
       <SettingsShell
-         title="Issue templates"
-         description="These templates are available when creating issues for any team in the workspace. To create templates that only apply to specific teams, add them as team templates."
+         title={t('Issue templates')}
+         description={t(
+            'These templates are available when creating issues for any team in the workspace. To create templates that only apply to specific teams, add them as team templates.'
+         )}
       >
          <SettingsSection
-            title={`${templates.length} issue templates`}
+            title={`${templates.length} ${t('issue templates')}`}
             action={
                <Button size="xs" onClick={openCreate}>
-                  New template
+                  {t('New template')}
                </Button>
             }
          >
@@ -265,11 +270,11 @@ export default function IssueTemplatesSettings() {
                         <>
                            <span className="block">
                               {template.description || (
-                                 <span className="italic">No description</span>
+                                 <span className="italic">{t('No description')}</span>
                               )}
                            </span>
                            <span className="block text-muted-foreground/80">
-                              Prefills the issue title and description
+                              {t('Prefills the issue title and description')}
                            </span>
                         </>
                      }
@@ -282,13 +287,13 @@ export default function IssueTemplatesSettings() {
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
                                  <DropdownMenuItem onClick={() => openEdit(template)}>
-                                    Edit
+                                    {t('Edit')}
                                  </DropdownMenuItem>
                                  <DropdownMenuItem
                                     className="text-destructive"
                                     onClick={() => setDeleting(template)}
                                  >
-                                    Delete
+                                    {t('Delete')}
                                  </DropdownMenuItem>
                               </DropdownMenuContent>
                            </DropdownMenu>
@@ -298,7 +303,7 @@ export default function IssueTemplatesSettings() {
                ))}
                {loaded && templates.length === 0 && (
                   <div className="px-4 py-3 text-sm text-muted-foreground">
-                     No templates yet — create one to prefill new issues.
+                     {t('No templates yet — create one to prefill new issues.')}
                   </div>
                )}
             </SettingsCard>
@@ -314,14 +319,17 @@ export default function IssueTemplatesSettings() {
          <AlertDialog open={!!deleting} onOpenChange={(v) => !v && setDeleting(null)}>
             <AlertDialogContent>
                <AlertDialogHeader>
-                  <AlertDialogTitle>Delete template</AlertDialogTitle>
+                  <AlertDialogTitle>{t('Delete template')}</AlertDialogTitle>
                   <AlertDialogDescription>
-                     {`Delete template "${deleting?.name}"? This cannot be undone.`}
+                     {t('Delete template "{name}"? This cannot be undone.').replace(
+                        '{name}',
+                        deleting?.name ?? ''
+                     )}
                   </AlertDialogDescription>
                </AlertDialogHeader>
                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+                  <AlertDialogCancel>{t('Cancel')}</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDelete}>{t('Delete')}</AlertDialogAction>
                </AlertDialogFooter>
             </AlertDialogContent>
          </AlertDialog>

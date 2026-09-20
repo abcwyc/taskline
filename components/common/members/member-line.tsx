@@ -9,10 +9,12 @@ import {
    SelectValue,
 } from '@/components/ui/select';
 import { useIsAdmin } from '@/lib/hooks/use-current-user';
+import { useLanguage } from '@/components/providers/language-provider';
 import { cn } from '@/lib/utils';
 import { User } from '@/mock-data/users';
 import { useMembersStore } from '@/store/members-store';
-import { format, parseISO } from 'date-fns';
+import { AppLocale, formatAppDate } from '@/lib/i18n';
+import { parseISO } from 'date-fns';
 import { KeyRound, SquareUser, UserMinus } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -33,9 +35,11 @@ const displayNameOf = (user: User) =>
       .join(' ');
 
 /** Linear-style joined date: current year → "Mar 17", otherwise "Oct 2023". */
-const joinedLabel = (iso: string) => {
+const joinedLabel = (iso: string, locale: AppLocale) => {
    const date = parseISO(iso);
-   return date.getFullYear() === 2026 ? format(date, 'MMM d') : format(date, 'MMM yyyy');
+   return date.getFullYear() === 2026
+      ? formatAppDate(locale, date, 'MMM d')
+      : formatAppDate(locale, date, 'MMM yyyy');
 };
 
 const hashString = (value: string): number => {
@@ -46,6 +50,7 @@ const hashString = (value: string): number => {
 
 export default function MemberLine({ user }: MemberLineProps) {
    const { orgId } = useParams<{ orgId: string }>();
+   const { locale, t } = useLanguage();
    const removeMember = useMembersStore((s) => s.removeMember);
    const updateMember = useMembersStore((s) => s.updateMember);
    const isAdmin = useIsAdmin();
@@ -77,7 +82,7 @@ export default function MemberLine({ user }: MemberLineProps) {
          {/* Status (role) */}
          <div className="w-[110px] shrink-0" onClick={(e) => e.preventDefault()}>
             {isApplication || !isAdmin ? (
-               <span className="text-xs text-muted-foreground">{user.role}</span>
+               <span className="text-xs text-muted-foreground">{t(user.role)}</span>
             ) : (
                <Select
                   value={user.role}
@@ -95,7 +100,7 @@ export default function MemberLine({ user }: MemberLineProps) {
                   <SelectContent>
                      {ROLES.map((r) => (
                         <SelectItem key={r} value={r} className="text-xs">
-                           {r}
+                           {t(r)}
                         </SelectItem>
                      ))}
                   </SelectContent>
@@ -105,7 +110,7 @@ export default function MemberLine({ user }: MemberLineProps) {
 
          {/* Joined */}
          <div className="hidden lg:block w-[100px] shrink-0 text-xs text-muted-foreground">
-            {joinedLabel(user.joinedDate)}
+            {joinedLabel(user.joinedDate, locale)}
          </div>
 
          <div className="hidden md:flex w-[170px] shrink-0 items-center gap-1.5 text-xs text-muted-foreground min-w-0">
@@ -124,8 +129,8 @@ export default function MemberLine({ user }: MemberLineProps) {
             <div className="flex shrink-0 items-center gap-0.5">
                <button
                   type="button"
-                  aria-label={`Reset password for ${user.name}`}
-                  title="Reset password"
+                  aria-label={t('Reset password for {name}').replace('{name}', user.name)}
+                  title={t('Reset password')}
                   className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
                   onClick={(event) => {
                      event.preventDefault();
@@ -136,11 +141,15 @@ export default function MemberLine({ user }: MemberLineProps) {
                </button>
                <button
                   type="button"
-                  aria-label={`Remove ${user.name}`}
+                  aria-label={t('Remove {name}').replace('{name}', user.name)}
                   className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                   onClick={(event) => {
                      event.preventDefault();
-                     if (window.confirm(`Remove ${user.name} from this workspace?`)) {
+                     if (
+                        window.confirm(
+                           t('Remove {name} from this workspace?').replace('{name}', user.name)
+                        )
+                     ) {
                         removeMember(user.id);
                      }
                   }}
@@ -155,7 +164,7 @@ export default function MemberLine({ user }: MemberLineProps) {
             {user.status === 'online' && !isApplication && (
                <>
                   <span className="size-1.5 rounded-full bg-[#00cc66]" />
-                  Online
+                  {t('Online')}
                </>
             )}
          </div>

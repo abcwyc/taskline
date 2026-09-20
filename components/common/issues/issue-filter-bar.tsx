@@ -2,6 +2,7 @@
 
 import { DataTableFilter } from '@/components/data-table-filter';
 import { useDataTableFilters } from '@/components/data-table-filter/hooks/use-data-table-filters';
+import { useLanguage } from '@/components/providers/language-provider';
 import { useFilterStore } from '@/store/filter-store';
 import { useIssuesStore } from '@/store/issues-store';
 import { useIssueFilterColumns } from './issue-filter-columns';
@@ -20,6 +21,7 @@ export function IssueFilterBar() {
    const { issues } = useIssuesStore();
    const { filters, setFilters } = useFilterStore();
    const columnsConfig = useIssueFilterColumns();
+   const { locale } = useLanguage();
 
    const { columns, actions, strategy } = useDataTableFilters({
       strategy: 'client',
@@ -38,6 +40,7 @@ export function IssueFilterBar() {
             filters={filters}
             actions={actions}
             strategy={strategy}
+            locale={locale}
          />
       </div>
    );

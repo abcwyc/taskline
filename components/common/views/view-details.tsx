@@ -2,6 +2,7 @@
 
 import { GroupedIssuesView } from '@/components/common/issues/grouped-issues-view';
 import { InsightsPanel } from '@/components/common/issues/insights-panel';
+import { useLanguage } from '@/components/providers/language-provider';
 import ProjectsList from '@/components/common/projects/projects-list';
 import { ProjectGroup } from '@/components/common/projects/projects';
 import { status as allStatus } from '@/mock-data/status';
@@ -54,12 +55,13 @@ function ProjectViewBody({ view }: { view: View }) {
 
 /** Saved-view detail page: filtered issues (with insights) or projects. */
 export default function ViewDetails({ viewId }: { viewId: string }) {
+   const { t } = useLanguage();
    const view = useViewsStore((s) => s.getViewById(viewId));
 
    if (!view) {
       return (
          <div className="w-full h-full flex items-center justify-center text-sm text-muted-foreground">
-            View not found
+            {t('View not found')}
          </div>
       );
    }

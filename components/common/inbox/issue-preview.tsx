@@ -22,6 +22,8 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useRef, useState } from 'react';
 import { NotificationBox } from './icons/motification-box';
+import { useLanguage } from '@/components/providers/language-provider';
+import { formatRelativeTime } from '@/lib/i18n';
 
 interface IssuePreviewProps {
    notification?: InboxItem;
@@ -43,6 +45,7 @@ const LOADING_DETAIL: IssueDetail = {
 
 export default function IssuePreview({ notification, onMarkAsRead }: IssuePreviewProps) {
    const { orgId } = useParams<{ orgId: string }>();
+   const { locale, t } = useLanguage();
    const { getUnreadCount } = useNotificationsStore();
    const { issues } = useIssuesStore();
 
@@ -77,7 +80,9 @@ export default function IssuePreview({ notification, onMarkAsRead }: IssuePrevie
       for (const file of Array.from(files)) {
          await uploadAttachment(commentTarget, file);
       }
-      toast.success(`Attached ${files.length} file${files.length > 1 ? 's' : ''}`);
+      toast.success(
+         `${files.length} ${t(files.length === 1 ? 'attached file' : 'attached files')}`
+      );
       if (fileRef.current) fileRef.current.value = '';
    };
 
@@ -88,10 +93,10 @@ export default function IssuePreview({ notification, onMarkAsRead }: IssuePrevie
          <div className="flex flex-col items-center justify-center h-full p-8 text-center">
             <NotificationBox className="w-16 h-16 mb-4 text-muted-foreground/50" />
             <h3 className="text-lg font-semibold text-muted-foreground mb-2">
-               {unreadCount} unread notification{unreadCount !== 1 ? 's' : ''}
+               {unreadCount} {t(unreadCount === 1 ? 'unread notification' : 'unread notifications')}
             </h3>
             <p className="text-sm text-muted-foreground max-w-sm">
-               Select a notification from the list to view its details and take action.
+               {t('Select a notification from the list to view its details and take action.')}
             </p>
          </div>
       );
@@ -119,12 +124,12 @@ export default function IssuePreview({ notification, onMarkAsRead }: IssuePrevie
                      className="gap-1"
                   >
                      <Check className="size-4" />
-                     Mark as read
+                     {t('Mark as read')}
                   </Button>
                )}
                <Button variant="ghost" size="xs" asChild>
                   <Link href={`/${orgId ?? 'lndev-ui'}/issue/${displayIssue.identifier}`}>
-                     Open
+                     {t('Open')}
                      <ArrowUpRight className="size-3.5 ml-0.5" />
                   </Link>
                </Button>
@@ -155,9 +160,12 @@ export default function IssuePreview({ notification, onMarkAsRead }: IssuePrevie
                         <span className="font-medium">{notification.user.name}</span>{' '}
                         <span className="text-muted-foreground">
                            ·{' '}
-                           {formatDistanceToNowStrict(new Date(notification.timestamp), {
-                              addSuffix: true,
-                           })}
+                           {formatRelativeTime(
+                              locale,
+                              formatDistanceToNowStrict(new Date(notification.timestamp), {
+                                 addSuffix: true,
+                              })
+                           )}
                         </span>
                      </div>
                   </div>
@@ -170,11 +178,11 @@ export default function IssuePreview({ notification, onMarkAsRead }: IssuePrevie
                   <div className="flex items-center flex-wrap gap-x-4 gap-y-2 mt-4 text-sm xl:hidden">
                      <span className="flex items-center gap-1.5">
                         <displayIssue.status.icon />
-                        {displayIssue.status.name}
+                        {t(displayIssue.status.name)}
                      </span>
                      <span className="flex items-center gap-1.5 text-muted-foreground">
                         <displayIssue.priority.icon className="size-3.5" />
-                        {displayIssue.priority.name}
+                        {t(displayIssue.priority.name)}
                      </span>
                      {displayIssue.assignee && (
                         <span className="flex items-center gap-1.5">
@@ -212,7 +220,9 @@ export default function IssuePreview({ notification, onMarkAsRead }: IssuePrevie
                         disabled={!canComment}
                         className="w-full rounded-lg border px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent pb-14 resize-none"
                         placeholder={
-                           canComment ? 'Leave a comment... (⌘↵ to submit)' : 'Sign in to comment'
+                           canComment
+                              ? t('Leave a comment... (⌘↵ to submit)')
+                              : t('Sign in to comment')
                         }
                         rows={3}
                      />
@@ -227,7 +237,7 @@ export default function IssuePreview({ notification, onMarkAsRead }: IssuePrevie
                         <Button
                            size="icon"
                            variant="ghost"
-                           aria-label="Attach files"
+                           aria-label={t('Attach files')}
                            disabled={!canComment}
                            onClick={() => fileRef.current?.click()}
                         >
@@ -236,7 +246,7 @@ export default function IssuePreview({ notification, onMarkAsRead }: IssuePrevie
                         <Button
                            size="icon"
                            variant="secondary"
-                           aria-label="Send comment"
+                           aria-label={t('Send comment')}
                            disabled={!canComment || !commentDraft.trim() || posting}
                            onClick={submitComment}
                         >

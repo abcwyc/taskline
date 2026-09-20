@@ -10,6 +10,7 @@ import {
    updateTeam as apiUpdateTeam,
 } from '@/lib/api/teams';
 import type { TeamCreateBody } from '@/lib/api/types';
+import { tt } from '@/lib/i18n';
 
 /**
  * Teams cache. `getTeamById` looks up by the team key ("CORE") — same as the
@@ -45,7 +46,7 @@ export const useTeamsStore = create<TeamsState>((set, get) => ({
          set({ teams, hydrated: true, isLoading: false });
       } catch (err) {
          set({ isLoading: false, error: (err as Error).message });
-         toast.error('Failed to load teams');
+         toast.error(tt('Failed to load teams'));
          throw err;
       }
    },
@@ -60,7 +61,7 @@ export const useTeamsStore = create<TeamsState>((set, get) => ({
          set({ teams: [...get().teams, team] });
          return team;
       } catch (err) {
-         toast.error('Failed to create team');
+         toast.error(tt('Failed to create team'));
          console.error(err);
          return null;
       }
@@ -75,7 +76,7 @@ export const useTeamsStore = create<TeamsState>((set, get) => ({
          .then((saved) => set({ teams: get().teams.map((t) => (t.id === id ? saved : t)) }))
          .catch((err) => {
             set({ teams: get().teams.map((t) => (t.id === id ? snapshot : t)) });
-            toast.error('Failed to save changes');
+            toast.error(tt('Failed to save changes'));
             console.error(err);
          });
    },
@@ -85,7 +86,7 @@ export const useTeamsStore = create<TeamsState>((set, get) => ({
       set({ teams: snapshot.filter((t) => t.id !== id) });
       apiDeleteTeam(id).catch((err) => {
          set({ teams: snapshot });
-         toast.error('Failed to delete team');
+         toast.error(tt('Failed to delete team'));
          console.error(err);
       });
    },

@@ -8,8 +8,10 @@ import { ChevronRight, MoreHorizontal, Star } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { CycleView } from '@/components/common/issues/cycle-issues';
+import { useLanguage } from '@/components/providers/language-provider';
 
 export default function HeaderNav({ cycleView }: { cycleView: CycleView }) {
+   const { t } = useLanguage();
    const teams = useTeamsStore((s) => s.teams);
    const { orgId, teamId } = useParams<{ orgId: string; teamId: string }>();
    const team = teams.find((t) => t.id === teamId) ?? teams[0];
@@ -35,7 +37,7 @@ export default function HeaderNav({ cycleView }: { cycleView: CycleView }) {
                href={`/${orgId}/team/${team.id}/cycles`}
                className="text-sm font-medium text-muted-foreground hover:text-foreground"
             >
-               Cycles
+               {t('Cycles')}
             </Link>
             <ChevronRight className="size-3.5 text-muted-foreground shrink-0" />
             <div className="flex items-center gap-1.5 min-w-0">

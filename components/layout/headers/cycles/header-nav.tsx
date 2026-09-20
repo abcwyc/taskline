@@ -5,8 +5,10 @@ import { useTeamsStore } from '@/store/teams-store';
 import { ChevronRight, Star } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { useLanguage } from '@/components/providers/language-provider';
 
 export default function HeaderNav() {
+   const { t } = useLanguage();
    const teams = useTeamsStore((s) => s.teams);
    const { orgId, teamId } = useParams<{ orgId: string; teamId: string }>();
    const team = teams.find((t) => t.id === teamId) ?? teams[0];
@@ -25,7 +27,7 @@ export default function HeaderNav() {
                <span className="text-sm font-medium truncate">{team.name}</span>
             </Link>
             <ChevronRight className="size-3.5 text-muted-foreground shrink-0" />
-            <span className="text-sm font-medium">Cycles</span>
+            <span className="text-sm font-medium">{t('Cycles')}</span>
             <Star className="size-3.5 text-muted-foreground shrink-0 ml-1" />
          </div>
       </div>

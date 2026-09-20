@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import { toast } from 'sonner';
 
 import { acceptTriageItem, fetchTriageItems, setTriageItemStatus } from '@/lib/api/triage';
+import { tt } from '@/lib/i18n';
 import { useIssuesStore } from './issues-store';
 
 /**
@@ -58,7 +59,7 @@ export const useTriageStore = create<TriageState>((set, get) => ({
          .then((issue) => useIssuesStore.getState().receiveIssue(issue))
          .catch((err) => {
             set({ items: snapshot });
-            toast.error('Failed to accept item');
+            toast.error(tt('Failed to accept item'));
             console.error(err);
          });
    },
@@ -71,7 +72,7 @@ export const useTriageStore = create<TriageState>((set, get) => ({
       }));
       setTriageItemStatus(id, 'declined').catch((err) => {
          set({ items: snapshot });
-         toast.error('Failed to decline item');
+         toast.error(tt('Failed to decline item'));
          console.error(err);
       });
    },
@@ -84,7 +85,7 @@ export const useTriageStore = create<TriageState>((set, get) => ({
       }));
       setTriageItemStatus(id, 'snoozed').catch((err) => {
          set({ items: snapshot });
-         toast.error('Failed to snooze item');
+         toast.error(tt('Failed to snooze item'));
          console.error(err);
       });
    },

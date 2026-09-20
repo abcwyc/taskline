@@ -19,6 +19,7 @@ import {
    DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/components/providers/language-provider';
 import { useReviewsStore } from '@/store/reviews-store';
 import {
    Check,
@@ -49,6 +50,7 @@ const SECTION_TABS: { key: ReviewSection; label: string; path: string }[] = [
 
 /** Right pane of the Reviews split view: breadcrumb, tabs and section body. */
 export function ReviewDetail({ reviewId, section }: { reviewId: string; section: ReviewSection }) {
+   const { t } = useLanguage();
    const { orgId } = useParams<{ orgId: string }>();
    const router = useRouter();
    const review = useReviewsStore((s) => s.getReviewById(reviewId));
@@ -60,7 +62,7 @@ export function ReviewDetail({ reviewId, section }: { reviewId: string; section:
    if (!review) {
       return (
          <div className="h-full flex items-center justify-center text-sm text-muted-foreground">
-            Review not found
+            {t('Review not found')}
          </div>
       );
    }
@@ -95,7 +97,7 @@ export function ReviewDetail({ reviewId, section }: { reviewId: string; section:
                   ) : (
                      <X className="size-3" />
                   )}
-                  {review.verdict === 'approved' ? 'Approved' : 'Changes requested'}
+                  {review.verdict === 'approved' ? t('Approved') : t('Changes requested')}
                </span>
             )}
             <span className="flex-1" />
@@ -115,7 +117,7 @@ export function ReviewDetail({ reviewId, section }: { reviewId: string; section:
                            : 'text-muted-foreground hover:bg-accent/50'
                      )}
                   >
-                     {tab.label}
+                     {t(tab.label)}
                   </Link>
                ))}
             </div>
@@ -124,25 +126,27 @@ export function ReviewDetail({ reviewId, section }: { reviewId: string; section:
                   size="xs"
                   variant="outline"
                   disabled={!isOpen}
-                  title={isOpen ? 'Approve this review' : 'Only open reviews can be reviewed'}
+                  title={isOpen ? t('Approve this review') : t('Only open reviews can be reviewed')}
                   onClick={() => setVerdict(review.id, 'approved')}
                   className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-600 dark:hover:text-emerald-400"
                >
                   <Check className="size-3.5" />
-                  Approve
+                  {t('Approve')}
                </Button>
                <Button
                   size="xs"
                   variant="outline"
                   disabled={!isOpen}
                   title={
-                     isOpen ? 'Request changes on this review' : 'Only open reviews can be reviewed'
+                     isOpen
+                        ? t('Request changes on this review')
+                        : t('Only open reviews can be reviewed')
                   }
                   onClick={() => setVerdict(review.id, 'changes_requested')}
                   className="text-amber-600 dark:text-amber-400 hover:text-amber-600 dark:hover:text-amber-400"
                >
                   <X className="size-3.5" />
-                  Request changes
+                  {t('Request changes')}
                </Button>
                <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -150,7 +154,7 @@ export function ReviewDetail({ reviewId, section }: { reviewId: string; section:
                         size="xs"
                         variant="ghost"
                         className="size-7 px-0"
-                        aria-label="More review actions"
+                        aria-label={t('More review actions')}
                      >
                         <MoreHorizontal className="size-3.5" />
                      </Button>
@@ -160,23 +164,23 @@ export function ReviewDetail({ reviewId, section }: { reviewId: string; section:
                         <>
                            <DropdownMenuItem onClick={() => setStatus(review.id, 'merged')}>
                               <GitMerge />
-                              Mark merged
+                              {t('Mark merged')}
                            </DropdownMenuItem>
                            <DropdownMenuItem onClick={() => setStatus(review.id, 'closed')}>
                               <CircleSlash />
-                              Close review
+                              {t('Close review')}
                            </DropdownMenuItem>
                         </>
                      ) : (
                         <DropdownMenuItem onClick={() => setStatus(review.id, 'open')}>
                            <RotateCcw />
-                           Reopen
+                           {t('Reopen')}
                         </DropdownMenuItem>
                      )}
                      <DropdownMenuSeparator />
                      <DropdownMenuItem variant="destructive" onClick={() => setDeleteOpen(true)}>
                         <Trash2 />
-                        Delete review
+                        {t('Delete review')}
                      </DropdownMenuItem>
                   </DropdownMenuContent>
                </DropdownMenu>
@@ -191,14 +195,14 @@ export function ReviewDetail({ reviewId, section }: { reviewId: string; section:
          <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
             <AlertDialogContent>
                <AlertDialogHeader>
-                  <AlertDialogTitle>Delete review?</AlertDialogTitle>
+                  <AlertDialogTitle>{t('Delete review?')}</AlertDialogTitle>
                   <AlertDialogDescription>
-                     This permanently deletes “{review.title}” together with its comments. This
-                     action cannot be undone.
+                     {t('This permanently deletes')} “{review.title}”{' '}
+                     {t('together with its comments. This action cannot be undone.')}
                   </AlertDialogDescription>
                </AlertDialogHeader>
                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogCancel>{t('Cancel')}</AlertDialogCancel>
                   <AlertDialogAction
                      className="bg-destructive text-white hover:bg-destructive/90"
                      onClick={() => {
@@ -206,7 +210,7 @@ export function ReviewDetail({ reviewId, section }: { reviewId: string; section:
                         router.push(`/${orgId}/reviews`);
                      }}
                   >
-                     Delete
+                     {t('Delete')}
                   </AlertDialogAction>
                </AlertDialogFooter>
             </AlertDialogContent>

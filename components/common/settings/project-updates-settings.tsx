@@ -24,15 +24,18 @@ import { deleteProjectUpdate, fetchWorkspaceUpdates } from '@/lib/api/project-de
 import { useIsAdmin } from '@/lib/hooks/use-current-user';
 import { useMembersStore } from '@/store/members-store';
 import { apiErrorMessage } from '@/components/common/settings/shared';
-import { format, parseISO } from 'date-fns';
+import { formatAppDate } from '@/lib/i18n';
+import { parseISO } from 'date-fns';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Trash2 } from 'lucide-react';
+import { useLanguage } from '@/components/providers/language-provider';
 
 /** Health pill matching the project activity page. */
 function HealthBadge({ health }: { health: string }) {
+   const { t } = useLanguage();
    const key = (
       ['on-track', 'at-risk', 'off-track'].includes(health) ? health : 'on-track'
    ) as ProjectUpdateHealth;
@@ -42,7 +45,7 @@ function HealthBadge({ health }: { health: string }) {
             className="size-2 rounded-full"
             style={{ backgroundColor: projectUpdateHealthColor[key] }}
          />
-         {projectUpdateHealthLabel[key]}
+         {t(projectUpdateHealthLabel[key])}
       </span>
    );
 }
@@ -60,12 +63,13 @@ function UpdateEntry({
    onDeleted: () => void;
 }) {
    const members = useMembersStore((s) => s.members);
+   const { locale, t } = useLanguage();
    const [deleting, setDeleting] = useState(false);
    const author =
       members.find((member) => member.id === update.authorId) ??
       ({
          id: update.authorId,
-         name: 'Unknown member',
+         name: t('Unknown member'),
          avatarUrl: '',
          email: '',
          status: 'offline',
@@ -81,7 +85,7 @@ function UpdateEntry({
          await deleteProjectUpdate(update.projectId, update.id);
          onDeleted();
       } catch (err) {
-         toast.error(apiErrorMessage(err, 'Failed to delete update'));
+         toast.error(apiErrorMessage(err, t('Failed to delete update')));
          console.error(err);
       }
    };
@@ -96,7 +100,7 @@ function UpdateEntry({
                {update.projectName}
             </Link>
             <span className="text-xs text-muted-foreground shrink-0">
-               {format(parseISO(update.date), 'MMM d, yyyy')}
+               {formatAppDate(locale, parseISO(update.date), 'MMM d, yyyy')}
             </span>
             <span className="ml-auto flex items-center gap-1.5 shrink-0">
                <HealthBadge health={update.health} />
@@ -106,27 +110,28 @@ function UpdateEntry({
                         <AlertDialogTrigger asChild>
                            <button
                               className="text-muted-foreground hover:text-destructive transition-colors"
-                              aria-label="Delete update"
-                              title="Delete update"
+                              aria-label={t('Delete update')}
+                              title={t('Delete update')}
                            >
                               <Trash2 className="size-3.5" />
                            </button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete update</AlertDialogTitle>
+                              <AlertDialogTitle>{t('Delete update')}</AlertDialogTitle>
                               <AlertDialogDescription>
-                                 This update will be permanently removed from {update.projectName}.
-                                 This action cannot be undone.
+                                 {t(
+                                    'This update will be permanently removed from {name}. This action cannot be undone.'
+                                 ).replace('{name}', update.projectName)}
                               </AlertDialogDescription>
                            </AlertDialogHeader>
                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogCancel>{t('Cancel')}</AlertDialogCancel>
                               <AlertDialogAction
                                  className="bg-destructive text-white hover:bg-destructive/90"
                                  onClick={handleDelete}
                               >
-                                 Delete
+                                 {t('Delete')}
                               </AlertDialogAction>
                            </AlertDialogFooter>
                         </AlertDialogContent>
@@ -151,6 +156,7 @@ function UpdateEntry({
 
 /** Workspace "Project updates" settings: read-only feed of every project update. */
 export default function ProjectUpdatesSettings() {
+   const { t } = useLanguage();
    const { orgId } = useParams<{ orgId: string }>();
    const isAdmin = useIsAdmin();
    const [updates, setUpdates] = useState<WorkspaceUpdateDTO[] | null>(null);
@@ -160,10 +166,10 @@ export default function ProjectUpdatesSettings() {
          setUpdates(await fetchWorkspaceUpdates());
       } catch (err) {
          console.error(err);
-         toast.error(apiErrorMessage(err, 'Failed to load project updates'));
+         toast.error(apiErrorMessage(err, t('Failed to load project updates')));
          setUpdates([]);
       }
-   }, []);
+   }, [t]);
 
    useEffect(() => {
       void load();
@@ -172,18 +178,19 @@ export default function ProjectUpdatesSettings() {
    return (
       <div className="w-full overflow-y-auto h-full">
          <div className="max-w-3xl mx-auto px-6 py-10 pb-20">
-            <h1 className="text-2xl font-medium">Project updates</h1>
+            <h1 className="text-2xl font-medium">{t('Project updates')}</h1>
             <p className="text-sm text-muted-foreground mt-1">
-               All project updates across the workspace, newest first. Updates are posted from each
-               project&apos;s activity page.
+               {t(
+                  "All project updates across the workspace, newest first. Updates are posted from each project's activity page."
+               )}
             </p>
 
             {updates === null && (
-               <p className="mt-10 text-sm text-muted-foreground">Loading updates…</p>
+               <p className="mt-10 text-sm text-muted-foreground">{t('Loading updates…')}</p>
             )}
             {updates?.length === 0 && (
                <p className="mt-10 text-sm text-muted-foreground">
-                  No project updates yet — post one from a project&apos;s activity page.
+                  {t("No project updates yet — post one from a project's activity page.")}
                </p>
             )}
             {updates && updates.length > 0 && (

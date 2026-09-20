@@ -7,6 +7,7 @@ import {
    uploadAttachment,
 } from '@/lib/api/attachments';
 import type { AttachmentDTO } from '@/lib/api/types';
+import { tt } from '@/lib/i18n';
 
 /** Per-issue attachment lists, keyed by issue identifier. Lazy-loaded. */
 interface AttachmentsState {
@@ -48,7 +49,7 @@ export const useAttachmentsStore = create<AttachmentsState>((set, get) => ({
             },
          }));
       } catch (err) {
-         toast.error((err as Error).message || 'Upload failed');
+         toast.error((err as Error).message || tt('Upload failed'));
       } finally {
          set((s) => ({ uploading: { ...s.uploading, [identifier]: false } }));
       }
@@ -63,7 +64,7 @@ export const useAttachmentsStore = create<AttachmentsState>((set, get) => ({
          await apiDelete(id);
       } catch {
          set((s) => ({ byIssue: { ...s.byIssue, [identifier]: snapshot } }));
-         toast.error('Failed to delete attachment');
+         toast.error(tt('Failed to delete attachment'));
       }
    },
 }));

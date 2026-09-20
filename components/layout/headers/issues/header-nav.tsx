@@ -9,6 +9,7 @@ import { SearchIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, usePathname } from 'next/navigation';
 import { useEffect, useRef } from 'react';
+import { useLanguage } from '@/components/providers/language-provider';
 import Notifications from './notifications';
 
 const ISSUE_VIEW_TABS = [
@@ -20,6 +21,7 @@ const ISSUE_VIEW_TABS = [
 function IssueViewTabs() {
    const { orgId, teamId } = useParams<{ orgId: string; teamId: string }>();
    const pathname = usePathname();
+   const { t } = useLanguage();
 
    return (
       <div className="flex items-center gap-1">
@@ -37,7 +39,7 @@ function IssueViewTabs() {
                         : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-accent/50'
                   )}
                >
-                  {tab.label}
+                  {t(tab.label)}
                </Link>
             );
          })}
@@ -48,6 +50,7 @@ function IssueViewTabs() {
 export default function HeaderNav() {
    const { isSearchOpen, toggleSearch, closeSearch, setSearchQuery, searchQuery } =
       useSearchStore();
+   const { t } = useLanguage();
    const searchInputRef = useRef<HTMLInputElement>(null);
    const searchContainerRef = useRef<HTMLDivElement>(null);
    const previousValueRef = useRef<string>('');
@@ -110,7 +113,7 @@ export default function HeaderNav() {
                            }
                         }
                      }}
-                     placeholder="Search issues..."
+                     placeholder={t('Search issues...')}
                      className="pl-8 h-7 text-sm"
                      onKeyDown={(e) => {
                         if (e.key === 'Escape') {
@@ -130,7 +133,7 @@ export default function HeaderNav() {
                      size="icon"
                      onClick={toggleSearch}
                      className="h-8 w-8"
-                     aria-label="Search"
+                     aria-label={t('Search')}
                   >
                      <SearchIcon className="h-4 w-4" />
                   </Button>

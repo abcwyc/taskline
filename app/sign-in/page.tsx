@@ -2,6 +2,8 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 
 import { PasskeySignInButton } from '@/components/common/forms/passkey-sign-in-button';
+import { T } from '@/components/providers/t';
+import { TInput } from '@/components/providers/t-input';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -30,21 +32,29 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
                <span className="text-lg font-semibold">Circle</span>
             </div>
 
-            <h1 className="text-xl font-semibold tracking-tight">Sign in to your workspace</h1>
-            <p className="mt-1 text-sm text-muted-foreground">Use your email and password.</p>
+            <h1 className="text-xl font-semibold tracking-tight">
+               <T k="Sign in to your workspace" />
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+               <T k="Use your email and password." />
+            </p>
 
             {error && (
                <p className="mt-4 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                  {error === 'RateLimited'
-                     ? 'Too many attempts. Wait a few minutes and try again.'
-                     : 'Incorrect email or password.'}
+                  {error === 'RateLimited' ? (
+                     <T k="Too many attempts. Wait a few minutes and try again." />
+                  ) : (
+                     <T k="Incorrect email or password." />
+                  )}
                </p>
             )}
 
             <form action={signInAction} className="mt-6 flex flex-col gap-4">
                <input type="hidden" name="callbackUrl" value={callbackUrl} />
                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">
+                     <T k="Email" />
+                  </Label>
                   <Input
                      id="email"
                      name="email"
@@ -56,7 +66,9 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
                   />
                </div>
                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">
+                     <T k="Password" />
+                  </Label>
                   <Input
                      id="password"
                      name="password"
@@ -66,19 +78,21 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
                   />
                </div>
                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="totp">Two-factor code</Label>
-                  <Input
+                  <Label htmlFor="totp">
+                     <T k="Two-factor code" />
+                  </Label>
+                  <TInput
                      id="totp"
                      name="totp"
                      type="text"
                      inputMode="numeric"
                      maxLength={6}
                      autoComplete="one-time-code"
-                     placeholder="2FA code (if enabled)"
+                     placeholderKey="2FA code (if enabled)"
                   />
                </div>
                <Button type="submit" className="mt-2 w-full">
-                  Sign in
+                  <T k="Sign in" />
                </Button>
             </form>
 
@@ -87,9 +101,9 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
             </div>
 
             <p className="mt-4 text-sm text-muted-foreground">
-               Need an account?{' '}
+               <T k="Need an account?" />{' '}
                <Link href="/sign-up" className="text-foreground underline">
-                  Create one
+                  <T k="Create one" />
                </Link>
             </p>
          </div>

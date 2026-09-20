@@ -13,6 +13,7 @@ import {
    DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { DarkVariant, LightVariant, useThemeStore } from '@/store/theme-store';
+import { useLanguage } from '@/components/providers/language-provider';
 
 const LIGHT_VARIANTS: { id: LightVariant; label: string }[] = [
    { id: 'pure-light', label: 'Pure Light' },
@@ -31,6 +32,7 @@ const DARK_VARIANTS: { id: DarkVariant; label: string }[] = [
  * fully custom theme is only reachable from Settings → Preferences).
  */
 export function ThemeToggle() {
+   const { t } = useLanguage();
    const { mode, lightVariant, darkVariant, setMode, setLightVariant, setDarkVariant } =
       useThemeStore();
 
@@ -52,14 +54,14 @@ export function ThemeToggle() {
                ) : (
                   <Laptop className="h-4 w-4" />
                )}
-               <span className="sr-only">Toggle theme</span>
+               <span className="sr-only">{t('Toggle theme')}</span>
             </Button>
          </DropdownMenuTrigger>
          <DropdownMenuContent align="end" className="w-40">
             <DropdownMenuSub>
                <DropdownMenuSubTrigger>
                   <Sun className="mr-2 h-4 w-4" />
-                  <span className="flex-1">Light</span>
+                  <span className="flex-1">{t('Light')}</span>
                   {mode === 'light' && <Check className="h-3.5 w-3.5" />}
                </DropdownMenuSubTrigger>
                <DropdownMenuSubContent className="w-40">
@@ -71,7 +73,7 @@ export function ThemeToggle() {
                            setMode('light');
                         }}
                      >
-                        <span className="flex-1">{variant.label}</span>
+                        <span className="flex-1">{t(variant.label)}</span>
                         {mode === 'light' && lightVariant === variant.id && (
                            <Check className="h-3.5 w-3.5" />
                         )}
@@ -82,7 +84,7 @@ export function ThemeToggle() {
             <DropdownMenuSub>
                <DropdownMenuSubTrigger>
                   <Moon className="mr-2 h-4 w-4" />
-                  <span className="flex-1">Dark</span>
+                  <span className="flex-1">{t('Dark')}</span>
                   {mode === 'dark' && <Check className="h-3.5 w-3.5" />}
                </DropdownMenuSubTrigger>
                <DropdownMenuSubContent className="w-40">
@@ -94,7 +96,7 @@ export function ThemeToggle() {
                            setMode('dark');
                         }}
                      >
-                        <span className="flex-1">{variant.label}</span>
+                        <span className="flex-1">{t(variant.label)}</span>
                         {mode === 'dark' && darkVariant === variant.id && (
                            <Check className="h-3.5 w-3.5" />
                         )}
@@ -104,7 +106,7 @@ export function ThemeToggle() {
             </DropdownMenuSub>
             <DropdownMenuItem onClick={() => setMode('system')}>
                <Laptop className="mr-2 h-4 w-4" />
-               <span className="flex-1">System</span>
+               <span className="flex-1">{t('System')}</span>
                {mode === 'system' && <Check className="h-3.5 w-3.5" />}
             </DropdownMenuItem>
          </DropdownMenuContent>

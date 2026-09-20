@@ -1,11 +1,11 @@
 'use client';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
+import { useLanguage } from '@/components/providers/language-provider';
 import { useDocumentsStore } from '@/store/documents-store';
 import { useTeamsStore } from '@/store/teams-store';
 import { RiDonutChartFill } from '@remixicon/react';
-import { Box, CopyMinus, Layers, Plus, Settings, SquareStack } from 'lucide-react';
+import { Box, CopyMinus, Layers, Settings } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 
@@ -14,6 +14,7 @@ import { useParams } from 'next/navigation';
  * quick links, Linear-style.
  */
 export default function TeamOverview() {
+   const { t } = useLanguage();
    const teams = useTeamsStore((s) => s.teams);
    const documentFolders = useDocumentsStore((s) => s.folders);
    const { orgId, teamId } = useParams<{ orgId: string; teamId: string }>();
@@ -42,16 +43,16 @@ export default function TeamOverview() {
                <h1 className="text-3xl font-semibold">{team.name}</h1>
             </div>
 
-            <p className="mt-4 text-muted-foreground">Add a description...</p>
+            <p className="mt-4 text-muted-foreground">{t('Add a description…')}</p>
 
             <div className="mt-12">
                <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-semibold">Team resources</h2>
+                  <h2 className="text-xl font-semibold">{t('Team resources')}</h2>
                </div>
 
                <div className="mt-4 flex flex-col gap-1">
                   {pinnedDocuments.length === 0 && (
-                     <p className="text-sm text-muted-foreground">No resources yet.</p>
+                     <p className="text-sm text-muted-foreground">{t('No resources yet.')}</p>
                   )}
                   {pinnedDocuments.map((doc) => (
                      <Link
@@ -69,7 +70,7 @@ export default function TeamOverview() {
 
          {/* Side column */}
          <div className="w-full lg:w-60 shrink-0">
-            <h3 className="text-sm font-medium text-muted-foreground">Members</h3>
+            <h3 className="text-sm font-medium text-muted-foreground">{t('Members')}</h3>
             <Link
                href={`/${orgId}/team/${team.id}/members`}
                className="mt-2 flex items-center gap-2 hover:opacity-80"
@@ -85,7 +86,7 @@ export default function TeamOverview() {
                <span className="text-sm text-muted-foreground">{team.members.length}</span>
             </Link>
 
-            <h3 className="text-sm font-medium text-muted-foreground mt-8">Go to</h3>
+            <h3 className="text-sm font-medium text-muted-foreground mt-8">{t('Go to')}</h3>
             <div className="mt-2 flex flex-col">
                {goToLinks.map((link) => (
                   <Link
@@ -94,7 +95,7 @@ export default function TeamOverview() {
                      className="flex items-center gap-2.5 py-1.5 px-2 -mx-2 rounded-md hover:bg-sidebar/50 text-sm"
                   >
                      <link.icon className="size-4 text-muted-foreground" />
-                     {link.label}
+                     {t(link.label)}
                   </Link>
                ))}
             </div>

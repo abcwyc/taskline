@@ -1,5 +1,6 @@
 'use client';
 
+import { useLanguage } from '@/components/providers/language-provider';
 import { Button } from '@/components/ui/button';
 import {
    Select,
@@ -55,6 +56,7 @@ function StatusTick(props: { x?: number; y?: number; payload?: { value: string }
  * segmented by priority — stacked bar chart + detail table.
  */
 export function InsightsPanel({ issues }: InsightsPanelProps) {
+   const { t } = useLanguage();
    const { closePanel } = useRightPanelStore();
    const { isActive, toggle } = usePanelFilter();
 
@@ -89,7 +91,7 @@ export function InsightsPanel({ issues }: InsightsPanelProps) {
          <div className="flex items-center justify-between px-4 pt-4 pb-2 shrink-0">
             <div className="flex items-baseline gap-1.5">
                <span className="text-xl font-semibold">{issues.length}</span>
-               <span className="text-sm text-muted-foreground">issues</span>
+               <span className="text-sm text-muted-foreground">{t('issues')}</span>
             </div>
             <Button variant="ghost" size="icon" className="size-7" onClick={closePanel}>
                <X className="size-4" />
@@ -99,35 +101,35 @@ export function InsightsPanel({ issues }: InsightsPanelProps) {
          {/* Measure / Slice / Segment */}
          <div className="grid grid-cols-3 gap-2 px-4 pb-4 shrink-0">
             <div className="flex flex-col gap-1">
-               <span className="text-xs text-muted-foreground">Measure</span>
+               <span className="text-xs text-muted-foreground">{t('Measure')}</span>
                <Select defaultValue="issue-count">
                   <SelectTrigger className="h-8 text-xs w-full">
                      <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                     <SelectItem value="issue-count">Issue count</SelectItem>
+                     <SelectItem value="issue-count">{t('Issue count')}</SelectItem>
                   </SelectContent>
                </Select>
             </div>
             <div className="flex flex-col gap-1">
-               <span className="text-xs text-muted-foreground">Slice</span>
+               <span className="text-xs text-muted-foreground">{t('Slice')}</span>
                <Select defaultValue="status">
                   <SelectTrigger className="h-8 text-xs w-full">
                      <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                     <SelectItem value="status">Status</SelectItem>
+                     <SelectItem value="status">{t('Status')}</SelectItem>
                   </SelectContent>
                </Select>
             </div>
             <div className="flex flex-col gap-1">
-               <span className="text-xs text-muted-foreground">Segment</span>
+               <span className="text-xs text-muted-foreground">{t('Segment')}</span>
                <Select defaultValue="priority">
                   <SelectTrigger className="h-8 text-xs w-full">
                      <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                     <SelectItem value="priority">Priority</SelectItem>
+                     <SelectItem value="priority">{t('Priority')}</SelectItem>
                   </SelectContent>
                </Select>
             </div>
@@ -165,7 +167,7 @@ export function InsightsPanel({ issues }: InsightsPanelProps) {
                      <Bar
                         key={priority.id}
                         dataKey={priority.id}
-                        name={priority.name}
+                        name={t(priority.name)}
                         stackId="issues"
                         fill={PRIORITY_COLORS[priority.id]}
                         isAnimationActive={false}
@@ -181,15 +183,15 @@ export function InsightsPanel({ issues }: InsightsPanelProps) {
             <table className="w-full text-sm">
                <thead className="sticky top-0 bg-container z-10">
                   <tr className="text-left text-muted-foreground">
-                     <th className="font-medium px-4 py-2">Status</th>
-                     <th className="font-medium px-3 py-2 text-right">Issue count</th>
+                     <th className="font-medium px-4 py-2">{t('Status')}</th>
+                     <th className="font-medium px-3 py-2 text-right">{t('Issue count')}</th>
                      {priorities.map((priority) => {
                         const Icon = priority.icon;
                         return (
                            <th key={priority.id} className="font-medium px-3 py-2">
                               <div className="flex items-center gap-1.5 whitespace-nowrap">
                                  <Icon className="size-3.5 text-muted-foreground" />
-                                 <span className="hidden xl:inline">{priority.name}</span>
+                                 <span className="hidden xl:inline">{t(priority.name)}</span>
                               </div>
                            </th>
                         );
@@ -213,9 +215,9 @@ export function InsightsPanel({ issues }: InsightsPanelProps) {
                            <td className="px-4 py-2">
                               <div className="flex items-center gap-2 whitespace-nowrap">
                                  <Icon />
-                                 <span className="truncate max-w-28">{row.status.name}</span>
+                                 <span className="truncate max-w-28">{t(row.status.name)}</span>
                                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-background/80 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                                    {active ? 'Clear filter' : 'Filter'}
+                                    {active ? t('Clear filter') : t('Filter')}
                                  </span>
                               </div>
                            </td>

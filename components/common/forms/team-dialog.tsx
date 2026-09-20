@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import type { Team } from '@/mock-data/teams';
 import { useTeamsStore } from '@/store/teams-store';
+import { useLanguage } from '@/components/providers/language-provider';
 
 const ICONS = ['📋', '🛠️', '🎨', '📱', '🌐', '📊', '🧠', '☁️', '🔒', '✅', '🚀', '⚡', '☀️'];
 const COLORS = [
@@ -41,6 +42,7 @@ export function TeamDialog({
 }) {
    const createTeam = useTeamsStore((s) => s.createTeam);
    const updateTeam = useTeamsStore((s) => s.updateTeam);
+   const { t } = useLanguage();
 
    const [name, setName] = useState('');
    const [icon, setIcon] = useState(ICONS[0]);
@@ -68,27 +70,29 @@ export function TeamDialog({
       <Dialog open={open} onOpenChange={onOpenChange}>
          <DialogContent className="sm:max-w-md">
             <DialogHeader>
-               <DialogTitle>{team ? 'Team settings' : 'Create a team'}</DialogTitle>
+               <DialogTitle>{team ? t('Team settings') : t('Create a team')}</DialogTitle>
             </DialogHeader>
             <div className="flex flex-col gap-4 py-2">
                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="team-name">Name</Label>
+                  <Label htmlFor="team-name">{t('Name')}</Label>
                   <Input
                      id="team-name"
                      autoFocus
                      value={name}
                      onChange={(e) => setName(e.target.value)}
-                     placeholder="Mobile"
+                     placeholder={t('Mobile')}
                   />
                   {!team && (
                      <p className="text-xs text-muted-foreground">
-                        A short key (e.g. {name.slice(0, 4).toUpperCase() || 'MOBI'}) is generated
-                        from the name.
+                        {t('A short key (e.g. {name}) is generated from the name.').replace(
+                           '{name}',
+                           name.slice(0, 4).toUpperCase() || 'MOBI'
+                        )}
                      </p>
                   )}
                </div>
                <div className="flex flex-col gap-1.5">
-                  <Label>Icon</Label>
+                  <Label>{t('Icon')}</Label>
                   <div className="flex flex-wrap gap-1.5">
                      {ICONS.map((i) => (
                         <button
@@ -106,7 +110,7 @@ export function TeamDialog({
                   </div>
                </div>
                <div className="flex flex-col gap-1.5">
-                  <Label>Color</Label>
+                  <Label>{t('Color')}</Label>
                   <div className="flex flex-wrap gap-1.5">
                      {COLORS.map((c) => (
                         <button
@@ -125,10 +129,10 @@ export function TeamDialog({
             </div>
             <DialogFooter>
                <Button variant="ghost" onClick={() => onOpenChange(false)}>
-                  Cancel
+                  {t('Cancel')}
                </Button>
                <Button onClick={submit} disabled={!name.trim()}>
-                  {team ? 'Save' : 'Create'}
+                  {team ? t('Save') : t('Create')}
                </Button>
             </DialogFooter>
          </DialogContent>

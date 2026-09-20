@@ -1,14 +1,17 @@
 'use client';
 
 import { PanelFilterTarget, usePanelFilter } from '@/components/common/issues/use-panel-filter';
+import { useLanguage } from '@/components/providers/language-provider';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
-import { Cycle, cycleStatusLabel, formatCycleDateRange } from '@/mock-data/cycles';
+import { formatAppDate } from '@/lib/i18n';
+import { Cycle, cycleStatusLabel } from '@/mock-data/cycles';
 import { Issue } from '@/mock-data/issues';
 import { useRightPanelStore } from '@/store/right-panel-store';
-import { Plus, User, X } from 'lucide-react';
+import { parseISO } from 'date-fns';
+import { User, X } from 'lucide-react';
 import { useMemo } from 'react';
 import { CapacityRing } from './capacity-ring';
 import { CycleBurnupChart } from './cycle-burnup-chart';
@@ -61,8 +64,9 @@ interface BreakdownListProps {
 }
 
 function BreakdownList({ rows, isActive, toggle }: BreakdownListProps) {
+   const { t } = useLanguage();
    if (rows.length === 0) {
-      return <p className="text-xs text-muted-foreground px-1 py-3">Nothing to show yet.</p>;
+      return <p className="text-xs text-muted-foreground px-1 py-3">{t('Nothing to show yet.')}</p>;
    }
 
    return (
@@ -82,17 +86,17 @@ function BreakdownList({ rows, isActive, toggle }: BreakdownListProps) {
                >
                   <div className="flex items-center gap-2 min-w-0">
                      {row.leading}
-                     <span className="text-sm truncate">{row.label}</span>
+                     <span className="text-sm truncate">{t(row.label)}</span>
                   </div>
                   <div className="flex items-center gap-2 shrink-0 text-sm text-muted-foreground">
                      {row.filter && (
                         <span className="text-xs px-1.5 py-0.5 rounded bg-background/80 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                           {active ? 'Clear filter' : 'Filter'}
+                           {active ? t('Clear filter') : t('Filter')}
                         </span>
                      )}
                      <CapacityRing value={row.completedPercent} color="#6771c5" />
                      <span className="whitespace-nowrap">
-                        {row.completedPercent}% of {row.total}
+                        {row.completedPercent}% {t('of')} {row.total}
                      </span>
                   </div>
                </button>
@@ -107,6 +111,7 @@ function BreakdownList({ rows, isActive, toggle }: BreakdownListProps) {
  * compact burn-up chart and breakdowns by assignee / label / priority / project.
  */
 export function CycleDetailsPanel({ cycle, issues }: CycleDetailsPanelProps) {
+   const { locale, t } = useLanguage();
    const { closePanel } = useRightPanelStore();
    const { isActive, toggle } = usePanelFilter();
 
@@ -222,10 +227,14 @@ export function CycleDetailsPanel({ cycle, issues }: CycleDetailsPanelProps) {
             <div className="flex items-center justify-between gap-2">
                <div className="flex items-center gap-1.5 flex-wrap">
                   <span className="text-xs px-2 py-1 rounded-md bg-accent text-muted-foreground">
-                     {cycleStatusLabel[cycle.status]}
+                     {t(cycleStatusLabel[cycle.status])}
                   </span>
                   <span className="text-xs px-2 py-1 rounded-md bg-accent text-muted-foreground">
-                     {formatCycleDateRange(cycle)}
+                     {`${formatAppDate(locale, parseISO(cycle.startDate), 'MMM d')} → ${formatAppDate(
+                        locale,
+                        parseISO(cycle.endDate),
+                        'MMM d'
+                     )}`}
                   </span>
                </div>
                <Button variant="ghost" size="icon" className="size-7" onClick={closePanel}>
@@ -241,12 +250,12 @@ export function CycleDetailsPanel({ cycle, issues }: CycleDetailsPanelProps) {
 
          {/* Progress */}
          <div className="px-4 mt-6 shrink-0">
-            <h3 className="text-sm font-medium mb-3">Progress</h3>
+            <h3 className="text-sm font-medium mb-3">{t('Progress')}</h3>
             <div className="grid grid-cols-3 gap-2 mb-3">
                <div className="flex flex-col gap-0.5">
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                      <span className="size-2 rounded-[2px] bg-[#8f9299]" />
-                     Scope
+                     {t('Scope')}
                   </div>
                   <div className="text-sm">
                      <span className="font-medium">{cycle.scope}</span>{' '}
@@ -258,7 +267,7 @@ export function CycleDetailsPanel({ cycle, issues }: CycleDetailsPanelProps) {
                <div className="flex flex-col gap-0.5">
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                      <span className="size-2 rounded-[2px] bg-[#facc15]" />
-                     Started
+                     {t('Started')}
                   </div>
                   <div className="text-sm">
                      <span className="font-medium">{cycle.started}</span>{' '}
@@ -268,7 +277,7 @@ export function CycleDetailsPanel({ cycle, issues }: CycleDetailsPanelProps) {
                <div className="flex flex-col gap-0.5">
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                      <span className="size-2 rounded-[2px] bg-[#6771c5]" />
-                     Completed
+                     {t('Completed')}
                   </div>
                   <div className="text-sm">
                      <span className="font-medium">{cycle.completed}</span>{' '}
@@ -284,16 +293,16 @@ export function CycleDetailsPanel({ cycle, issues }: CycleDetailsPanelProps) {
             <Tabs defaultValue="assignees">
                <TabsList className="h-8 bg-transparent gap-1 p-0">
                   <TabsTrigger value="assignees" className="text-xs px-2.5 rounded-full">
-                     Assignees
+                     {t('Assignees')}
                   </TabsTrigger>
                   <TabsTrigger value="labels" className="text-xs px-2.5 rounded-full">
-                     Labels
+                     {t('Labels')}
                   </TabsTrigger>
                   <TabsTrigger value="priority" className="text-xs px-2.5 rounded-full">
-                     Priority
+                     {t('Priority')}
                   </TabsTrigger>
                   <TabsTrigger value="projects" className="text-xs px-2.5 rounded-full">
-                     Projects
+                     {t('Projects')}
                   </TabsTrigger>
                </TabsList>
                <TabsContent value="assignees">

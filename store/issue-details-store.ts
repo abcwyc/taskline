@@ -16,6 +16,7 @@ import {
    updateIssueComment,
 } from '@/lib/api/issue-details';
 import type { RelationEntry } from '@/mock-data/issue-details';
+import { tt } from '@/lib/i18n';
 import { useMeStore } from '@/store/me-store';
 import { useMembersStore } from '@/store/members-store';
 
@@ -29,6 +30,8 @@ interface IssueDetailsState {
 
    ensureDetail: (issue: Issue) => void;
    getDetail: (identifier: string) => IssueDetail | undefined;
+   /** Refetch in the background, keeping the current data visible until it resolves. */
+   refreshDetail: (identifier: string) => void;
    postComment: (identifier: string, text: string) => void;
    editComment: (identifier: string, commentId: string, text: string) => void;
    deleteComment: (identifier: string, commentId: string) => void;
@@ -68,6 +71,22 @@ export const useIssueDetailsStore = create<IssueDetailsState>((set, get) => ({
 
    getDetail: (identifier) => get().byIdentifier[identifier],
 
+   refreshDetail: (identifier) => {
+      if (get().loading[identifier]) return;
+      set((s) => ({ loading: { ...s.loading, [identifier]: true } }));
+      fetchIssueDetail(identifier)
+         .then((detail) =>
+            set((s) => ({
+               byIdentifier: { ...s.byIdentifier, [identifier]: detail },
+               loading: { ...s.loading, [identifier]: false },
+            }))
+         )
+         .catch((err) => {
+            set((s) => ({ loading: { ...s.loading, [identifier]: false } }));
+            console.error(err);
+         });
+   },
+
    invalidate: (identifier) =>
       set((s) => {
          if (!s.byIdentifier[identifier]) return {};
@@ -90,7 +109,7 @@ export const useIssueDetailsStore = create<IssueDetailsState>((set, get) => ({
                ? { byIdentifier: { ...s.byIdentifier, [identifier]: { ...d, subscribed: !next } } }
                : {};
          });
-         toast.error('Failed to update subscription');
+         toast.error(tt('Failed to update subscription'));
       });
    },
 
@@ -147,7 +166,7 @@ export const useIssueDetailsStore = create<IssueDetailsState>((set, get) => ({
                   },
                };
             });
-            toast.error('Failed to post comment');
+            toast.error(tt('Failed to post comment'));
             console.error(err);
          });
    },
@@ -171,7 +190,7 @@ export const useIssueDetailsStore = create<IssueDetailsState>((set, get) => ({
             })
          )
          .catch((err) => {
-            toast.error('Failed to edit comment');
+            toast.error(tt('Failed to edit comment'));
             console.error(err);
          });
    },
@@ -194,7 +213,7 @@ export const useIssueDetailsStore = create<IssueDetailsState>((set, get) => ({
       });
       deleteIssueComment(identifier, commentId).catch((err) => {
          set((s) => ({ byIdentifier: { ...s.byIdentifier, [identifier]: snapshot } }));
-         toast.error('Failed to delete comment');
+         toast.error(tt('Failed to delete comment'));
          console.error(err);
       });
    },
@@ -224,8 +243,8 @@ export const useIssueDetailsStore = create<IssueDetailsState>((set, get) => ({
       } catch (err) {
          toast.error(
             (err as Error).message.includes('already related')
-               ? 'These issues are already related'
-               : 'Failed to add relation'
+               ? tt('These issues are already related')
+               : tt('Failed to add relation')
          );
          console.error(err);
          return false;
@@ -256,7 +275,7 @@ export const useIssueDetailsStore = create<IssueDetailsState>((set, get) => ({
       });
       removeIssueRelation(identifier, relationId).catch((err) => {
          set((s) => ({ byIdentifier: { ...s.byIdentifier, [identifier]: snapshot } }));
-         toast.error('Failed to remove relation');
+         toast.error(tt('Failed to remove relation'));
          console.error(err);
       });
    },
@@ -276,7 +295,7 @@ export const useIssueDetailsStore = create<IssueDetailsState>((set, get) => ({
          });
          return true;
       } catch (err) {
-         toast.error('Failed to link the pull request');
+         toast.error(tt('Failed to link the pull request'));
          console.error(err);
          return false;
       }
@@ -297,7 +316,7 @@ export const useIssueDetailsStore = create<IssueDetailsState>((set, get) => ({
       });
       removeIssuePrLink(identifier, prLinkId).catch((err) => {
          set((s) => ({ byIdentifier: { ...s.byIdentifier, [identifier]: snapshot } }));
-         toast.error('Failed to unlink the pull request');
+         toast.error(tt('Failed to unlink the pull request'));
          console.error(err);
       });
    },

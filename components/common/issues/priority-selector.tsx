@@ -10,6 +10,7 @@ import {
    CommandList,
 } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { useLanguage } from '@/components/providers/language-provider';
 import { useIssuesStore } from '@/store/issues-store';
 import { priorities, Priority } from '@/mock-data/priorities';
 import { CheckIcon } from 'lucide-react';
@@ -21,6 +22,7 @@ interface PrioritySelectorProps {
 }
 
 export function PrioritySelector({ priority, issueId }: PrioritySelectorProps) {
+   const { t } = useLanguage();
    const id = useId();
    const [open, setOpen] = useState<boolean>(false);
    const [value, setValue] = useState<string>(priority.id);
@@ -70,9 +72,9 @@ export function PrioritySelector({ priority, issueId }: PrioritySelectorProps) {
                align="start"
             >
                <Command>
-                  <CommandInput placeholder="Set priority..." />
+                  <CommandInput placeholder={t('Set priority…')} />
                   <CommandList>
-                     <CommandEmpty>No priority found.</CommandEmpty>
+                     <CommandEmpty>{t('No priority found.')}</CommandEmpty>
                      <CommandGroup>
                         {priorities.map((item) => (
                            <CommandItem
@@ -83,7 +85,7 @@ export function PrioritySelector({ priority, issueId }: PrioritySelectorProps) {
                            >
                               <div className="flex items-center gap-2">
                                  <item.icon className="text-muted-foreground size-4" />
-                                 {item.name}
+                                 {t(item.name)}
                               </div>
                               {value === item.id && <CheckIcon size={16} className="ml-auto" />}
                               <span className="text-muted-foreground text-xs">

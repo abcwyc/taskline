@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useMemo } from 'react';
 
 import { Team } from '@/mock-data/teams';
+import { useLanguage } from '@/components/providers/language-provider';
 import { useCyclesStore } from '@/store/cycles-store';
 import { useTeamsDisplayStore } from '@/store/teams-display-store';
 import { Box, Check, Play } from 'lucide-react';
@@ -23,6 +24,7 @@ const CREATED_DATES = ['Mar 2024', 'Jun 2024', 'Sep 2024', 'Jan 2025', 'May 2025
 const UPDATED_DATES = ['Jul 12', 'Jul 20', 'Jul 27', 'Jul 30', 'Aug 1', 'Aug 3'];
 
 export default function TeamLine({ team }: TeamLineProps) {
+   const { t } = useLanguage();
    const { displayProperties } = useTeamsDisplayStore();
    const allCycles = useCyclesStore((s) => s.cycles);
    const cycles = useMemo(
@@ -51,7 +53,7 @@ export default function TeamLine({ team }: TeamLineProps) {
                {team.joined && (
                   <span className="inline-flex items-center gap-1 text-xs border rounded-md px-1.5 py-0.5 text-muted-foreground">
                      <Check className="size-3" />
-                     Joined
+                     {t('Joined')}
                   </span>
                )}
             </div>

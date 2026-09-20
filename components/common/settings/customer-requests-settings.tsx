@@ -13,6 +13,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { useLanguage } from '@/components/providers/language-provider';
 
 const formatDate = (iso: string) => {
    const date = parseISO(iso);
@@ -37,6 +38,7 @@ export default function CustomerRequestsSettings() {
    const [requests, setRequests] = useState<TriageItemDTO[] | null>(null);
    const [loadingError, setLoadingError] = useState<string | null>(null);
    const [decliningId, setDecliningId] = useState<string | null>(null);
+   const { t } = useLanguage();
 
    const refresh = useCallback(async () => {
       try {
@@ -56,10 +58,10 @@ export default function CustomerRequestsSettings() {
       setDecliningId(id);
       try {
          await declineAsk(id);
-         toast.success(`Request ${identifier} declined`);
+         toast.success(t('Request {name} declined').replace('{name}', identifier));
          await refresh();
       } catch (err) {
-         toast.error('Failed to decline request', {
+         toast.error(t('Failed to decline request'), {
             description: (err as Error).message,
          });
       } finally {
@@ -74,25 +76,25 @@ export default function CustomerRequestsSettings() {
    return (
       <div className="w-full overflow-y-auto h-full">
          <div className="max-w-5xl mx-auto px-6 py-10 pb-20">
-            <h1 className="text-2xl font-medium">Customer requests</h1>
+            <h1 className="text-2xl font-medium">{t('Customer requests')}</h1>
             <p className="text-sm text-muted-foreground mt-1">
-               Requests submitted by people in this workspace, waiting in team intake queues.
+               {t('Requests submitted by people in this workspace, waiting in team intake queues.')}
             </p>
 
             <div className="mt-6">
                {loadingError && <p className="text-sm text-destructive">{loadingError}</p>}
                {requests === null && !loadingError && (
-                  <p className="text-sm text-muted-foreground">Loading requests…</p>
+                  <p className="text-sm text-muted-foreground">{t('Loading requests…')}</p>
                )}
                {requests !== null && (
                   <div className="rounded-lg border bg-container">
                      <div className="flex items-center px-4 py-2 text-xs text-muted-foreground border-b">
-                        <span className="w-20 shrink-0">Request</span>
-                        <span className="flex-1 min-w-0">Title</span>
-                        <span className="hidden lg:block w-36 shrink-0">Reporter</span>
-                        <span className="hidden sm:block w-28 shrink-0">Team</span>
-                        <span className="hidden md:block w-28 shrink-0">Received</span>
-                        <span className="w-44 shrink-0 text-right">Actions</span>
+                        <span className="w-20 shrink-0">{t('Request')}</span>
+                        <span className="flex-1 min-w-0">{t('Title')}</span>
+                        <span className="hidden lg:block w-36 shrink-0">{t('Reporter')}</span>
+                        <span className="hidden sm:block w-28 shrink-0">{t('Team')}</span>
+                        <span className="hidden md:block w-28 shrink-0">{t('Received')}</span>
+                        <span className="w-44 shrink-0 text-right">{t('Actions')}</span>
                      </div>
                      {requests.map((request) => {
                         const team = teamOf(request.teamId);
@@ -137,7 +139,7 @@ export default function CustomerRequestsSettings() {
                                     <>
                                        <UserRound className="size-3.5 shrink-0" />
                                        <span className="truncate">
-                                          {request.reporterName ?? 'Unknown member'}
+                                          {request.reporterName ?? t('Unknown member')}
                                        </span>
                                     </>
                                  )}
@@ -159,7 +161,7 @@ export default function CustomerRequestsSettings() {
                                  <Button size="xxs" variant="ghost" asChild>
                                     <Link href={`/${orgId}/team/${request.teamId}/triage`}>
                                        <ExternalLink className="size-3.5" />
-                                       Open triage
+                                       {t('Open triage')}
                                     </Link>
                                  </Button>
                                  {canWrite && (
@@ -170,7 +172,7 @@ export default function CustomerRequestsSettings() {
                                        disabled={decliningId === request.id}
                                        onClick={() => decline(request.id, request.identifier)}
                                     >
-                                       {decliningId === request.id ? 'Declining…' : 'Decline'}
+                                       {decliningId === request.id ? t('Declining…') : t('Decline')}
                                     </Button>
                                  )}
                               </span>
@@ -179,7 +181,7 @@ export default function CustomerRequestsSettings() {
                      })}
                      {requests.length === 0 && (
                         <p className="text-sm text-muted-foreground px-4 py-6">
-                           No pending customer requests.
+                           {t('No pending customer requests.')}
                         </p>
                      )}
                   </div>

@@ -10,6 +10,7 @@ import {
    SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/components/providers/language-provider';
 import {
    TEAM_DISPLAY_PROPERTIES,
    TeamsOrdering,
@@ -25,13 +26,14 @@ const ORDERINGS: { value: TeamsOrdering; label: string }[] = [
 
 /** Linear-style Display popover for the Teams page. */
 export function TeamsDisplayOptions() {
+   const { t } = useLanguage();
    const { ordering, displayProperties, setOrdering, toggleDisplayProperty } =
       useTeamsDisplayStore();
 
    return (
       <Popover>
          <PopoverTrigger asChild>
-            <Button size="xs" variant="ghost" aria-label="Display options">
+            <Button size="xs" variant="ghost" aria-label={t('Display options')}>
                <SlidersHorizontal className="size-4" />
             </Button>
          </PopoverTrigger>
@@ -39,7 +41,7 @@ export function TeamsDisplayOptions() {
             <div className="flex items-center justify-between gap-3">
                <span className="flex items-center gap-2 text-sm">
                   <ArrowUpNarrowWide className="size-4 text-muted-foreground" />
-                  Ordering
+                  {t('Ordering')}
                </span>
                <Select
                   value={ordering}
@@ -51,7 +53,7 @@ export function TeamsDisplayOptions() {
                   <SelectContent>
                      {ORDERINGS.map((option) => (
                         <SelectItem key={option.value} value={option.value}>
-                           {option.label}
+                           {t(option.label)}
                         </SelectItem>
                      ))}
                   </SelectContent>
@@ -59,7 +61,7 @@ export function TeamsDisplayOptions() {
             </div>
 
             <div className="flex flex-col gap-2">
-               <span className="text-sm text-muted-foreground">Display properties</span>
+               <span className="text-sm text-muted-foreground">{t('Display properties')}</span>
                <div className="flex flex-wrap gap-1.5">
                   {TEAM_DISPLAY_PROPERTIES.map((property) => {
                      const enabled = displayProperties[property.key];
@@ -75,7 +77,7 @@ export function TeamsDisplayOptions() {
                                  : 'border-border/60 text-muted-foreground hover:text-foreground'
                            )}
                         >
-                           {property.label}
+                           {t(property.label)}
                         </button>
                      );
                   })}

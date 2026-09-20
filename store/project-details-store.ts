@@ -8,6 +8,7 @@ import type {
    ProjectUpdateHealth,
 } from '@/mock-data/project-details';
 import type { User } from '@/mock-data/users';
+import { tt } from '@/lib/i18n';
 import { useMeStore } from '@/store/me-store';
 import { useMembersStore } from '@/store/members-store';
 import {
@@ -160,7 +161,7 @@ export const useProjectDetailsStore = create<ProjectDetailsState>((set, get) => 
                   },
                };
             });
-            toast.error('Failed to post update');
+            toast.error(tt('Failed to post update'));
             console.error(err);
          });
    },
@@ -175,7 +176,7 @@ export const useProjectDetailsStore = create<ProjectDetailsState>((set, get) => 
       }));
       apiDeleteUpdate(projectId, updateId).catch((err) => {
          set((s) => ({ detailsById: { ...s.detailsById, [projectId]: current } }));
-         toast.error('Failed to delete update');
+         toast.error(tt('Failed to delete update'));
          console.error(err);
       });
    },
@@ -192,7 +193,7 @@ export const useProjectDetailsStore = create<ProjectDetailsState>((set, get) => 
 
       apiSetMilestone(projectId, milestoneId, completed).catch((err) => {
          set((s) => ({ detailsById: { ...s.detailsById, [projectId]: current } }));
-         toast.error('Failed to update milestone');
+         toast.error(tt('Failed to update milestone'));
          console.error(err);
       });
    },
@@ -212,7 +213,7 @@ export const useProjectDetailsStore = create<ProjectDetailsState>((set, get) => 
             })
          )
          .catch((err) => {
-            toast.error('Failed to add milestone');
+            toast.error(tt('Failed to add milestone'));
             console.error(err);
          });
    },
@@ -220,7 +221,7 @@ export const useProjectDetailsStore = create<ProjectDetailsState>((set, get) => 
    renameMilestone: (projectId, milestoneId, name) => {
       patchMilestone(get, set, projectId, milestoneId, { name });
       apiUpdateMilestone(projectId, milestoneId, { name }).catch((err) => {
-         toast.error('Failed to rename milestone');
+         toast.error(tt('Failed to rename milestone'));
          console.error(err);
       });
    },
@@ -230,7 +231,7 @@ export const useProjectDetailsStore = create<ProjectDetailsState>((set, get) => 
          ...(targetDate ? { targetDate } : {}),
       });
       apiUpdateMilestone(projectId, milestoneId, { targetDate }).catch((err) => {
-         toast.error('Failed to update the milestone date');
+         toast.error(tt('Failed to update the milestone date'));
          console.error(err);
       });
    },
@@ -248,7 +249,7 @@ export const useProjectDetailsStore = create<ProjectDetailsState>((set, get) => 
       }));
       apiDeleteMilestone(projectId, milestoneId).catch((err) => {
          set((s) => ({ detailsById: { ...s.detailsById, [projectId]: current } }));
-         toast.error('Failed to delete milestone');
+         toast.error(tt('Failed to delete milestone'));
          console.error(err);
       });
    },

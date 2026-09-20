@@ -1,8 +1,9 @@
 'use client';
 
+import { useLanguage } from '@/components/providers/language-provider';
+import { formatAppDate } from '@/lib/i18n';
 import { Issue } from '@/mock-data/issues';
 import { useDisplaySettingsStore } from '@/store/display-settings-store';
-import { format } from 'date-fns';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { motion } from 'motion/react';
@@ -24,6 +25,7 @@ type IssueGridProps = {
 
 // Custom DragLayer component to render the drag preview
 function IssueDragPreview({ issue }: { issue: Issue }) {
+   const { locale } = useLanguage();
    return (
       <div className="w-full p-3 bg-background rounded-md border border-border/50 overflow-hidden">
          <div className="flex items-center justify-between mb-2">
@@ -43,7 +45,7 @@ function IssueDragPreview({ issue }: { issue: Issue }) {
 
          <div className="flex items-center justify-between mt-auto pt-2">
             <span className="text-xs text-muted-foreground">
-               {format(new Date(issue.createdAt), 'MMM dd')}
+               {formatAppDate(locale, new Date(issue.createdAt), 'MMM dd')}
             </span>
             <AssigneeUser user={issue.assignee} />
          </div>
@@ -78,6 +80,7 @@ export function CustomDragLayer() {
 }
 
 export function IssueGrid({ issue }: IssueGridProps) {
+   const { locale } = useLanguage();
    const ref = useRef<HTMLDivElement>(null);
    const { orgId } = useParams<{ orgId: string }>();
    const { displayProperties } = useDisplaySettingsStore();
@@ -143,7 +146,7 @@ export function IssueGrid({ issue }: IssueGridProps) {
                <div className="flex items-center justify-between mt-auto pt-2">
                   {displayProperties.created ? (
                      <span className="text-xs text-muted-foreground">
-                        {format(new Date(issue.createdAt), 'MMM dd')}
+                        {formatAppDate(locale, new Date(issue.createdAt), 'MMM dd')}
                      </span>
                   ) : (
                      <span />

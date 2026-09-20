@@ -1,6 +1,7 @@
 import type { User } from '@/mock-data/users';
 import { create } from 'zustand';
 import { toast } from 'sonner';
+import { tt } from '@/lib/i18n';
 
 import {
    deleteMember as apiDeleteMember,
@@ -44,7 +45,7 @@ export const useMembersStore = create<MembersState>((set, get) => ({
          set({ members, hydrated: true, isLoading: false });
       } catch (err) {
          set({ isLoading: false, error: (err as Error).message });
-         toast.error('Failed to load members');
+         toast.error(tt('Failed to load members'));
          throw err;
       }
    },
@@ -68,7 +69,7 @@ export const useMembersStore = create<MembersState>((set, get) => ({
          })
          .catch((err) => {
             set({ members: get().members.map((m) => (m.id === id ? snapshot : m)) });
-            toast.error('Failed to save changes');
+            toast.error(tt('Failed to save changes'));
             console.error(err);
          });
    },
@@ -78,7 +79,7 @@ export const useMembersStore = create<MembersState>((set, get) => ({
       set({ members: snapshot.filter((member) => member.id !== id) });
       apiDeleteMember(id).catch((err) => {
          set({ members: snapshot });
-         toast.error('Failed to remove member');
+         toast.error(tt('Failed to remove member'));
          console.error(err);
       });
    },

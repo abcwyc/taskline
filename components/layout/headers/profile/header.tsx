@@ -10,21 +10,23 @@ import { cn } from '@/lib/utils';
 import { useIssuesStore } from '@/store/issues-store';
 import { useRightPanelStore } from '@/store/right-panel-store';
 import { useSearchStore } from '@/store/search-store';
-import { BarChart3, ChevronRight, PanelRight, SearchIcon, Star } from 'lucide-react';
+import { BarChart3, ChevronRight, PanelRight, SearchIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { parseAsString, useQueryState } from 'nuqs';
 import { useEffect, useRef } from 'react';
 import { DisplayOptions } from '../display-options';
 import Notifications from '../issues/notifications';
+import { useLanguage } from '@/components/providers/language-provider';
 
 const PROFILE_TABS = [
-   { label: 'Assigned', value: 'assigned' },
-   { label: 'Created', value: 'created' },
+   { label: 'Assigned to me', value: 'assigned' },
+   { label: 'Created by me', value: 'created' },
 ];
 
 function ProfileTabs() {
    const [activeTab, setActiveTab] = useQueryState('tab', parseAsString.withDefault('assigned'));
+   const { t } = useLanguage();
 
    return (
       <div className="flex items-center gap-1">
@@ -43,7 +45,7 @@ function ProfileTabs() {
                         : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-accent/50'
                   )}
                >
-                  {tab.label}
+                  {t(tab.label)}
                </button>
             );
          })}
@@ -56,6 +58,7 @@ function HeaderSearch() {
       useSearchStore();
    const searchInputRef = useRef<HTMLInputElement>(null);
    const searchContainerRef = useRef<HTMLDivElement>(null);
+   const { t } = useLanguage();
 
    useEffect(() => {
       if (isSearchOpen && searchInputRef.current) {
@@ -87,7 +90,7 @@ function HeaderSearch() {
                ref={searchInputRef}
                value={searchQuery}
                onChange={(event) => setSearchQuery(event.target.value)}
-               placeholder="Search issues..."
+               placeholder={t('Search issues...')}
                className="pl-8 h-7 text-sm"
                onKeyDown={(event) => {
                   if (event.key === 'Escape') {
@@ -106,7 +109,7 @@ function HeaderSearch() {
             size="icon"
             onClick={toggleSearch}
             className="h-8 w-8"
-            aria-label="Search"
+            aria-label={t('Search')}
          >
             <SearchIcon className="h-4 w-4" />
          </Button>
@@ -120,6 +123,7 @@ export default function Header({ member }: { member: User }) {
    const [activeTab] = useQueryState('tab', parseAsString.withDefault('assigned'));
    const { issues } = useIssuesStore();
    const { openPanel, togglePanel } = useRightPanelStore();
+   const { t } = useLanguage();
 
    const count =
       activeTab === 'created'
@@ -136,7 +140,7 @@ export default function Header({ member }: { member: User }) {
                      href={`/${orgId}/members`}
                      className="text-muted-foreground hover:text-foreground transition-colors"
                   >
-                     Members
+                     {t('Members')}
                   </Link>
                   <ChevronRight className="size-3.5 text-muted-foreground shrink-0" />
                   <Avatar className="size-5 shrink-0">
@@ -154,7 +158,7 @@ export default function Header({ member }: { member: User }) {
             <div className="flex items-center gap-3">
                <ProfileTabs />
                <span className="text-sm text-muted-foreground hidden sm:inline">
-                  {count} {count === 1 ? 'issue' : 'issues'}
+                  {count} {count === 1 ? t('issue') : t('issues')}
                </span>
             </div>
             <div className="flex items-center gap-1">
@@ -163,7 +167,7 @@ export default function Header({ member }: { member: User }) {
                   size="xs"
                   variant={openPanel === 'insights' ? 'secondary' : 'ghost'}
                   onClick={() => togglePanel('insights')}
-                  aria-label="Toggle insights panel"
+                  aria-label={t('Toggle insights panel')}
                >
                   <BarChart3 className="size-4" />
                </Button>
@@ -173,7 +177,7 @@ export default function Header({ member }: { member: User }) {
                      openPanel !== 'hidden' && openPanel !== 'insights' ? 'secondary' : 'ghost'
                   }
                   onClick={() => togglePanel('hidden')}
-                  aria-label="Toggle profile panel"
+                  aria-label={t('Toggle profile panel')}
                >
                   <PanelRight className="size-4" />
                </Button>

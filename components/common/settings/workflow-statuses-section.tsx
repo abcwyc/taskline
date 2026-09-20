@@ -49,6 +49,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Plus } from 'lucide-react';
 import { apiErrorMessage, SettingsCard, SettingsSection } from './shared';
+import { useLanguage } from '@/components/providers/language-provider';
 
 const STATUS_CATEGORIES = [
    'triage',
@@ -113,6 +114,7 @@ function WorkflowStateDialog({
    editing?: WorkflowStateDTO;
    onSaved: () => Promise<void>;
 }) {
+   const { t } = useLanguage();
    const [name, setName] = useState('');
    const [color, setColor] = useState(DEFAULT_STATUS_COLOR);
    const [category, setCategory] = useState<string>('started');
@@ -136,7 +138,7 @@ function WorkflowStateDialog({
          await onSaved();
          onOpenChange(false);
       } catch (err) {
-         toast.error(apiErrorMessage(err, 'Failed to save status'));
+         toast.error(apiErrorMessage(err, t('Failed to save status')));
          console.error(err);
       }
    };
@@ -145,22 +147,22 @@ function WorkflowStateDialog({
       <Dialog open={open} onOpenChange={onOpenChange}>
          <DialogContent className="sm:max-w-sm">
             <DialogHeader>
-               <DialogTitle>{editing ? 'Edit status' : 'New status'}</DialogTitle>
+               <DialogTitle>{editing ? t('Edit status') : t('New status')}</DialogTitle>
             </DialogHeader>
             <div className="flex flex-col gap-4 py-2">
                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="status-name">Name</Label>
+                  <Label htmlFor="status-name">{t('Name')}</Label>
                   <Input
                      id="status-name"
                      autoFocus
                      value={name}
                      onChange={(e) => setName(e.target.value)}
                      onKeyDown={(e) => e.key === 'Enter' && submit()}
-                     placeholder="In review"
+                     placeholder={t('In review')}
                   />
                </div>
                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="status-color">Color</Label>
+                  <Label htmlFor="status-color">{t('Color')}</Label>
                   <Input
                      id="status-color"
                      type="color"
@@ -170,7 +172,7 @@ function WorkflowStateDialog({
                   />
                </div>
                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="status-category">Category</Label>
+                  <Label htmlFor="status-category">{t('Category')}</Label>
                   <Select value={category} onValueChange={setCategory}>
                      <SelectTrigger id="status-category">
                         <SelectValue />
@@ -178,14 +180,16 @@ function WorkflowStateDialog({
                      <SelectContent>
                         {STATUS_CATEGORIES.map((c) => (
                            <SelectItem key={c} value={c}>
-                              <span className="capitalize">{c}</span>
+                              <span className="capitalize">
+                                 {t(c.charAt(0).toUpperCase() + c.slice(1))}
+                              </span>
                            </SelectItem>
                         ))}
                      </SelectContent>
                   </Select>
                </div>
                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="status-icon">Icon</Label>
+                  <Label htmlFor="status-icon">{t('Icon')}</Label>
                   <Select value={iconKey} onValueChange={setIconKey}>
                      <SelectTrigger id="status-icon">
                         <SelectValue />
@@ -193,7 +197,7 @@ function WorkflowStateDialog({
                      <SelectContent>
                         {STATUS_ICON_OPTIONS.map((option) => (
                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
+                              {t(option.label)}
                            </SelectItem>
                         ))}
                      </SelectContent>
@@ -202,10 +206,10 @@ function WorkflowStateDialog({
             </div>
             <DialogFooter>
                <Button variant="ghost" onClick={() => onOpenChange(false)}>
-                  Cancel
+                  {t('Cancel')}
                </Button>
                <Button onClick={submit} disabled={!name.trim()}>
-                  {editing ? 'Save' : 'Create'}
+                  {editing ? t('Save') : t('Create')}
                </Button>
             </DialogFooter>
          </DialogContent>
@@ -226,6 +230,7 @@ export function WorkflowStatusesSection({
    title?: string;
    description?: string;
 }) {
+   const { t } = useLanguage();
    const [states, setStates] = useState<WorkflowStateDTO[]>([]);
    const [dialogOpen, setDialogOpen] = useState(false);
    const [editing, setEditing] = useState<WorkflowStateDTO | undefined>(undefined);
@@ -259,19 +264,19 @@ export function WorkflowStatusesSection({
          await deleteWorkflowState(target.id);
          await refresh();
       } catch (err) {
-         toast.error(apiErrorMessage(err, 'Failed to delete status'));
+         toast.error(apiErrorMessage(err, t('Failed to delete status')));
          console.error(err);
       }
    };
 
    return (
       <SettingsSection
-         title={title}
-         description={description}
+         title={t(title)}
+         description={t(description)}
          action={
             <Button size="xs" onClick={openCreate}>
                <Plus className="size-4 md:mr-1" />
-               Add status
+               {t('Add status')}
             </Button>
          }
       >
@@ -283,31 +288,31 @@ export function WorkflowStatusesSection({
                   </span>
                   <div className="flex-1 min-w-0">
                      <div className="text-sm font-medium flex items-center gap-2">
-                        <span className="truncate">{state.name}</span>
+                        <span className="truncate">{t(state.name)}</span>
                         {state.inUse && (
                            <Badge variant="secondary" className="px-1.5 py-0 text-[10px]">
-                              In use
+                              {t('In use')}
                            </Badge>
                         )}
                      </div>
                      <div className="text-xs text-muted-foreground mt-0.5 capitalize">
-                        {state.category}
+                        {t(state.category.charAt(0).toUpperCase() + state.category.slice(1))}
                      </div>
                   </div>
                   <div className="shrink-0 flex items-center gap-1">
                      <Button size="xs" variant="ghost" onClick={() => openEdit(state)}>
-                        Edit
+                        {t('Edit')}
                      </Button>
                      {state.inUse ? (
                         <Tooltip>
                            <TooltipTrigger asChild>
                               <span className="inline-flex">
                                  <Button size="xs" variant="ghost" disabled>
-                                    Delete
+                                    {t('Delete')}
                                  </Button>
                               </span>
                            </TooltipTrigger>
-                           <TooltipContent>In use by issues or projects</TooltipContent>
+                           <TooltipContent>{t('In use by issues or projects')}</TooltipContent>
                         </Tooltip>
                      ) : (
                         <Button
@@ -316,14 +321,14 @@ export function WorkflowStatusesSection({
                            className="text-destructive"
                            onClick={() => setDeleting(state)}
                         >
-                           Delete
+                           {t('Delete')}
                         </Button>
                      )}
                   </div>
                </div>
             ))}
             {states.length === 0 && (
-               <div className="px-4 py-3 text-sm text-muted-foreground">No statuses</div>
+               <div className="px-4 py-3 text-sm text-muted-foreground">{t('No statuses')}</div>
             )}
          </SettingsCard>
 
@@ -337,14 +342,16 @@ export function WorkflowStatusesSection({
          <AlertDialog open={!!deleting} onOpenChange={(v) => !v && setDeleting(null)}>
             <AlertDialogContent>
                <AlertDialogHeader>
-                  <AlertDialogTitle>Delete status</AlertDialogTitle>
+                  <AlertDialogTitle>{t('Delete status')}</AlertDialogTitle>
                   <AlertDialogDescription>
-                     {`Delete status "${deleting?.name}"? Issues and projects using it must be moved to another status first.`}
+                     {t(
+                        'Delete status "{name}"? Issues and projects using it must be moved to another status first.'
+                     ).replace('{name}', deleting?.name ?? '')}
                   </AlertDialogDescription>
                </AlertDialogHeader>
                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+                  <AlertDialogCancel>{t('Cancel')}</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDelete}>{t('Delete')}</AlertDialogAction>
                </AlertDialogFooter>
             </AlertDialogContent>
          </AlertDialog>

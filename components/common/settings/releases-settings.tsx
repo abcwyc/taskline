@@ -2,14 +2,16 @@
 
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { format, parseISO } from 'date-fns';
+import { parseISO } from 'date-fns';
 import { Check } from 'lucide-react';
 import { useEffect, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import type { ProjectMilestone } from '@/mock-data/project-details';
 import { useProjectDetailsStore } from '@/store/project-details-store';
 import { useProjectsStore } from '@/store/projects-store';
+import { formatAppDate } from '@/lib/i18n';
 import { SettingsCard, SettingsSection, SettingsStatCard } from './shared';
+import { useLanguage } from '@/components/providers/language-provider';
 
 interface ReleaseRow {
    projectId: string;
@@ -19,6 +21,7 @@ interface ReleaseRow {
 
 /** Workspace "Releases" settings: every project milestone on one timeline. */
 export default function ReleasesSettings() {
+   const { locale, t } = useLanguage();
    const { orgId } = useParams<{ orgId: string }>();
    const projects = useProjectsStore((s) => s.projects);
    const detailsById = useProjectDetailsStore((s) => s.detailsById);
@@ -62,14 +65,14 @@ export default function ReleasesSettings() {
          })
          .map(([date, items]) => ({
             date,
-            label: date ? format(parseISO(date), 'MMM d, yyyy') : 'No date',
+            label: date ? formatAppDate(locale, parseISO(date), 'MMM d, yyyy') : t('No date'),
             items: items.sort(
                (a, b) =>
                   a.projectName.localeCompare(b.projectName) ||
                   a.milestone.name.localeCompare(b.milestone.name)
             ),
          }));
-   }, [rows]);
+   }, [rows, locale, t]);
 
    const shipped = rows.filter((r) => r.milestone.completed).length;
    const allLoaded = projects.length > 0 && loadedProjects.length === projects.length;
@@ -77,15 +80,15 @@ export default function ReleasesSettings() {
    return (
       <div className="w-full overflow-y-auto h-full">
          <div className="max-w-4xl mx-auto px-6 py-10 pb-20">
-            <h1 className="text-2xl font-medium">Releases</h1>
+            <h1 className="text-2xl font-medium">{t('Releases')}</h1>
             <p className="text-sm text-muted-foreground mt-1">
-               Milestones across every project in this workspace, grouped by target date.
+               {t('Milestones across every project in this workspace, grouped by target date.')}
             </p>
 
             <div className="grid grid-cols-3 gap-3 mt-8">
-               <SettingsStatCard label="Total milestones" value={rows.length} />
-               <SettingsStatCard label="Shipped" value={shipped} />
-               <SettingsStatCard label="Upcoming" value={rows.length - shipped} />
+               <SettingsStatCard label={t('Total milestones')} value={rows.length} />
+               <SettingsStatCard label={t('Shipped')} value={shipped} />
+               <SettingsStatCard label={t('Upcoming')} value={rows.length - shipped} />
             </div>
 
             <div className="flex flex-col gap-8 mt-10">
@@ -110,8 +113,8 @@ export default function ReleasesSettings() {
                                  )}
                                  aria-label={
                                     milestone.completed
-                                       ? 'Mark milestone as not done'
-                                       : 'Mark milestone as done'
+                                       ? t('Mark milestone as not done')
+                                       : t('Mark milestone as done')
                                  }
                               >
                                  {milestone.completed && <Check className="size-2.5 text-white" />}
@@ -139,8 +142,8 @@ export default function ReleasesSettings() {
                {groups.length === 0 && (
                   <p className="text-sm text-muted-foreground">
                      {allLoaded
-                        ? 'No releases yet. Add milestones to a project to see them here.'
-                        : 'Loading milestones…'}
+                        ? t('No releases yet. Add milestones to a project to see them here.')
+                        : t('Loading milestones…')}
                   </p>
                )}
             </div>

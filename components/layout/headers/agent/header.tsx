@@ -11,10 +11,12 @@ import {
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useAgentChatStore } from '@/store/agent-chat-store';
 import { ChevronDown, MessageSquare, Plus } from 'lucide-react';
+import { useLanguage } from '@/components/providers/language-provider';
 
 export default function Header() {
    const { chats, activeChatId, setActiveChat, startNewChat } = useAgentChatStore();
    const activeChat = chats.find((chat) => chat.id === activeChatId);
+   const { t } = useLanguage();
 
    return (
       <div className="w-full flex justify-between items-center border-b py-1.5 px-6 h-10">
@@ -22,13 +24,13 @@ export default function Header() {
             <SidebarTrigger className="" />
             <DropdownMenu>
                <DropdownMenuTrigger className="flex items-center gap-1 text-sm font-medium outline-none hover:text-foreground min-w-0">
-                  <span className="truncate max-w-64">{activeChat?.title ?? 'New chat'}</span>
+                  <span className="truncate max-w-64">{activeChat?.title ?? t('New chat')}</span>
                   <ChevronDown className="size-3.5 text-muted-foreground shrink-0" />
                </DropdownMenuTrigger>
                <DropdownMenuContent align="start" className="w-64">
                   <DropdownMenuItem onClick={startNewChat}>
                      <Plus className="size-4" />
-                     New chat
+                     {t('New chat')}
                   </DropdownMenuItem>
                   {chats.length > 0 && <DropdownMenuSeparator />}
                   {chats.map((chat) => (
@@ -40,7 +42,12 @@ export default function Header() {
                </DropdownMenuContent>
             </DropdownMenu>
          </div>
-         <Button size="xs" variant="ghost" onClick={startNewChat} aria-label="Start a new chat">
+         <Button
+            size="xs"
+            variant="ghost"
+            onClick={startNewChat}
+            aria-label={t('Start a new chat')}
+         >
             <Plus className="size-4" />
          </Button>
       </div>

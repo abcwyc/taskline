@@ -1,7 +1,10 @@
+'use client';
+import { useLanguage } from '@/components/providers/language-provider';
 import { Badge } from '@/components/ui/badge';
 import { LabelInterface } from '@/mock-data/labels';
 
 export function LabelBadge({ label }: { label: LabelInterface[] }) {
+   const { t } = useLanguage();
    return (
       <>
          {label.map((l) => (
@@ -15,7 +18,7 @@ export function LabelBadge({ label }: { label: LabelInterface[] }) {
                   style={{ backgroundColor: l.color }}
                   aria-hidden="true"
                ></span>
-               {l.name}
+               {t(l.name)}
             </Badge>
          ))}
       </>
