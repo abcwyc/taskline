@@ -5,7 +5,7 @@ import MainLayout from '@/components/layout/main-layout';
 export default function IntegrationsSettingsPage() {
    return (
       <MainLayout header={<Header />} headersNumber={1}>
-         <Integrations />
+         <Integrations githubConfigured={Boolean(process.env.GITHUB_WEBHOOK_SECRET)} />
       </MainLayout>
    );
 }

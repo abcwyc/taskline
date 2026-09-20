@@ -14,6 +14,14 @@ const healthId = z.enum(['no-update', 'off-track', 'on-track', 'at-risk']);
 
 const RICH = z.string().max(100_000); // plain-text form of a rich field
 const idList = z.array(zId).max(100);
+/** Story points: 0–1000, one decimal step (0.5) — null clears the estimate. */
+const estimate = z
+   .number()
+   .min(0)
+   .max(1000)
+   .refine((v) => Math.round(v * 2) === v * 2, {
+      message: 'estimate must be a multiple of 0.5',
+   });
 
 export const issueCreate = z
    .object({
@@ -27,6 +35,7 @@ export const issueCreate = z
       cycleId: zId.optional(),
       dueDate: zDate,
       parentId: zId.optional(),
+      estimate: estimate.nullable().optional(),
    })
    .strict();
 
@@ -42,6 +51,7 @@ export const issueUpdate = z
       cycleId: z.string().max(64).optional(),
       dueDate: zDate,
       rank: z.string().min(1).max(64).optional(),
+      estimate: estimate.nullable().optional(),
    })
    .strict();
 

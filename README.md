@@ -15,10 +15,19 @@ putting it on a network.
 - Credentials authentication (with optional TOTP two-factor and passkeys),
   invite-only registration, and ADMIN/MEMBER/GUEST authorization
 - Issue, project, initiative, cycle, team, member, label, view, and triage flows
-  — including comment edit/delete, issue relations, PR links, custom workflow
-  statuses, milestones, and issue templates
+  — including comment edit/delete, issue relations, PR links, estimates,
+  custom workflow statuses, milestones, and issue templates
 - Comments, activity, subscriptions, in-app notifications (delete/snooze,
   per-user preferences, optional SMTP email delivery), and attachments
+- Live updates: an SSE stream (`/api/events`) pings clients on issue and
+  comment changes so open workspaces re-hydrate within a second, with the
+  polling interval kept as a fallback
+- Global keyboard shortcuts: `c` (new issue), `?` (shortcut help) and
+  `g`-prefixed navigation chords, mirroring the command palette hints
+- Inbound GitHub webhook (`/api/integrations/github/webhook`,
+  `GITHUB_WEBHOOK_SECRET`): pull requests are linked to issues mentioned by
+  identifier in the title, body or branch name, and merged PRs optionally move
+  the issue to a Done state (workspace setting, on by default)
 - Local code reviews: paste a unified diff, discuss per file, approve or
   request changes
 - Workspace agent (AI chat with persisted conversations) backed by any
@@ -32,7 +41,8 @@ putting it on a network.
   backup/restore helpers, cycle snapshots, and basic abuse throttling
 
 Reviews have no VCS integration (paste-a-diff local flow), and third-party SaaS
-integrations/connected accounts intentionally do not ship in this build.
+integrations beyond the inbound GitHub webhook intentionally do not ship in
+this build.
 
 ## Local development
 

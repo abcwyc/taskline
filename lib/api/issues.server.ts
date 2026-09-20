@@ -3,6 +3,7 @@ import { PublicError } from './http';
 import { Prisma, Priority } from '@prisma/client';
 
 import { db } from '@/lib/db';
+import { realtimeBus } from '@/lib/realtime.server';
 import { LexoRank } from '@/lib/utils';
 import { purgeAttachmentBlobs } from './attachments.server';
 import { onIssueUpdated } from './issue-events.server';
@@ -59,6 +60,7 @@ export function serializeIssue(row: IssueRow): IssueDTO {
       parentId: row.parentId,
       rank: row.rank,
       dueDate: row.dueDate ? row.dueDate.toISOString().slice(0, 10) : null,
+      estimate: row.estimate,
       createdAt: row.createdAt.toISOString(),
    };
 }
@@ -229,6 +231,7 @@ export async function createIssue(
             parent: parent ? { connect: { id: parent.id } } : undefined,
             cycle: connectOrUndef(body.cycleId),
             dueDate: body.dueDate ? new Date(body.dueDate) : null,
+            estimate: body.estimate ?? null,
             rank,
             activity: actorId
                ? { create: { actor: { connect: { id: actorId } }, verb: 'created' } }
@@ -243,6 +246,7 @@ export async function createIssue(
          },
          include: issueInclude,
       });
+      realtimeBus.publish(orgId, { resource: 'issue', action: 'created', id: created.id });
       return serializeIssue(created);
    });
 }
@@ -284,6 +288,7 @@ export async function updateIssue(
       data.cycle = body.cycleId ? { connect: { id: body.cycleId } } : { disconnect: true };
    }
    if (body.dueDate !== undefined) data.dueDate = body.dueDate ? new Date(body.dueDate) : null;
+   if (body.estimate !== undefined) data.estimate = body.estimate;
    if (body.rank !== undefined) data.rank = body.rank;
    const labels = labelWrite(body.labelIds);
    if (labels) data.labels = labels;
@@ -313,6 +318,7 @@ export async function updateIssue(
             projectId: before.projectId,
             title: before.title,
             dueDate: before.dueDate,
+            estimate: before.estimate,
             labelIds: before.labelIds,
          },
          patch: {
@@ -323,11 +329,13 @@ export async function updateIssue(
             title: body.title,
             description: body.description,
             dueDate: body.dueDate,
+            estimate: body.estimate,
             labelIds: body.labelIds,
          },
       });
       return updated;
    });
+   realtimeBus.publish(orgId, { resource: 'issue', action: 'updated', id: existing.id });
    return serializeIssue(row);
 }
 
@@ -339,5 +347,6 @@ export async function deleteIssue(orgId: string, id: string): Promise<boolean> {
    if (!existing) return false;
    await purgeAttachmentBlobs([existing.id]);
    await db.issue.delete({ where: { id: existing.id } });
+   realtimeBus.publish(orgId, { resource: 'issue', action: 'deleted', id: existing.id });
    return true;
 }

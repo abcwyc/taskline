@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useLanguage } from '@/components/providers/language-provider';
+import { GithubWebhookCard } from './github-webhook-card';
 import { INTEGRATION_LOGOS } from './integration-logos';
 import { INTEGRATION_CATEGORIES, INTEGRATIONS, Integration } from './integrations-data';
 
@@ -100,11 +101,11 @@ function CategorySection({ label, items }: { label: string; items: Integration[]
 }
 
 /**
- * Workspace "Integrations" settings. Circle runs self-hosted and does not
- * bundle third-party SaaS integrations in this build, so this page keeps the
- * catalog purely as a browsable reference — nothing here can be connected.
+ * Workspace "Integrations" settings. The GitHub webhook ships live (inbound
+ * PR events); the rest of the catalog is a browsable reference only — nothing
+ * else can be connected in this build.
  */
-export default function Integrations() {
+export default function Integrations({ githubConfigured = false }: { githubConfigured?: boolean }) {
    const [query, setQuery] = useState('');
    const { t } = useLanguage();
 
@@ -125,10 +126,12 @@ export default function Integrations() {
                <h1 className="text-2xl font-medium">{t('Integrations')}</h1>
                <p className="text-sm text-muted-foreground">
                   {t(
-                     'Circle runs self-hosted and does not bundle third-party SaaS integrations in this build.'
+                     'Circle runs self-hosted — connect GitHub below; other third-party SaaS integrations are not bundled in this build.'
                   )}
                </p>
             </div>
+
+            <GithubWebhookCard configured={githubConfigured} />
 
             <div className="rounded-md border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-sm text-amber-700 dark:text-amber-400">
                {t(

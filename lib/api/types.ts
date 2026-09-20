@@ -23,6 +23,7 @@ export interface IssueDTO {
    parentId: string | null;
    rank: string;
    dueDate: string | null; // ISO date
+   estimate: number | null; // story points; null = no estimate
    createdAt: string; // ISO datetime
 }
 
@@ -40,6 +41,7 @@ export type IssueCreateBody = Partial<
       | 'cycleId'
       | 'dueDate'
       | 'parentId'
+      | 'estimate'
    >
 >;
 
@@ -57,6 +59,7 @@ export type IssueUpdateBody = Partial<
       | 'cycleId'
       | 'dueDate'
       | 'rank'
+      | 'estimate'
    >
 >;
 

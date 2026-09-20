@@ -3,6 +3,7 @@ import { PublicError } from './http';
 import { Prisma, RelationType } from '@prisma/client';
 
 import { db } from '@/lib/db';
+import { realtimeBus } from '@/lib/realtime.server';
 import { onIssueCommented } from './issue-events.server';
 import { readBlocks, storeBlocks, textToBlocks } from './rich-text';
 import {
@@ -193,6 +194,7 @@ export async function addIssueComment(
       });
       return comment;
    });
+   realtimeBus.publish(orgId, { resource: 'comment', action: 'created', id: issue.id });
    return serializeComment(c as DetailRow['comments'][number]);
 }
 

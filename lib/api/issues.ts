@@ -55,6 +55,7 @@ export function dtoToIssue(dto: IssueDTO): Issue {
       subissues: [],
       rank: dto.rank,
       createdAt: dto.createdAt,
+      estimate: dto.estimate ?? undefined,
       ...(dto.dueDate ? { dueDate: dto.dueDate } : {}),
    };
 }
@@ -71,6 +72,7 @@ export function issueToCreateBody(issue: Issue, parentId?: string): IssueCreateB
       projectId: issue.project?.id ?? null,
       cycleId: issue.cycleId || undefined,
       dueDate: issue.dueDate ?? undefined,
+      estimate: issue.estimate ?? null,
       ...(parentId ? { parentId } : {}),
    };
 }
@@ -87,6 +89,7 @@ export function issuePatchToBody(patch: Partial<Issue>): IssueUpdateBody {
    if ('project' in patch) body.projectId = patch.project ? patch.project.id : null;
    if ('cycleId' in patch) body.cycleId = patch.cycleId ?? '';
    if ('dueDate' in patch) body.dueDate = patch.dueDate ?? null;
+   if ('estimate' in patch) body.estimate = patch.estimate ?? null;
    if ('rank' in patch) body.rank = patch.rank;
    return body;
 }

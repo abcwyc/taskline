@@ -14,7 +14,8 @@ export type DisplayPropertyKey =
    | 'project'
    | 'dueDate'
    | 'created'
-   | 'cycle';
+   | 'cycle'
+   | 'estimate';
 
 export const DISPLAY_PROPERTIES: { key: DisplayPropertyKey; label: string }[] = [
    { key: 'id', label: 'ID' },
@@ -26,6 +27,7 @@ export const DISPLAY_PROPERTIES: { key: DisplayPropertyKey; label: string }[] = 
    { key: 'dueDate', label: 'Due date' },
    { key: 'created', label: 'Created' },
    { key: 'cycle', label: 'Cycle' },
+   { key: 'estimate', label: 'Estimate' },
 ];
 
 const DEFAULT_DISPLAY_PROPERTIES: Record<DisplayPropertyKey, boolean> = {
@@ -38,6 +40,7 @@ const DEFAULT_DISPLAY_PROPERTIES: Record<DisplayPropertyKey, boolean> = {
    dueDate: false,
    created: true,
    cycle: false,
+   estimate: true,
 };
 
 interface DisplaySettingsState {

@@ -37,7 +37,7 @@ export function IssueLine({ issue, layoutId = false }: { issue: Issue; layoutId?
                      <PrioritySelector priority={issue.priority} issueId={issue.id} />
                   )}
                   {displayProperties.id && (
-                     <span className="text-sm hidden sm:inline-block text-muted-foreground font-medium w-[66px] truncate shrink-0 mr-0.5">
+                     <span className="text-sm hidden sm:inline-block text-muted-foreground font-medium w-[78px] truncate shrink-0 mr-0.5">
                         {issue.identifier}
                      </span>
                   )}
@@ -64,6 +64,14 @@ export function IssueLine({ issue, layoutId = false }: { issue: Issue; layoutId?
                   {cycle && (
                      <span className="text-xs text-muted-foreground border border-border rounded-md px-1.5 py-0.5 shrink-0 hidden lg:inline-block">
                         {cycle.name}
+                     </span>
+                  )}
+                  {displayProperties.estimate && issue.estimate !== undefined && (
+                     <span
+                        className="text-xs text-muted-foreground border border-border rounded-md px-1.5 py-0.5 shrink-0 hidden sm:inline-block"
+                        title={t('Estimate')}
+                     >
+                        {issue.estimate}
                      </span>
                   )}
                   {displayProperties.dueDate && issue.dueDate && (

@@ -10,6 +10,7 @@ import { db } from '@/lib/db';
  */
 
 export const AI_DEFAULT = { enabled: false, model: '', systemPrompt: '' };
+export const GITHUB_DEFAULT = { autoDone: true };
 export const SLAS_DEFAULT = [
    { priority: 'urgent', respondHours: 4, resolveHours: 24 },
    { priority: 'high', respondHours: 12, resolveHours: 72 },
@@ -33,11 +34,16 @@ const slaSchema = z.array(
 const emojisSchema = z.array(
    z.object({ name: z.string().trim().min(1).max(40), emoji: z.string().min(1).max(16) })
 );
+const githubSchema = z.object({
+   // Move issues to a COMPLETED workflow state when a linked PR is merged.
+   autoDone: z.boolean(),
+});
 
 export const SETTING_SCHEMAS = {
    ai: aiSchema,
    slas: slaSchema,
    emojis: emojisSchema,
+   github: githubSchema,
 } as const;
 
 export type SettingKey = keyof typeof SETTING_SCHEMAS;
@@ -46,6 +52,7 @@ export const SETTING_DEFAULTS: Record<SettingKey, unknown> = {
    ai: AI_DEFAULT,
    slas: SLAS_DEFAULT,
    emojis: EMOJIS_DEFAULT,
+   github: GITHUB_DEFAULT,
 };
 
 export function isSettingKey(key: string): key is SettingKey {

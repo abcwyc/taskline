@@ -165,6 +165,7 @@ export interface IssueBefore {
    projectId: string | null;
    title: string;
    dueDate: string | null; // ISO date or null
+   estimate: number | null;
    labelIds: string[];
 }
 
@@ -176,6 +177,7 @@ interface IssueUpdatePatch {
    title?: string;
    description?: string;
    dueDate?: string | null;
+   estimate?: number | null;
    labelIds?: string[];
 }
 
@@ -287,6 +289,23 @@ export async function onIssueUpdated(
       notes.push({
          type: 'edited',
          content: patch.dueDate ? `set the due date to ${patch.dueDate}` : `cleared the due date`,
+      });
+   }
+
+   // estimate
+   if (patch.estimate !== undefined && (patch.estimate ?? null) !== (before.estimate ?? null)) {
+      const next = patch.estimate ?? null;
+      act(
+         'estimate',
+         before.estimate !== null ? String(before.estimate) : null,
+         next !== null ? String(next) : null
+      );
+      notes.push({
+         type: 'edited',
+         content:
+            patch.estimate !== null && patch.estimate !== undefined
+               ? `set the estimate to ${patch.estimate}`
+               : `cleared the estimate`,
       });
    }
 

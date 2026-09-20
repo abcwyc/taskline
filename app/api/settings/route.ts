@@ -9,6 +9,7 @@ import {
    putSetting,
    SETTING_DEFAULTS,
    SETTING_SCHEMAS,
+   SettingKey,
 } from '@/lib/api/workspace-settings.server';
 
 export const dynamic = 'force-dynamic';
@@ -41,7 +42,7 @@ export async function PUT(req: NextRequest) {
          })
       );
       // validate against the key's own schema for a precise error
-      const key = body.key as 'ai' | 'slas' | 'emojis';
+      const key = body.key as SettingKey;
       SETTING_SCHEMAS[key].parse(body.value);
       await putSetting(ctx.orgId, key, body.value);
       return NextResponse.json(await getSetting(ctx.orgId, key));

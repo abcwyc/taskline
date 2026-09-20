@@ -22,6 +22,7 @@ export interface Issue {
    subissues?: string[];
    rank: string;
    dueDate?: string;
+   estimate?: number;
 }
 
 /* -------------------------------------------------------------------------- */

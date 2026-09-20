@@ -6,7 +6,6 @@ import { AssigneeUser } from '../assignee-user';
 import { LabelBadge } from '../label-badge';
 import { LabelSelector } from '@/components/layout/sidebar/create-new-issue/label-selector';
 import type { LabelInterface } from '@/mock-data/labels';
-import { useIssuesStore } from '@/store/issues-store';
 import { useLabelsStore } from '@/store/labels-store';
 import { PrioritySelector } from '../priority-selector';
 import { StatusSelector } from '../status-selector';
@@ -34,9 +33,13 @@ import { IssueDetail, RelationEntry } from '@/mock-data/issue-details';
 import { Issue } from '@/mock-data/issues';
 import { useCyclesStore } from '@/store/cycles-store';
 import { useIssueDetailsStore } from '@/store/issue-details-store';
-import { ArrowUpRight, Ban, GitPullRequestArrow, Plus, X } from 'lucide-react';
+import { useIssuesStore } from '@/store/issues-store';
+import { ArrowUpRight, Ban, GitPullRequestArrow, Plus, Signal, X } from 'lucide-react';
 import { useState } from 'react';
 import { IssueRefRow } from './content-blocks';
+
+/** Estimate presets (Fibonacci scale, Linear-style); null clears the estimate. */
+const ESTIMATE_PRESETS = [0, 1, 2, 3, 5, 8, 13, 21];
 
 interface IssuePropertiesPanelProps {
    issue: Issue;
@@ -319,6 +322,7 @@ export function IssuePropertiesPanel({ issue, detail }: IssuePropertiesPanelProp
                      <span className="text-sm">{cycle.name}</span>
                   </div>
                )}
+               <EstimateRow issue={issue} />
             </div>
          </Section>
 
@@ -452,6 +456,61 @@ export function IssuePropertiesPanel({ issue, detail }: IssuePropertiesPanelProp
             </div>
          </Section>
       </div>
+   );
+}
+
+/** Estimate property row: icon + value, popover with the Fibonacci presets. */
+function EstimateRow({ issue }: { issue: Issue }) {
+   const { t } = useLanguage();
+   const [open, setOpen] = useState(false);
+   const updateIssue = useIssuesStore((s) => s.updateIssue);
+   const value = issue.estimate;
+
+   const pick = (next: number | null) => {
+      setOpen(false);
+      updateIssue(issue.id, { estimate: next ?? undefined });
+   };
+
+   return (
+      <Popover open={open} onOpenChange={setOpen}>
+         <PopoverTrigger asChild>
+            <button
+               type="button"
+               className="flex items-center gap-1.5 -ml-1.5 size-7 rounded-md hover:bg-accent"
+               aria-label={t('Set estimate…')}
+            >
+               <Signal className="size-4 text-muted-foreground mx-auto" />
+            </button>
+         </PopoverTrigger>
+         <PopoverContent align="start" className="w-40 p-1">
+            <div className="flex flex-col">
+               {ESTIMATE_PRESETS.map((preset) => (
+                  <button
+                     key={preset}
+                     type="button"
+                     onClick={() => pick(preset)}
+                     className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent text-left"
+                  >
+                     <Signal className="size-3.5 text-muted-foreground" />
+                     {preset}
+                     {value === preset && (
+                        <span className="ml-auto text-xs text-muted-foreground">✓</span>
+                     )}
+                  </button>
+               ))}
+               {value !== undefined && (
+                  <button
+                     type="button"
+                     onClick={() => pick(null)}
+                     className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-accent text-left border-t border-border/60 mt-1 pt-2"
+                  >
+                     <X className="size-3.5" />
+                     {t('No estimate')}
+                  </button>
+               )}
+            </div>
+         </PopoverContent>
+      </Popover>
    );
 }
 

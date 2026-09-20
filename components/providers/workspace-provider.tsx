@@ -109,10 +109,25 @@ export function WorkspaceProvider({
       window.addEventListener('focus', refresh);
       document.addEventListener('visibilitychange', onVisible);
       const timer = intervalMs > 0 ? window.setInterval(refresh, intervalMs) : undefined;
+
+      // Live updates: the SSE stream pings "something changed"; debounce the
+      // re-hydration so a burst of edits costs one refresh. The interval above
+      // stays as a fallback for missed events (server restart, proxy drops).
+      const source = new EventSource('/api/events');
+      let debounce: number | undefined;
+      const onStreamChange = () => {
+         if (document.visibilityState !== 'visible') return;
+         if (debounce !== undefined) window.clearTimeout(debounce);
+         debounce = window.setTimeout(() => void refresh(), 400);
+      };
+      source.addEventListener('change', onStreamChange);
+
       return () => {
          window.removeEventListener('focus', refresh);
          document.removeEventListener('visibilitychange', onVisible);
          if (timer !== undefined) window.clearInterval(timer);
+         if (debounce !== undefined) window.clearTimeout(debounce);
+         source.close();
       };
    }, [hydrateIssues, hydrateNotifications, refreshIntervalMs]);
 
