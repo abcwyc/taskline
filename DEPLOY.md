@@ -3,8 +3,9 @@
 Taskline is a Next.js 15 (App Router) app + Prisma/PostgreSQL backend + Auth.js
 credentials login. The core project-management surface — issues, projects,
 teams, cycles, initiatives, views, docs, triage, notifications, attachments — is
-DB-backed. Some settings sub-pages and the Agent / Reviews / Integrations
-surfaces are not yet functional (see **Not implemented** below).
+DB-backed. The remaining surfaces are functional but limited: the Agent needs an
+OpenAI-compatible LLM endpoint, Reviews are local-only (no VCS sync), and
+Integrations ships a GitHub webhook only (see **Known boundaries** below).
 
 > Read **SECURITY.md** before exposing this to the public internet.
 
